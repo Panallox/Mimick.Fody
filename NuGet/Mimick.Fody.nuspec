@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Mimick.Fody</id>
+    <version>1.0.0</version>
+    <authors>Chris Copeland</authors>
+    <owners>Chris Copeland</owners>
+    <licenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/Epoque1/Mimick.Fody</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A framework for automating development in cross-platform C# environments.</description>
+    <releaseNotes>Initial.</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>Fody</tags>
+    <dependencies>
+      <dependency id="Fody" version ="[1.29,)"/>
+    </dependencies>
+  </metadata>
+</package>
