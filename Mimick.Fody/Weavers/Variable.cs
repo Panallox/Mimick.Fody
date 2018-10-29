@@ -56,6 +56,23 @@ namespace Mimick.Fody.Weavers
             get;
         }
 
+        /// <summary>
+        /// Gets the type of the variable.
+        /// </summary>
+        public TypeReference Type
+        {
+            get
+            {
+                if (IsField)
+                    return ((FieldDefinition)Reference).FieldType;
+                if (IsLocal)
+                    return ((VariableDefinition)Reference).VariableType;
+                if (IsParameter)
+                    return ((ParameterDefinition)Reference).ParameterType;
+                throw new InvalidCastException();
+            }
+        }
+
         #endregion
 
         /// <summary>

@@ -46,6 +46,17 @@
     <Compile Include="Aspect\IParameterInterceptor.cs" />
     <Compile Include="Aspect\MethodInterceptionArgs.cs" />
     <Compile Include="Aspect\ParameterInterceptionArgs.cs" />
+    <Compile Include="Core\ReadWriteDictionary.cs" />
+    <Compile Include="Framework\DependencyConfigurator.cs" />
+    <Compile Include="Framework\DependencyEntry.cs" />
+    <Compile Include="Framework\DependencyFactory.cs" />
+    <Compile Include="Helper\ReflectionExtensions.cs" />
+    <Compile Include="IDependencyConfigurator.cs" />
+    <Compile Include="IDependencyFactory.cs" />
+    <Compile Include="IDependencyLifetime.cs" />
+    <Compile Include="IFrameworkContext.cs" />
+    <Compile Include="Lifetime\AdhocLifetime.cs" />
+    <Compile Include="Lifetime\SingletonLifetime.cs" />
     <Compile Include="ParamAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestAttribute.cs" />

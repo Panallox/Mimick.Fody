@@ -17,7 +17,7 @@ namespace Mimick
 
         public void OnException(MethodInterceptionArgs e, Exception ex)
         {
-            Console.WriteLine(">> Exception thrown: " + ex.Message);
+            
         }
 
         public void OnExit(MethodInterceptionArgs e)

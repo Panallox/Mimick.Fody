@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,51 @@ static class MethodExtensions
         hash = hash * 31L + returns.FullName.GetHashCode();
 
         return string.Format("{0:X}", Math.Abs(hash));
+    }
+
+    public static bool HasBody(this MethodReference method)
+    {
+        if (method == null)
+            return false;
+
+        var body = method.Resolve().Body;
+        var il = body.GetILProcessor();
+        var it = body.Instructions;
+        var count = it.Count;
+        
+        switch (count)
+        {
+            case 0:
+                return false;
+            case 1:
+                var code = it[0].OpCode;
+
+                if (code == OpCodes.Nop ||
+                    code == OpCodes.Ret)
+                    return false;
+                break;
+            case 2:
+                var code21 = it[0].OpCode;
+                var code22 = it[1].OpCode;
+
+                if ((code21 == OpCodes.Nop && code22 == OpCodes.Ret))
+                    return false;
+                break;
+            case 3:
+                var code31 = it[0].OpCode;
+                var code32 = it[1].OpCode;
+                var code33 = it[2].OpCode;
+
+                if (code31 == OpCodes.Nop && (code32 == OpCodes.Br || code32 == OpCodes.Br_S) && code33.Equals(it[1].Operand))
+                    return false;
+                if (code31 == OpCodes.Nop && code32 == OpCodes.Newobj && it[1].Operand is TypeReference type && code33 == OpCodes.Throw)
+                    return type.FullName == typeof(NotImplementedException).FullName;
+
+                break;
+        }
+
+
+        return true;
     }
 
     public static bool IsReturn(this MethodReference method)

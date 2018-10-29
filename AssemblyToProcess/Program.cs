@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mimick;
 using Mimick.Aspect;
+using Mimick.Framework;
 
 namespace AssemblyToProcess
 {
@@ -13,46 +14,35 @@ namespace AssemblyToProcess
     {
         static void Main(string[] args)
         {
-            var example = new Example();
+            var factory = new DependencyFactory();
 
-            example.Write();
-            example.Read("Good morning");
+            factory.Register<Example>("testing").Singleton();
 
-            string message = example.Generate();
-            Console.WriteLine($"Generate: {message}");
+            var instance = factory.Resolve<Example>();
+            instance.Read("Hello World");
 
-            Example.WriteStatic();
+            instance = factory.Resolve("testing") as Example;
+            instance.Read("Hello again");
 
+            instance = factory.Resolve<IExample>() as Example;
+            instance.Read("Hello interface");
+            
+            Console.WriteLine("Done");
             Console.ReadLine();
-        }
-
-        void ReflectMe()
-        {
-            var attribute = new TestAttribute();
-            var args = new MethodInterceptionArgs(this, new object[0], null, MethodInfo.GetCurrentMethod());
-
-            try
-            {
-                attribute.OnEnter(args);
-            }
-            catch (Exception ex)
-            {
-                attribute.OnException(args, ex);
-            }
-            finally
-            {
-                attribute.OnExit(args);
-            }
         }
     }
 
-    class Example
+    public interface IExample
+    {
+        void Write();
+    }
+
+    public class Example : IExample
     {
         [Test]
         public void Write()
         {
-            Console.WriteLine("Hello world");
-            throw new Exception("Nothing to see here");
+            Console.WriteLine("Hello world from method");
         }
 
         [Test]

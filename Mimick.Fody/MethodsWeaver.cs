@@ -158,6 +158,7 @@ public partial class ModuleWeaver
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.Leave(leave));
+
             il.Finally(leave);
 
             if (result != null)
