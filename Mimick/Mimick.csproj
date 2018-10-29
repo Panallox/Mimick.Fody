@@ -47,9 +47,11 @@
     <Compile Include="Aspect\MethodInterceptionArgs.cs" />
     <Compile Include="Aspect\ParameterInterceptionArgs.cs" />
     <Compile Include="Core\ReadWriteDictionary.cs" />
+    <Compile Include="Core\ReadWriteList.cs" />
     <Compile Include="Framework\DependencyConfigurator.cs" />
     <Compile Include="Framework\DependencyEntry.cs" />
     <Compile Include="Framework\DependencyFactory.cs" />
+    <Compile Include="Framework\FrameworkContext.cs" />
     <Compile Include="Helper\ReflectionExtensions.cs" />
     <Compile Include="IDependencyConfigurator.cs" />
     <Compile Include="IDependencyFactory.cs" />

@@ -13,8 +13,13 @@ namespace Mimick.Framework
     /// <summary>
     /// A class representing a default implementation of the dependency factory.
     /// </summary>
-    public sealed class DependencyFactory : IDependencyFactory
+    sealed class DependencyFactory : IDependencyFactory
     {
+        /// <summary>
+        /// The entries across all implementations.
+        /// </summary>
+        private readonly IList<DependencyEntry> allEntries;
+
         /// <summary>
         /// The entries where one concrete type implements an interface type.
         /// </summary>
@@ -35,9 +40,18 @@ namespace Mimick.Framework
         /// </summary>
         public DependencyFactory()
         {
+            allEntries = new ReadWriteList<DependencyEntry>();
             implementedEntries = new ReadWriteDictionary<Type, DependencyEntry>();
             namedEntries = new ReadWriteDictionary<string, DependencyEntry>();
             typedEntries = new ReadWriteDictionary<Type, DependencyEntry>();
+        }
+
+        /// <summary>
+        /// Finalizes an instance of the <see cref="DependencyFactory"/> class.
+        /// </summary>
+        ~DependencyFactory()
+        {
+            Dispose(false);
         }
         
         /// <summary>
@@ -70,6 +84,29 @@ namespace Mimick.Framework
         /// <param name="type">The type.</param>
         /// <returns>A <see cref="Type"/> array containing the results.</returns>
         private Type[] GetImplementedTypes(Type type) => type.GetInterfaces().Where(i => !i.IsSystem()).ToArray();
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing">
+        ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                foreach (var e in allEntries)
+                    e.Dispose();
+            }
+        }
 
         /// <summary>
         /// Register a provided type within the dependency provider using the default singleton lifetime.
@@ -185,6 +222,8 @@ namespace Mimick.Framework
 
                 namedEntries.Add(name, entry);
             }
+
+            allEntries.Add(entry);
 
             return new DependencyConfigurator(new[] { entry });
         }

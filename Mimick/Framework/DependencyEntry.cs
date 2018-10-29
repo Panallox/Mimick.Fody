@@ -9,7 +9,7 @@ namespace Mimick.Framework
     /// <summary>
     /// A class representing an entry within the dependency provider.
     /// </summary>
-    sealed class DependencyEntry
+    sealed class DependencyEntry : IDisposable
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DependencyEntry"/> class.
@@ -61,5 +61,13 @@ namespace Mimick.Framework
         }
 
         #endregion
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Lifetime.Dispose();
+        }
     }
 }
