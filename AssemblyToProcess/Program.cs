@@ -28,26 +28,52 @@ namespace AssemblyToProcess
             var context = FrameworkContext.Instance;
             var dependencies = context.Dependencies;
 
+            var working = new Example<int>();
+            working.Testing();
+
             Console.WriteLine("Creating testing<T>");
-            var testing = new Testing();
+            var testing = new Testing<int>();
 
             Console.WriteLine("Calling print(T)");
             testing.Print(1234);
 
             Console.WriteLine("Calling print<U>(U)");
-            testing.PrintFor("Hello world");
+            testing.PrintFor("Hello world", 456);
+
+            Console.WriteLine("Calling testing");
+            Console.WriteLine($"Value is {testing.testing}");
 
             Console.WriteLine("Done");
             Console.ReadLine();
         }
     }
 
-    public class Testing
+    public class Testing<T>
     {
-        [Test]
-        public void Print(int value) => Console.WriteLine($"Value is {value}");
+        [Prop]
+        public string testing;
 
         [Test]
-        public void PrintFor<U>(U value) => Console.WriteLine($"Value<U> is {value}");
+        public void Print(T value) => Console.WriteLine($"Value is {value}");
+
+        [Test]
+        public void PrintFor<U>(U value, T other) => Console.WriteLine($"Value<U> is {value} and {other}");
+    }
+
+    public class Example<T>
+    {
+        static TestAttribute att;
+        static MethodInfo mi;
+        
+        static Example()
+        {
+            att = new TestAttribute();
+            mi = typeof(Example<T>).GetMethod("Testing");
+        }
+
+        public void Testing()
+        {
+            var args = new MethodInterceptionArgs(this, new object[0], null, mi);
+        }
     }
 }

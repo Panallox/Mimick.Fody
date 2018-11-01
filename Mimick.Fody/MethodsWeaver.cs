@@ -3,6 +3,7 @@ using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,6 +66,7 @@ public partial class ModuleWeaver
             il.Emit(Codes.Store(result));
         }
 
+        var declaring = weaver.Parent.Target.HasGenericParameters ? (TypeReference)weaver.Parent.Target.MakeGenericInstanceType(weaver.Parent.Target.GenericParameters.ToArray()) : weaver.Parent.Target;
         var leave = WeaveMethodReturnsRoute(weaver, result, mInterceptors.Length > 0);
         var cancel = il.CreateLabel();
 
@@ -281,7 +283,7 @@ public partial class ModuleWeaver
                 weaver.Parent.Context.AddNonSerialized(sdef);
                 sil.Emit(Codes.Nop);
                 sil.Emit(Codes.Create(attribute.Constructor));
-                sil.Emit(Codes.Store(sfield));
+                sil.Emit(Codes.Store(sdef));
                 return sfield;
         }
 
@@ -295,22 +297,25 @@ public partial class ModuleWeaver
     /// <returns></returns>
     public Variable WeaveMethodBaseVariable(MethodWeaver weaver)
     {
+        var parent = weaver.Parent;
+        var type = parent.Target;
+
         var id = weaver.Target.GetHashString();
         var field = weaver.Parent.CreateField($"<>__method{weaver.Target.Name}{id}", Context.Refs.MethodInfo, toStatic: true);
-        var il = weaver.Parent.GetStaticConstructor().GetWeaver();
 
         var def = (FieldDefinition)field;
+
         weaver.Parent.Context.AddCompilerGenerated(def);
         weaver.Parent.Context.AddNonSerialized(def);
 
-        var type = weaver.Parent.Target;
-                
+        var il = weaver.Parent.GetStaticConstructor().GetWeaver();
+
         il.Emit(Codes.Nop);
-        il.Emit(Codes.LoadToken(weaver.Target));
-        il.Emit(Codes.LoadToken(type));
-        il.Emit(Codes.InvokeStatic(Context.Refs.MethodBaseGetMethodFromHandle));
+        il.Emit(Codes.LoadToken(weaver.Parent.Target.HasGenericParameters ? weaver.Target : weaver.Target.GetGeneric()));
+        il.Emit(Codes.LoadToken(weaver.Parent.Target.GetGeneric()));
+        il.Emit(Codes.InvokeStatic(Context.Refs.MethodBaseGetMethodFromHandleAndType));
         il.Emit(Codes.Cast(Context.Refs.MethodInfo));
-        il.Emit(Codes.Store(field));
+        il.Emit(Codes.Store(def.GetGeneric()));
 
         return field;
     }
@@ -332,12 +337,13 @@ public partial class ModuleWeaver
         weaver.Parent.Context.AddNonSerialized(def);
 
         il.Emit(Codes.Nop);
-        il.Emit(Codes.LoadToken(weaver.Target));
-        il.Emit(Codes.InvokeStatic(Context.Refs.MethodBaseGetMethodFromHandle));
+        il.Emit(Codes.LoadToken(weaver.Target.GetGeneric()));
+        il.Emit(Codes.LoadToken(weaver.Parent.Target.GetGeneric()));
+        il.Emit(Codes.InvokeStatic(Context.Refs.MethodBaseGetMethodFromHandleAndType));
         il.Emit(Codes.Invoke(Context.Refs.MethodBaseGetParameters));
         il.Emit(Codes.Int(parameter.Index));
         il.Emit(Codes.LoadArray);
-        il.Emit(Codes.Store(field));
+        il.Emit(Codes.Store(def.GetGeneric()));
 
         return field;
     }

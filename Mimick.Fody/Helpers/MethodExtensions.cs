@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,5 +89,38 @@ static class MethodExtensions
             return false;
 
         return true;
+    }
+
+    public static MethodReference MakeGeneric(this MethodReference method, params TypeReference[] types)
+    {
+        if (method.GenericParameters.Count == 0)
+            return MakeHostInstanceGeneric(method, types.Select(x => method.Module.ImportReference(x)).ToArray());
+        else
+        {
+            var instance = new GenericInstanceMethod(method);
+
+            foreach (var generic in types)
+                instance.GenericArguments.Add(generic);
+
+            return instance;
+        }
+    }
+
+    public static MethodReference MakeHostInstanceGeneric(this MethodReference method, params TypeReference[] types)
+    {
+        var genericType = method.DeclaringType.MakeGenericInstanceType(types);
+        var genericMethod = new MethodReference(method.Name, method.ReturnType, genericType);
+
+        genericMethod.CallingConvention = method.CallingConvention;
+        genericMethod.ExplicitThis = method.ExplicitThis;
+        genericMethod.HasThis = method.HasThis;
+
+        foreach (var param in method.Parameters)
+            genericMethod.Parameters.Add(new ParameterDefinition(param.ParameterType));
+
+        foreach (var generic in method.GenericParameters)
+            genericMethod.GenericParameters.Add(new GenericParameter(generic.Name, genericMethod));
+
+        return genericMethod;
     }
 }

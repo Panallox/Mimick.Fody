@@ -12,7 +12,7 @@ namespace Mimick
     {
         public void OnEnter(ParameterInterceptionArgs e)
         {
-            Console.WriteLine("[I] Intercepted argument " + e.Value);
+            Console.WriteLine("[I] Intercepted argument " + (e?.Value ?? "<null>"));
         }
     }
 }

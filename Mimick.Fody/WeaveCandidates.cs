@@ -89,7 +89,10 @@ namespace Mimick.Fody
                     var parameters = method.Parameters.SelectMany(p => p.CustomAttributes.Where(a => a.HasInterface<IParameterInterceptor>()));
 
                     if (these.Any() || parameters.Any())
-                        methods.Add(new MethodInterceptorInfo { Method = method, MethodInterceptors = these.ToArray(), ParameterInterceptors = parameters.ToArray() });
+                    {
+                        var generic = type.HasGenericParameters ? method.MakeGeneric(type.GenericParameters.ToArray()) : method;
+                        methods.Add(new MethodInterceptorInfo { Method = generic.Resolve(), MethodInterceptors = these.ToArray(), ParameterInterceptors = parameters.ToArray() });
+                    }
                 }
 
                 if (methods.Count > 0)

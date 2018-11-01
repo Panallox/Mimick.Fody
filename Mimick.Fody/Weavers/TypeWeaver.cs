@@ -216,7 +216,7 @@ namespace Mimick.Fody.Weavers
                     staticConstructor = new MethodWeaver(this, method);
                 else
                 {
-                    method = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Public, Module.TypeSystem.Void);
+                    method = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Private, Module.TypeSystem.Void);
 
                     if (Target.IsGenericInstance)
                     {

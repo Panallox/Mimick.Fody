@@ -327,7 +327,7 @@ public partial class ModuleWeaver
         flags |= isStatic ? BindingFlags.Static : BindingFlags.Instance;
 
         il.Emit(Codes.Nop);
-        il.Emit(Codes.LoadToken(weaver.Target));
+        il.Emit(Codes.LoadToken(weaver.Target.GetGeneric()));
         il.Emit(Codes.InvokeStatic(Context.Refs.TypeGetTypeFromHandle));
         il.Emit(Codes.String(property.Name));
         il.Emit(Codes.Int((int)flags));

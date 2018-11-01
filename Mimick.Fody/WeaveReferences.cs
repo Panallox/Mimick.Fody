@@ -2,6 +2,7 @@
 using Mono.Cecil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -44,6 +45,8 @@ namespace Mimick.Fody
         public TypeReference ParameterInterceptionArgs { get; set; }
         public TypeReference PropertyInfo { get; set; }
         public TypeReference PropertyInterceptionArgs { get; set; }
+        public TypeReference Type { get; set; }
+        public TypeReference TypeArray { get; set; }
 
         // constructors
         public MethodReference CompilerGeneratedAttributeCtor { get; set; }
@@ -53,8 +56,10 @@ namespace Mimick.Fody
         public MethodReference PropertyInterceptionArgsCtor { get; set; }
         
         // methods
+        public MethodReference DebugWriteLine { get; set; }
         public MethodReference ConsoleWriteLine { get; set; }
         public MethodReference MethodBaseGetMethodFromHandle { get; set; }
+        public MethodReference MethodBaseGetMethodFromHandleAndType { get; set; }
         public MethodReference MethodBaseGetParameters { get; set; }
         public MethodReference MethodInterceptorOnEnter { get; set; }
         public MethodReference MethodInterceptorOnException { get; set; }
@@ -66,6 +71,7 @@ namespace Mimick.Fody
         public MethodReference PropertySetInterceptorOnSet { get; set; }
         public MethodReference TypeGetProperty { get; set; }
         public MethodReference TypeGetTypeFromHandle { get; set; }
+        public MethodReference TypeMakeGenericType { get; set; }
 
         // properties
         public MethodReference MethodInterceptionArgsCancelGet { get; set; }
@@ -75,6 +81,7 @@ namespace Mimick.Fody
         public MethodReference PropertyInterceptionArgsIsDirtyGet { get; set; }
         public MethodReference PropertyInterceptionArgsValueGet { get; set; }
         public MethodReference PropertyInterceptionArgsValueSet { get; set; }
+        public MethodReference TypeTypeHandleGet { get; set; }
 
         #endregion
 
@@ -98,6 +105,8 @@ namespace Mimick.Fody
             ParameterInterceptionArgs = module.Type<ParameterInterceptionArgs>();
             PropertyInfo = module.Type<PropertyInfo>();
             PropertyInterceptionArgs = module.Type<PropertyInterceptionArgs>();
+            Type = module.Type<Type>();
+            TypeArray = module.Type<Type[]>();
 
             // constructors
             CompilerGeneratedAttributeCtor = module.Constructor<CompilerGeneratedAttribute>();
@@ -107,8 +116,10 @@ namespace Mimick.Fody
             PropertyInterceptionArgsCtor = module.Constructor<PropertyInterceptionArgs>();
 
             // methods
+            DebugWriteLine = module.Method(typeof(Debug), "WriteLine", typeof(string));
             ConsoleWriteLine = module.Method(typeof(Console), "WriteLine", typeof(object));
-            MethodBaseGetMethodFromHandle = module.Method<MethodBase>("GetMethodFromHandle", typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle));
+            MethodBaseGetMethodFromHandle = module.Method<MethodBase>("GetMethodFromHandle", typeof(RuntimeMethodHandle));
+            MethodBaseGetMethodFromHandleAndType = module.Method<MethodBase>("GetMethodFromHandle", typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle));
             MethodBaseGetParameters = module.Method<MethodBase>("GetParameters");
             MethodInterceptorOnEnter = module.Method<IMethodInterceptor>("OnEnter");
             MethodInterceptorOnException = module.Method<IMethodInterceptor>("OnException");
@@ -120,6 +131,7 @@ namespace Mimick.Fody
             PropertySetInterceptorOnSet = module.Method<IPropertySetInterceptor>("OnSet");
             TypeGetProperty = module.Method<Type>("GetProperty", typeof(string), typeof(BindingFlags));
             TypeGetTypeFromHandle = module.Method<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle));
+            TypeMakeGenericType = module.Method<Type>("MakeGenericType");
 
             // properties
             MethodInterceptionArgsCancelGet = module.Getter<MethodInterceptionArgs>("Cancel");
@@ -129,6 +141,7 @@ namespace Mimick.Fody
             PropertyInterceptionArgsIsDirtyGet = module.Getter<PropertyInterceptionArgs>("IsDirty");
             PropertyInterceptionArgsValueGet = module.Getter<PropertyInterceptionArgs>("Value");
             PropertyInterceptionArgsValueSet = module.Setter<PropertyInterceptionArgs>("Value");
+            TypeTypeHandleGet = module.Getter<Type>("TypeHandle");
         }
     }
 }

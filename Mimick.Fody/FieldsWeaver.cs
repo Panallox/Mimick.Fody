@@ -48,8 +48,8 @@ public partial class ModuleWeaver
 
         field.Name = $"<{field.Name}>k__BackingField";
 
-        Context.AddCompilerGenerated(field);
-        Context.AddNonSerialized(field);
+        Context.AddCompilerGenerated(item.Field);
+        Context.AddNonSerialized(item.Field);
 
         var getter = property.GetGetter();
         var gil = getter.GetWeaver();
@@ -74,7 +74,7 @@ public partial class ModuleWeaver
         sil.Emit(Codes.Store(variable));
         sil.Emit(Codes.Return);
         
-        var search = field.IsPrivate ? weaver.Target.Methods : Context.Candidates.SelectMany(a => a.Resolve().Methods);
+        var search = item.Field.IsPrivate ? weaver.Target.Methods : Context.Candidates.SelectMany(a => a.Resolve().Methods);
 
         foreach (var method in search)
         {
@@ -86,9 +86,11 @@ public partial class ModuleWeaver
             foreach (var i in il)
             {
                 var reference = i.Operand as FieldReference ?? i.Operand as FieldDefinition;
-
-                if (reference == null || !reference.FullName.Equals(field.FullName))
+                
+                if (reference == null || !reference.IsGenericMatch(path))
                     continue;
+
+                var declaring = reference.DeclaringType;
                 
                 if (i.OpCode == OpCodes.Ldfld || i.OpCode == OpCodes.Ldsfld)
                 {

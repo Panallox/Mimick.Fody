@@ -65,6 +65,8 @@
     <Compile Include="ConstructorsWeaver.cs" />
     <Compile Include="FieldsWeaver.cs" />
     <Compile Include="Helpers\AttributeExtensions.cs" />
+    <Compile Include="Helpers\DebugExtensions.cs" />
+    <Compile Include="Helpers\GenericExtensions.cs" />
     <Compile Include="Helpers\MethodExtensions.cs" />
     <Compile Include="Helpers\ModuleExtensions.cs" />
     <Compile Include="Helpers\PropertyExtensions.cs" />

@@ -105,6 +105,18 @@ namespace Mimick.Fody.Weavers
         public Variable CreateLocal(TypeReference type, string name = null) => Parent.CreateVariable(type, name);
 
         /// <summary>
+        /// Emit a debug command within the method body.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <returns></returns>
+        public CodeWeaver Debug(string message)
+        {
+            Emit(Instruction.Create(OpCodes.Ldstr, message));
+            Emit(Instruction.Create(OpCodes.Call, Parent.Parent.Context.Refs.DebugWriteLine));
+            return this;
+        }
+
+        /// <summary>
         /// Emit code within the method body.
         /// </summary>
         /// <param name="code">The code.</param>
@@ -379,20 +391,20 @@ namespace Mimick.Fody.Weavers
         /// </summary>
         /// <param name="parameter">The parameter.</param>
         /// <returns></returns>
-        public static Instruction Arg(ParameterDefinition parameter) => Instruction.Create(OpCodes.Ldarg, parameter);
+        public static Instruction Arg(ParameterReference parameter) => Instruction.Create(OpCodes.Ldarg, parameter.Resolve());
 
         /// <summary>
         /// A box code.
         /// </summary>
         /// <param name="type">The type.</param>
-        public static Instruction Box(TypeReference type) => type.IsValueType ? Instruction.Create(OpCodes.Box, type) : null;
+        public static Instruction Box(TypeReference type) => type.IsValueType || type.IsGenericParameter ? Instruction.Create(OpCodes.Box, type) : null;
 
         /// <summary>
         /// A cast code.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
-        public static Instruction Cast(TypeReference type) => type.IsValueType ? null : Instruction.Create(OpCodes.Castclass, type);
+        public static Instruction Cast(TypeReference type) => type.IsValueType || type.IsGenericParameter ? null : Instruction.Create(OpCodes.Castclass, type);
 
         /// <summary>
         /// An object creation code.
@@ -500,8 +512,8 @@ namespace Mimick.Fody.Weavers
         {
             if (variable.IsField)
             {
-                var field = (FieldDefinition)variable;
-                return Instruction.Create(field.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field);
+                var field = (FieldReference)variable;
+                return Instruction.Create(field.Resolve().IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field.Resolve().GetGeneric());
             }
 
             if (variable.IsLocal)
@@ -549,8 +561,8 @@ namespace Mimick.Fody.Weavers
         {
             if (variable.IsField)
             {
-                var field = (FieldDefinition)variable;
-                return Instruction.Create(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
+                var field = (FieldReference)variable;
+                return Instruction.Create(field.Resolve().IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field.Resolve().GetGeneric());
             }
 
             if (variable.IsLocal)
@@ -573,7 +585,7 @@ namespace Mimick.Fody.Weavers
             }
 
             if (variable.IsParameter)
-                return Instruction.Create(OpCodes.Starg, (ParameterDefinition)variable);
+                return Instruction.Create(OpCodes.Starg, ((ParameterReference)variable).Resolve());
 
             throw new NotSupportedException("Cannot store against an unrecognised variable");
         }
