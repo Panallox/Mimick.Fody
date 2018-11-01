@@ -58,19 +58,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Candidates\FieldInterceptorInfo.cs" />
     <Compile Include="Candidates\MethodInterceptorInfo.cs" />
+    <Compile Include="Candidates\PropertyInterceptorInfo.cs" />
     <Compile Include="Candidates\TypeInterceptorInfo.cs" />
+    <Compile Include="ConstructorsWeaver.cs" />
+    <Compile Include="FieldsWeaver.cs" />
     <Compile Include="Helpers\AttributeExtensions.cs" />
     <Compile Include="Helpers\MethodExtensions.cs" />
     <Compile Include="Helpers\ModuleExtensions.cs" />
+    <Compile Include="Helpers\PropertyExtensions.cs" />
     <Compile Include="MethodsWeaver.cs" />
     <Compile Include="ModuleWeaver.cs" />
+    <Compile Include="PropertiesWeaver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WeaveCandidates.cs" />
     <Compile Include="WeaveContext.cs" />
     <Compile Include="WeaveReferences.cs" />
     <Compile Include="Weavers\CodeWeaver.cs" />
     <Compile Include="Weavers\MethodWeaver.cs" />
+    <Compile Include="Weavers\PropertyWeaver.cs" />
     <Compile Include="Weavers\TypeWeaver.cs" />
     <Compile Include="Weavers\Variable.cs" />
   </ItemGroup>

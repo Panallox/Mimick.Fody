@@ -15,9 +15,9 @@ namespace Mimick
         #region Properties
 
         /// <summary>
-        /// Gets the dependency factory managing the dependency instances.
+        /// Gets the dependency context managing the dependency instances.
         /// </summary>
-        IDependencyFactory DependencyFactory
+        IDependencyContext Dependencies
         {
             get;
         }

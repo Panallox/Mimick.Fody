@@ -55,11 +55,23 @@ namespace Mimick.Fody.Weavers
         /// Create a new variable definition within the method body of the provided type.
         /// </summary>
         /// <param name="type">The variable type.</param>
+        /// <param name="name">The variable name.</param>
         /// <returns>A <see cref="Variable"/> value.</returns>
-        public Variable CreateVariable(TypeReference type)
+        public Variable CreateVariable(TypeReference type, string name = null)
         {
             var variable = new VariableDefinition(type);
             Body.Variables.Add(variable);
+
+            if (name != null)
+            {
+                var debug = Target.DebugInformation;
+
+                if (debug.Scope == null)
+                    debug.Scope = new ScopeDebugInformation(Body.Instructions.First(), Body.Instructions.Last());
+
+                debug.Scope.Variables.Add(new VariableDebugInformation(variable, name));
+            }
+
             return new Variable(variable);
         }
 

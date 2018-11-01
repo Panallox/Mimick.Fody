@@ -49,6 +49,11 @@ namespace Mimick.Fody.Weavers
         public bool IsParameter => Reference is ParameterDefinition;
 
         /// <summary>
+        /// Gets whether the variable requires the <see cref="Codes.This"/> value loading onto the instruction set.
+        /// </summary>
+        public bool IsThisNeeded => IsField && !((FieldDefinition)Reference).IsStatic;
+
+        /// <summary>
         /// Gets the variable reference.
         /// </summary>
         public object Reference

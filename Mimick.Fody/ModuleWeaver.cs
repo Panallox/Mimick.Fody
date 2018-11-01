@@ -37,7 +37,9 @@ public partial class ModuleWeaver : BaseModuleWeaver
         Context.Candidates = new WeaveCandidates(ModuleDefinition);
         Context.Refs = new WeaveReferences(ModuleDefinition);
         
-        WeaveInterceptors();
+        WeaveMethodInterceptors();
+        WeavePropertyInterceptors();
+        WeaveFieldInterceptors();
     }
 
     /// <summary>

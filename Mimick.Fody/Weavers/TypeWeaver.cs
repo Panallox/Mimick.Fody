@@ -13,19 +13,31 @@ namespace Mimick.Fody.Weavers
     /// </summary>
     public class TypeWeaver
     {
+        private MethodWeaver[] constructors;
         private MethodWeaver staticConstructor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeWeaver" /> class.
         /// </summary>
+        /// <param name="module">The module.</param>
         /// <param name="type">The type.</param>
-        public TypeWeaver(ModuleDefinition module, TypeReference type)
+        /// <param name="context">The context.</param>
+        public TypeWeaver(ModuleDefinition module, TypeReference type, WeaveContext context)
         {
+            Context = context;
             Module = module;
             Target = type as TypeDefinition ?? type.Resolve();
         }
 
         #region Properties
+
+        /// <summary>
+        /// Gets the weaving context.
+        /// </summary>
+        public WeaveContext Context
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the module definition.
@@ -78,6 +90,66 @@ namespace Mimick.Fody.Weavers
             Target.Fields.Add(field);
 
             return new Variable(field);
+        }
+
+        /// <summary>
+        /// Create a new property within the type.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="type">The type.</param>
+        /// <param name="toStatic">Whether the field should be static.</param>
+        /// <returns>A <see cref="PropertyWeaver"/> instance.</returns>
+        public PropertyWeaver CreateProperty(string name, TypeReference type, bool toStatic = false)
+        {
+            var existing = Target.Properties.FirstOrDefault(a => a.Name == name && a.PropertyType.FullName == type.FullName);
+
+            if (existing != null)
+                throw new NotSupportedException($"A property exists in '{type.FullName}' named '{name}'");
+
+            var attributes = PropertyAttributes.SpecialName;
+            var property = new PropertyDefinition(name, attributes, type);
+            Target.Properties.Add(property);
+
+            return new PropertyWeaver(this, property);
+        }
+
+        /// <summary>
+        /// Gets a collection of method weavers for the constructors of the type, where each constructor
+        /// does not call a reference to another self-constructor.
+        /// </summary>
+        /// <returns>A collection of <see cref="MethodWeaver"/> values.</returns>
+        public MethodWeaver[] GetConstructors()
+        {
+            if (constructors != null)
+                return constructors;
+
+            var candidates = Target.Methods.Where(m => m.Name == ".ctor" && m.IsSpecialName);
+            var match = new List<MethodWeaver>();
+
+            foreach (var candidate in candidates)
+            {
+                var il = candidate.Body.Instructions;
+                var ignore = false;
+
+                foreach (var i in il)
+                {
+                    if (i.OpCode == OpCodes.Call)
+                    {
+                        var target = i.Operand;
+
+                        if (target is MethodDefinition method && method.Name == ".ctor" && method.DeclaringType.FullName == Target.FullName)
+                        {
+                            ignore = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!ignore)
+                    match.Add(new MethodWeaver(this, candidate));
+            }
+
+            return constructors = match.ToArray();
         }
 
         /// <summary>
@@ -144,7 +216,14 @@ namespace Mimick.Fody.Weavers
                     staticConstructor = new MethodWeaver(this, method);
                 else
                 {
-                    method = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, Module.TypeSystem.Void);
+                    method = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Public, Module.TypeSystem.Void);
+
+                    if (Target.IsGenericInstance)
+                    {
+                        foreach (var generic in Target.GenericParameters)
+                            method.GenericParameters.Add(generic);
+                    }
+
                     Target.Methods.Add(method);
 
                     staticConstructor = new MethodWeaver(this, method);

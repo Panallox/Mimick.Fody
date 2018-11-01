@@ -32,6 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -42,27 +43,45 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Aspect\CompilationOptionsAttribute.cs" />
+    <Compile Include="Aspect\IInitializer.cs" />
     <Compile Include="Aspect\IMethodInterceptor.cs" />
     <Compile Include="Aspect\IParameterInterceptor.cs" />
+    <Compile Include="Aspect\IPropertySetInterceptor.cs" />
+    <Compile Include="Aspect\IPropertyGetInterceptor.cs" />
     <Compile Include="Aspect\MethodInterceptionArgs.cs" />
     <Compile Include="Aspect\ParameterInterceptionArgs.cs" />
+    <Compile Include="Aspect\PropertyInterceptionArgs.cs" />
+    <Compile Include="Attributes\ConfigurationAttribute.cs" />
+    <Compile Include="Configuration\AppConfigConfigurationSource.cs" />
+    <Compile Include="Configuration\Assemblies.cs" />
+    <Compile Include="Configuration\ConfigurationContext.cs" />
+    <Compile Include="Configuration\Configurations.cs" />
+    <Compile Include="Configuration\FrameworkConfiguration.cs" />
     <Compile Include="Core\ReadWriteDictionary.cs" />
     <Compile Include="Core\ReadWriteList.cs" />
+    <Compile Include="Core\TypeConverters\GuidTypeConverter.cs" />
     <Compile Include="Framework\DependencyConfigurator.cs" />
     <Compile Include="Framework\DependencyEntry.cs" />
-    <Compile Include="Framework\DependencyFactory.cs" />
+    <Compile Include="Framework\DependencyContext.cs" />
     <Compile Include="Framework\FrameworkContext.cs" />
+    <Compile Include="Helper\CollectionExtensions.cs" />
     <Compile Include="Helper\ReflectionExtensions.cs" />
+    <Compile Include="Helper\TypeHelper.cs" />
+    <Compile Include="IConfigurationContext.cs" />
+    <Compile Include="IConfigurationSource.cs" />
     <Compile Include="IDependencyConfigurator.cs" />
-    <Compile Include="IDependencyFactory.cs" />
+    <Compile Include="IDependencyContext.cs" />
     <Compile Include="IDependencyLifetime.cs" />
     <Compile Include="IFrameworkContext.cs" />
     <Compile Include="Lifetime\AdhocLifetime.cs" />
     <Compile Include="Lifetime\SingletonLifetime.cs" />
     <Compile Include="ParamAttribute.cs" />
+    <Compile Include="PostConstructAttribute.cs" />
+    <Compile Include="PropAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestAttribute.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)\Tools" />

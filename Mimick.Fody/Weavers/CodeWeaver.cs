@@ -101,13 +101,8 @@ namespace Mimick.Fody.Weavers
         /// Create a new local variable within the method.
         /// </summary>
         /// <param name="type">The variable type.</param>
-        public Variable CreateLocal(TypeReference type)
-        {
-            var variable = new VariableDefinition(type);
-            Body.Variables.Add(variable);
-
-            return new Variable(variable);
-        }
+        /// <param name="name">The variable name.</param>
+        public Variable CreateLocal(TypeReference type, string name = null) => Parent.CreateVariable(type, name);
 
         /// <summary>
         /// Emit code within the method body.
@@ -357,6 +352,31 @@ namespace Mimick.Fody.Weavers
         /// <summary>
         /// An argument code.
         /// </summary>
+        /// <param name="index">The argument index.</param>
+        /// <returns></returns>
+        public static Instruction Arg(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    return Instruction.Create(OpCodes.Ldarg_0);
+                case 1:
+                    return Instruction.Create(OpCodes.Ldarg_1);
+                case 2:
+                    return Instruction.Create(OpCodes.Ldarg_2);
+                case 3:
+                    return Instruction.Create(OpCodes.Ldarg_3);
+            }
+
+            if (index >= 0 && index <= 255)
+                return Instruction.Create(OpCodes.Ldarg_S, (byte)index);
+            else
+                return Instruction.Create(OpCodes.Ldarg, index);
+        }
+
+        /// <summary>
+        /// An argument code.
+        /// </summary>
         /// <param name="parameter">The parameter.</param>
         /// <returns></returns>
         public static Instruction Arg(ParameterDefinition parameter) => Instruction.Create(OpCodes.Ldarg, parameter);
@@ -366,6 +386,13 @@ namespace Mimick.Fody.Weavers
         /// </summary>
         /// <param name="type">The type.</param>
         public static Instruction Box(TypeReference type) => type.IsValueType ? Instruction.Create(OpCodes.Box, type) : null;
+
+        /// <summary>
+        /// A cast code.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        public static Instruction Cast(TypeReference type) => type.IsValueType ? null : Instruction.Create(OpCodes.Castclass, type);
 
         /// <summary>
         /// An object creation code.
@@ -380,6 +407,17 @@ namespace Mimick.Fody.Weavers
         /// <param name="type">The type.</param>
         /// <returns></returns>
         public static Instruction CreateArray(TypeReference type) => Instruction.Create(OpCodes.Newarr, type);
+
+        /// <summary>
+        /// A jump instruction to the provided label when the head of the stack is <c>false</c>.
+        /// </summary>
+        /// <param name="label">The label.</param>
+        public static Instruction IfFalse(Label label)
+        {
+            var code = Instruction.Create(OpCodes.Brfalse, Instruction.Create(OpCodes.Nop));
+            label.Reference(code);
+            return code;
+        }
 
         /// <summary>
         /// A jump instruction to the provided label when the head of the stack is <c>true</c>.
@@ -498,6 +536,12 @@ namespace Mimick.Fody.Weavers
         public static Instruction LoadToken(MethodReference method) => Instruction.Create(OpCodes.Ldtoken, method);
 
         /// <summary>
+        /// A load token code.
+        /// </summary>
+        /// <param name="type">The type handle.</param>
+        public static Instruction LoadToken(TypeReference type) => Instruction.Create(OpCodes.Ldtoken, type);
+
+        /// <summary>
         /// A stack store code.
         /// </summary>
         /// <param name="variable">The variable.</param>
@@ -533,7 +577,14 @@ namespace Mimick.Fody.Weavers
 
             throw new NotSupportedException("Cannot store against an unrecognised variable");
         }
-        
+
+        /// <summary>
+        /// A string load code.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public static Instruction String(string value) => Instruction.Create(OpCodes.Ldstr, value);
+
         /// <summary>
         /// An unbox code.
         /// </summary>

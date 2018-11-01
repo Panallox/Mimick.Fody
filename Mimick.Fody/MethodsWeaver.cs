@@ -16,15 +16,15 @@ using System.Threading.Tasks;
 public partial class ModuleWeaver
 {
     /// <summary>
-    /// Weaves all types which are candidates for member interception.
+    /// Weaves all types which are candidates for method interception.
     /// </summary>
-    public void WeaveInterceptors()
+    public void WeaveMethodInterceptors()
     {
-        var candidates = Context.Candidates.FindTypeByMemberInterceptors();
+        var candidates = Context.Candidates.FindTypeByMethodInterceptors();
 
         foreach (var item in candidates)
         {
-            var weaver = new TypeWeaver(Context.Module, item.Type);
+            var weaver = new TypeWeaver(Context.Module, item.Type, Context);
             
             foreach (var method in item.Methods)
             {
@@ -59,15 +59,10 @@ public partial class ModuleWeaver
         {
             var type = weaver.Target.ReturnType;
 
-            result = weaver.CreateVariable(weaver.Target.ReturnType);
+            result = weaver.CreateVariable(type);
 
-            if (type.IsValueType)
-                il.Emit(Codes.Init(weaver.Target.ReturnType));
-            else
-            {
-                il.Emit(Codes.Null);
-                il.Emit(Codes.Store(result));
-            }
+            il.Emit(type.IsValueType ? Codes.Init(type) : Codes.Null);
+            il.Emit(Codes.Store(result));
         }
 
         var leave = WeaveMethodReturnsRoute(weaver, result, mInterceptors.Length > 0);
@@ -84,7 +79,7 @@ public partial class ModuleWeaver
 
         var arguments = hasMethod ? WeaveMethodArgumentsArray(weaver) : null;
         var invocation = WeaveMethodBaseVariable(weaver);
-        var mEventArgs = hasMethod ? weaver.CreateVariable(Context.Refs.MethodInterceptionArgs) : null;
+        var mEventArgs = hasMethod ? weaver.CreateVariable(Context.Refs.MethodInterceptionArgs, name: "methodEventArgs") : null;
         
         if (hasMethod)
         {
@@ -115,6 +110,9 @@ public partial class ModuleWeaver
                 il.Emit(Codes.Create(Context.Refs.ParameterInterceptionArgsCtor));
                 il.Emit(Codes.Store(pEventArgs));
 
+                if (inc.IsThisNeeded)
+                    il.Emit(Codes.This);
+
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(pEventArgs));
                 il.Emit(Codes.Invoke(Context.Refs.ParameterInterceptorOnEnter));
@@ -131,6 +129,9 @@ public partial class ModuleWeaver
             for (int i = 0, count = mInterceptors.Length; i < count; i++)
             {
                 var inc = mInterceptors[i];
+
+                if (inc.IsThisNeeded)
+                    il.Emit(Codes.This);
 
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(mEventArgs));
@@ -149,6 +150,9 @@ public partial class ModuleWeaver
             for (int i = 0, count = mInterceptors.Length; i < count; i++)
             {
                 var inc = mInterceptors[i];
+
+                if (inc.IsThisNeeded)
+                    il.Emit(Codes.This);
 
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(mEventArgs));
@@ -173,9 +177,16 @@ public partial class ModuleWeaver
             {
                 var inc = mInterceptors[i];
 
+                if (inc.IsThisNeeded)
+                    il.Emit(Codes.This);
+
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(mEventArgs));
                 il.Emit(Codes.Invoke(Context.Refs.MethodInterceptorOnExit));
+
+                il.Emit(Codes.Load(mEventArgs));
+                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptionArgsCancelGet));
+                il.Emit(Codes.IfTrue(cancel));
             }
 
             il.Mark(cancel);
@@ -190,7 +201,7 @@ public partial class ModuleWeaver
             }
         }
     }
-
+    
     /// <summary>
     /// Weaves an argument array to contain the parameters of the method.
     /// </summary>
@@ -232,6 +243,9 @@ public partial class ModuleWeaver
         var options = attribute.GetAttribute<CompilationOptionsAttribute>();
         var scope = options.GetProperty("Scope", notFound: AttributeScope.Singleton);
 
+        if (scope == AttributeScope.Instanced && weaver.Target.IsStatic)
+            scope = AttributeScope.Singleton;
+
         switch (scope)
         {
             case AttributeScope.Adhoc:
@@ -242,16 +256,33 @@ public partial class ModuleWeaver
                 return variable;
 
             case AttributeScope.Instanced:
-                ; // TODO
-                return null;
+                var field = weaver.Parent.CreateField($"<>__interceptor${attribute.AttributeType.Name}", attribute.AttributeType);
+                var ctors = weaver.Parent.GetConstructors();
+                var def = (FieldDefinition)field;
+                weaver.Parent.Context.AddCompilerGenerated(def);
+                weaver.Parent.Context.AddNonSerialized(def);
+                foreach (var ctor in ctors)
+                {
+                    var cil = ctor.GetWeaver();
+                    cil.Insert = CodeInsertion.Before;
+                    cil.Position = cil.GetFirst();
+                    cil.Emit(Codes.Nop);
+                    cil.Emit(Codes.This);
+                    cil.Emit(Codes.Create(attribute.Constructor));
+                    cil.Emit(Codes.Store(field));
+                }
+                return field;
 
             case AttributeScope.Singleton:
-                var field = weaver.Parent.CreateField($"__mi${attribute.AttributeType.Name}", attribute.AttributeType, toStatic: true);
+                var sfield = weaver.Parent.CreateField($"<>__interceptor${attribute.AttributeType.Name}", attribute.AttributeType, toStatic: true);
                 var sil = weaver.Parent.GetStaticConstructor().GetWeaver();
+                var sdef = (FieldDefinition)sfield;
+                weaver.Parent.Context.AddCompilerGenerated(sdef);
+                weaver.Parent.Context.AddNonSerialized(sdef);
                 sil.Emit(Codes.Nop);
                 sil.Emit(Codes.Create(attribute.Constructor));
-                sil.Emit(Codes.Store(field));
-                return field;
+                sil.Emit(Codes.Store(sfield));
+                return sfield;
         }
 
         throw new NotSupportedException($"Cannot add an attribute storage for attribute '{attribute.AttributeType.FullName}'");
@@ -265,12 +296,20 @@ public partial class ModuleWeaver
     public Variable WeaveMethodBaseVariable(MethodWeaver weaver)
     {
         var id = weaver.Target.GetHashString();
-        var field = weaver.Parent.CreateField($"__mi${weaver.Target.Name}{id}", Context.Refs.MethodBase, toStatic: true);
+        var field = weaver.Parent.CreateField($"<>__method{weaver.Target.Name}{id}", Context.Refs.MethodInfo, toStatic: true);
         var il = weaver.Parent.GetStaticConstructor().GetWeaver();
 
+        var def = (FieldDefinition)field;
+        weaver.Parent.Context.AddCompilerGenerated(def);
+        weaver.Parent.Context.AddNonSerialized(def);
+
+        var type = weaver.Parent.Target;
+                
         il.Emit(Codes.Nop);
         il.Emit(Codes.LoadToken(weaver.Target));
+        il.Emit(Codes.LoadToken(type));
         il.Emit(Codes.InvokeStatic(Context.Refs.MethodBaseGetMethodFromHandle));
+        il.Emit(Codes.Cast(Context.Refs.MethodInfo));
         il.Emit(Codes.Store(field));
 
         return field;
@@ -285,8 +324,12 @@ public partial class ModuleWeaver
     public Variable WeaveMethodParameterVariable(MethodWeaver weaver, ParameterDefinition parameter)
     {
         var id = weaver.Target.GetHashString();
-        var field = weaver.Parent.CreateField($"__pi${weaver.Target.Name}{id}${parameter.Index}", Context.Refs.ParameterInfo, toStatic: true);
+        var field = weaver.Parent.CreateField($"<>__parameter{weaver.Target.Name}{id}${parameter.Index}", Context.Refs.ParameterInfo, toStatic: true);
         var il = weaver.Parent.GetStaticConstructor().GetWeaver();
+
+        var def = (FieldDefinition)field;
+        weaver.Parent.Context.AddCompilerGenerated(def);
+        weaver.Parent.Context.AddNonSerialized(def);
 
         il.Emit(Codes.Nop);
         il.Emit(Codes.LoadToken(weaver.Target));

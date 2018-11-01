@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 namespace Mimick.Framework
 {
     /// <summary>
-    /// A class representing a default implementation of the dependency factory.
+    /// A class representing a default implementation of the dependency context.
     /// </summary>
-    sealed class DependencyFactory : IDependencyFactory
+    sealed class DependencyContext : IDependencyContext
     {
         /// <summary>
         /// The entries across all implementations.
@@ -36,9 +36,9 @@ namespace Mimick.Framework
         private readonly IDictionary<Type, DependencyEntry> typedEntries;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DependencyFactory" /> class.
+        /// Initializes a new instance of the <see cref="DependencyContext" /> class.
         /// </summary>
-        public DependencyFactory()
+        public DependencyContext()
         {
             allEntries = new ReadWriteList<DependencyEntry>();
             implementedEntries = new ReadWriteDictionary<Type, DependencyEntry>();
@@ -47,9 +47,9 @@ namespace Mimick.Framework
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="DependencyFactory"/> class.
+        /// Finalizes an instance of the <see cref="DependencyContext"/> class.
         /// </summary>
-        ~DependencyFactory()
+        ~DependencyContext()
         {
             Dispose(false);
         }

@@ -14,49 +14,40 @@ namespace AssemblyToProcess
     {
         static void Main(string[] args)
         {
-            var factory = new DependencyFactory();
+            var configuration = FrameworkConfiguration
+                .Begin()
+                .Assemblies(a => a
+                    .Add(Assemblies.This)
+                    .Add(Assemblies.Find("Mimick.*"))
+                    .Add(Assemblies.Of<Program>()))
+                .Configurations(c => c
+                    .Add(Configurations.AppConfig));
 
-            factory.Register<Example>("testing").Singleton();
+            FrameworkContext.Configure(configuration);
 
-            var instance = factory.Resolve<Example>();
-            instance.Read("Hello World");
+            var context = FrameworkContext.Instance;
+            var dependencies = context.Dependencies;
 
-            instance = factory.Resolve("testing") as Example;
-            instance.Read("Hello again");
+            Console.WriteLine("Creating testing<T>");
+            var testing = new Testing();
 
-            instance = factory.Resolve<IExample>() as Example;
-            instance.Read("Hello interface");
-            
+            Console.WriteLine("Calling print(T)");
+            testing.Print(1234);
+
+            Console.WriteLine("Calling print<U>(U)");
+            testing.PrintFor("Hello world");
+
             Console.WriteLine("Done");
             Console.ReadLine();
         }
     }
 
-    public interface IExample
-    {
-        void Write();
-    }
-
-    public class Example : IExample
+    public class Testing
     {
         [Test]
-        public void Write()
-        {
-            Console.WriteLine("Hello world from method");
-        }
+        public void Print(int value) => Console.WriteLine($"Value is {value}");
 
         [Test]
-        public string Generate()
-        {
-            return "Hello world";
-        }
-
-        public void Read([Param] string message)
-        {
-            Console.WriteLine("Read: " + message);
-        }
-
-        [Test]
-        public static void WriteStatic() => throw new Exception("Nothing thrown here (static, wink wink)");
+        public void PrintFor<U>(U value) => Console.WriteLine($"Value<U> is {value}");
     }
 }

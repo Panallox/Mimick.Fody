@@ -39,5 +39,29 @@ namespace Mimick.Fody
         public WeaveReferences Refs { get; set; }
 
         #endregion
+
+        /// <summary>
+        /// Add the compiler generated attribute to the provided member.
+        /// </summary>
+        /// <param name="member">The member.</param>
+        public void AddCompilerGenerated(ICustomAttributeProvider member)
+        {
+            var attribute = new CustomAttribute(Refs.CompilerGeneratedAttributeCtor);
+
+            if (!member.CustomAttributes.Any(c => c.AttributeType.FullName == attribute.AttributeType.FullName))
+                member.CustomAttributes.Add(attribute);
+        }
+
+        /// <summary>
+        /// Add the non-serialized attribute to the provided member.
+        /// </summary>
+        /// <param name="member">The member.</param>
+        public void AddNonSerialized(ICustomAttributeProvider member)
+        {
+            var attribute = new CustomAttribute(Refs.NonSerializedAttributeCtor);
+
+            if (!member.CustomAttributes.Any(c => c.AttributeType.FullName == attribute.AttributeType.FullName))
+                member.CustomAttributes.Add(attribute);
+        }
     }
 }

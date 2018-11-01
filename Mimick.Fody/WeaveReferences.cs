@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,28 +37,44 @@ namespace Mimick.Fody
         public TypeReference CompilationOptionsAttribute { get; set; }
         public TypeReference Exception { get; set; }
         public TypeReference MethodBase { get; set; }
+        public TypeReference MethodInfo { get; set; }
         public TypeReference MethodInterceptionArgs { get; set; }
         public TypeReference ObjectArray { get; set; }
         public TypeReference ParameterInfo { get; set; }
         public TypeReference ParameterInterceptionArgs { get; set; }
+        public TypeReference PropertyInfo { get; set; }
+        public TypeReference PropertyInterceptionArgs { get; set; }
 
         // constructors
+        public MethodReference CompilerGeneratedAttributeCtor { get; set; }
         public MethodReference MethodInterceptionArgsCtor { get; set; }
+        public MethodReference NonSerializedAttributeCtor { get; set; }
         public MethodReference ParameterInterceptionArgsCtor { get; set; }
-
+        public MethodReference PropertyInterceptionArgsCtor { get; set; }
+        
         // methods
+        public MethodReference ConsoleWriteLine { get; set; }
         public MethodReference MethodBaseGetMethodFromHandle { get; set; }
         public MethodReference MethodBaseGetParameters { get; set; }
         public MethodReference MethodInterceptorOnEnter { get; set; }
         public MethodReference MethodInterceptorOnException { get; set; }
         public MethodReference MethodInterceptorOnExit { get; set; }
         public MethodReference ParameterInterceptorOnEnter { get; set; }
+        public MethodReference PropertyGetInterceptorOnExit { get; set; }
+        public MethodReference PropertyGetInterceptorOnGet { get; set; }
+        public MethodReference PropertySetInterceptorOnExit { get; set; }
+        public MethodReference PropertySetInterceptorOnSet { get; set; }
+        public MethodReference TypeGetProperty { get; set; }
+        public MethodReference TypeGetTypeFromHandle { get; set; }
 
         // properties
         public MethodReference MethodInterceptionArgsCancelGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnSet { get; set; }
         public MethodReference ParameterInterceptionArgsValueGet { get; set; }
+        public MethodReference PropertyInterceptionArgsIsDirtyGet { get; set; }
+        public MethodReference PropertyInterceptionArgsValueGet { get; set; }
+        public MethodReference PropertyInterceptionArgsValueSet { get; set; }
 
         #endregion
 
@@ -74,28 +91,44 @@ namespace Mimick.Fody
             CompilationOptionsAttribute = module.Type<CompilationOptionsAttribute>();
             Exception = module.Type<Exception>();
             MethodBase = module.Type<MethodBase>();
+            MethodInfo = module.Type<MethodInfo>();
             MethodInterceptionArgs = module.Type<MethodInterceptionArgs>();
             ObjectArray = module.Type<object[]>();
             ParameterInfo = module.Type<ParameterInfo>();
             ParameterInterceptionArgs = module.Type<ParameterInterceptionArgs>();
+            PropertyInfo = module.Type<PropertyInfo>();
+            PropertyInterceptionArgs = module.Type<PropertyInterceptionArgs>();
 
             // constructors
+            CompilerGeneratedAttributeCtor = module.Constructor<CompilerGeneratedAttribute>();
             MethodInterceptionArgsCtor = module.Constructor<MethodInterceptionArgs>();
+            NonSerializedAttributeCtor = module.Constructor<NonSerializedAttribute>();
             ParameterInterceptionArgsCtor = module.Constructor<ParameterInterceptionArgs>();
+            PropertyInterceptionArgsCtor = module.Constructor<PropertyInterceptionArgs>();
 
             // methods
-            MethodBaseGetMethodFromHandle = module.Method<MethodBase>("GetMethodFromHandle", typeof(RuntimeMethodHandle));
+            ConsoleWriteLine = module.Method(typeof(Console), "WriteLine", typeof(object));
+            MethodBaseGetMethodFromHandle = module.Method<MethodBase>("GetMethodFromHandle", typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle));
             MethodBaseGetParameters = module.Method<MethodBase>("GetParameters");
             MethodInterceptorOnEnter = module.Method<IMethodInterceptor>("OnEnter");
             MethodInterceptorOnException = module.Method<IMethodInterceptor>("OnException");
             MethodInterceptorOnExit = module.Method<IMethodInterceptor>("OnExit");
             ParameterInterceptorOnEnter = module.Method<IParameterInterceptor>("OnEnter");
+            PropertyGetInterceptorOnExit = module.Method<IPropertyGetInterceptor>("OnExit");
+            PropertyGetInterceptorOnGet = module.Method<IPropertyGetInterceptor>("OnGet");
+            PropertySetInterceptorOnExit = module.Method<IPropertySetInterceptor>("OnExit");
+            PropertySetInterceptorOnSet = module.Method<IPropertySetInterceptor>("OnSet");
+            TypeGetProperty = module.Method<Type>("GetProperty", typeof(string), typeof(BindingFlags));
+            TypeGetTypeFromHandle = module.Method<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle));
 
             // properties
             MethodInterceptionArgsCancelGet = module.Getter<MethodInterceptionArgs>("Cancel");
             MethodInterceptionArgsReturnGet = module.Getter<MethodInterceptionArgs>("Return");
             MethodInterceptionArgsReturnSet = module.Setter<MethodInterceptionArgs>("Return");
             ParameterInterceptionArgsValueGet = module.Getter<ParameterInterceptionArgs>("Value");
+            PropertyInterceptionArgsIsDirtyGet = module.Getter<PropertyInterceptionArgs>("IsDirty");
+            PropertyInterceptionArgsValueGet = module.Getter<PropertyInterceptionArgs>("Value");
+            PropertyInterceptionArgsValueSet = module.Setter<PropertyInterceptionArgs>("Value");
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Mimick
     /// many reads, with support for swapping dependencies. If an implementing application already uses a dependency
     /// framework then a custom provider implementation can leverage the existing system.
     /// </remarks>
-    public interface IDependencyFactory : IDisposable
+    public interface IDependencyContext : IDisposable
     {
         /// <summary>
         /// Register a provided type within the dependency provider using the default singleton lifetime.

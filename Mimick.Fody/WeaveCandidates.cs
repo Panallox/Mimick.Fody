@@ -40,10 +40,41 @@ namespace Mimick.Fody
         #endregion
 
         /// <summary>
-        /// Gets a collection of type candidate results for types containing members which implement interceptors.
+        /// Gets a collection of type candidate results for types containing members which implement property interceptors.
         /// </summary>
         /// <returns></returns>
-        public List<TypeInterceptorInfo> FindTypeByMemberInterceptors()
+        public List<TypeInterceptorInfo> FindTypeByFieldInterceptors()
+        {
+            var list = new List<TypeInterceptorInfo>();
+
+            foreach (var type in Types.Select(a => a.Resolve()).Where(a => !a.IsEnum && !a.IsInterface))
+            {
+                var item = new TypeInterceptorInfo { Type = type };
+                var fields = new List<FieldInterceptorInfo>();
+
+                foreach (var field in type.Fields)
+                {
+                    var attributes = field.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+
+                    if (attributes.Any())
+                        fields.Add(new FieldInterceptorInfo { Field = field, Interceptors = attributes.ToArray() });
+                }
+
+                if (fields.Count > 0)
+                {
+                    item.Fields = fields.ToArray();
+                    list.Add(item);
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Gets a collection of type candidate results for types containing members which implement method interceptors.
+        /// </summary>
+        /// <returns></returns>
+        public List<TypeInterceptorInfo> FindTypeByMethodInterceptors()
         {
             var list = new List<TypeInterceptorInfo>();
 
@@ -64,6 +95,37 @@ namespace Mimick.Fody
                 if (methods.Count > 0)
                 {
                     item.Methods = methods.ToArray();
+                    list.Add(item);
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Gets a collection of type candidate results for types containing members which implement property interceptors.
+        /// </summary>
+        /// <returns></returns>
+        public List<TypeInterceptorInfo> FindTypeByPropertyInterceptors()
+        {
+            var list = new List<TypeInterceptorInfo>();
+
+            foreach (var type in Types.Select(a => a.Resolve()).Where(a => !a.IsEnum && !a.IsInterface))
+            {
+                var item = new TypeInterceptorInfo { Type = type };
+                var properties = new List<PropertyInterceptorInfo>();
+
+                foreach (var property in type.Properties)
+                {
+                    var attributes = property.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+
+                    if (attributes.Any())
+                        properties.Add(new PropertyInterceptorInfo { Interceptors = attributes.ToArray(), Property = property });
+                }
+
+                if (properties.Count > 0)
+                {
+                    item.Properties = properties.ToArray();
                     list.Add(item);
                 }
             }
