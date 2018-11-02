@@ -22,7 +22,7 @@ public partial class ModuleWeaver
 
         foreach (var item in candidates)
         {
-            var weaver = new TypeWeaver(Context.Module, item.Type, Context);
+            var weaver = new TypeEmitter(Context.Module, item.Type, Context);
 
             foreach (var field in item.Fields)
             {
@@ -36,45 +36,19 @@ public partial class ModuleWeaver
     /// <summary>
     /// Weaves the replacement accessors for a particular field.
     /// </summary>
-    /// <param name="weaver">The type weaver.</param>
+    /// <param name="emitter">The type weaver.</param>
     /// <param name="item">The interceptor information.</param>
-    public PropertyDefinition WeaveFieldReplacements(TypeWeaver weaver, FieldInterceptorInfo item)
+    public PropertyDefinition WeaveFieldReplacements(TypeEmitter emitter, FieldInterceptorInfo item)
     {
         var field = item.Field;
         var path = field.FullName;
 
-        var variable = new Variable(field);
-        var property = weaver.CreateProperty(field.Name, field.FieldType);
-
-        field.Name = $"<{field.Name}>k__BackingField";
-
-        Context.AddCompilerGenerated(item.Field);
-        Context.AddNonSerialized(item.Field);
+        var property = CreateFieldProperty(emitter, field);
 
         var getter = property.GetGetter();
-        var gil = getter.GetWeaver();
-
-        gil.Emit(Codes.Nop);
-
-        if (variable.IsThisNeeded)
-            gil.Emit(Codes.This);
-
-        gil.Emit(Codes.Load(variable));
-        gil.Emit(Codes.Return);
-
         var setter = property.GetSetter();
-        var sil = setter.GetWeaver();
-
-        sil.Emit(Codes.Nop);
-
-        if (variable.IsThisNeeded)
-            sil.Emit(Codes.This);
-
-        sil.Emit(Codes.Arg(1));
-        sil.Emit(Codes.Store(variable));
-        sil.Emit(Codes.Return);
         
-        var search = item.Field.IsPrivate ? weaver.Target.Methods : Context.Candidates.SelectMany(a => a.Resolve().Methods);
+        var search = field.IsPrivate ? emitter.Target.Methods : Context.Candidates.SelectMany(a => a.Resolve().Methods);
 
         foreach (var method in search)
         {
@@ -91,16 +65,26 @@ public partial class ModuleWeaver
                     continue;
 
                 var declaring = reference.DeclaringType;
+                var get = (MethodReference)getter.Target;
+                var set = (MethodReference)setter.Target;
+
+                if (declaring.IsGenericInstance)
+                {
+                    var generic = (GenericInstanceType)declaring;
+
+                    get = get.MakeGeneric(generic.GenericArguments.ToArray());
+                    set = set.MakeGeneric(generic.GenericArguments.ToArray());
+                }
                 
                 if (i.OpCode == OpCodes.Ldfld || i.OpCode == OpCodes.Ldsfld)
                 {
                     i.OpCode = getter.Target.IsAbstract ? OpCodes.Callvirt : OpCodes.Call;
-                    i.Operand = getter.Target;
+                    i.Operand = get;
                 }
                 else if (i.OpCode == OpCodes.Stfld || i.OpCode == OpCodes.Stsfld)
                 {
                     i.OpCode = setter.Target.IsAbstract ? OpCodes.Callvirt : OpCodes.Call;
-                    i.Operand = setter.Target;
+                    i.Operand = set;
                 }
             }
         }

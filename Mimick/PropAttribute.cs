@@ -17,11 +17,13 @@ namespace Mimick
 
         public void OnExit(PropertyInterceptionArgs e)
         {
-            
+            Console.WriteLine($"-- Exiting {e.Property.Name}");
         }
 
         public void OnGet(PropertyInterceptionArgs e)
         {
+            Console.WriteLine($"-- Entering {e.Property.Name}");
+
             if (e.Value == null)
                 e.Value = "Goodbye world";
         }

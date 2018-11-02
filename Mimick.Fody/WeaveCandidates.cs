@@ -40,6 +40,28 @@ namespace Mimick.Fody
         #endregion
 
         /// <summary>
+        /// Gets a collection of type candidate results for types containing members which implement constructor interceptors.
+        /// </summary>
+        /// <returns></returns>
+        public List<TypeInterceptorInfo> FindTypeByConstructorInterceptors()
+        {
+            var list = new List<TypeInterceptorInfo>();
+
+            foreach (var type in Types.Select(a => a.Resolve()).Where(a => !a.IsEnum && !a.IsInterface))
+            {
+                var ctors = new ConstructorInterceptorInfo { Initializers = new MethodDefinition[0] };
+                var item = new TypeInterceptorInfo { Constructors = ctors, Type = type };
+
+                ctors.Initializers = type.Methods.Where(m => !m.IsAbstract).Where(m => m.CustomAttributes.Any(a => a.HasInterface<IInjectBeforeInitializer>() || a.HasInterface<IInjectAfterInitializer>())).ToArray();
+
+                if (ctors.Initializers.Length > 0)
+                    list.Add(item);
+            }
+
+            return list;
+        }
+
+        /// <summary>
         /// Gets a collection of type candidate results for types containing members which implement property interceptors.
         /// </summary>
         /// <returns></returns>
@@ -51,7 +73,7 @@ namespace Mimick.Fody
             {
                 var item = new TypeInterceptorInfo { Type = type };
                 var fields = new List<FieldInterceptorInfo>();
-
+                
                 foreach (var field in type.Fields)
                 {
                     var attributes = field.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
@@ -71,6 +93,25 @@ namespace Mimick.Fody
         }
 
         /// <summary>
+        /// Gets a collection of type candidate results for types requiring implementation.
+        /// </summary>
+        /// <returns></returns>
+        public List<TypeInterceptorInfo> FindTypeByImplements()
+        {
+            var list = new List<TypeInterceptorInfo>();
+
+            foreach (var type in Types.Select(a => a.Resolve()).Where(a => !a.IsEnum && !a.IsInterface))
+            {
+                var implements = type.CustomAttributes.Where(a => a.GetAttribute<CompilationImplementsAttribute>() != null);
+
+                if (implements.Any())
+                    list.Add(new TypeInterceptorInfo { Implements = implements.ToArray(), Type = type });
+            }
+
+            return list;
+        }
+
+        /// <summary>
         /// Gets a collection of type candidate results for types containing members which implement method interceptors.
         /// </summary>
         /// <returns></returns>
@@ -83,10 +124,12 @@ namespace Mimick.Fody
                 var item = new TypeInterceptorInfo { Type = type };
                 var methods = new List<MethodInterceptorInfo>();
 
+                var top = type.CustomAttributes.Where(a => a.HasInterface<IMethodInterceptor>());
+
                 foreach (var method in type.Methods.Where(m => !m.IsAbstract))
                 {
-                    var these = method.CustomAttributes.Where(a => a.HasInterface<IMethodInterceptor>());
-                    var parameters = method.Parameters.SelectMany(p => p.CustomAttributes.Where(a => a.HasInterface<IParameterInterceptor>()));
+                    var these = method.CustomAttributes.Where(a => a.HasInterface<IMethodInterceptor>()).Concat(top);
+                    var parameters = method.Parameters.SelectMany(p => p.CustomAttributes.Where(a => a.HasInterface<IParameterInterceptor>())).Concat(method.CustomAttributes.Where(a => a.HasInterface<IParameterInterceptor>()));
 
                     if (these.Any() || parameters.Any())
                     {
@@ -118,9 +161,11 @@ namespace Mimick.Fody
                 var item = new TypeInterceptorInfo { Type = type };
                 var properties = new List<PropertyInterceptorInfo>();
 
+                var top = type.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+
                 foreach (var property in type.Properties)
                 {
-                    var attributes = property.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+                    var attributes = property.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>()).Concat(top);
 
                     if (attributes.Any())
                         properties.Add(new PropertyInterceptorInfo { Interceptors = attributes.ToArray(), Property = property });

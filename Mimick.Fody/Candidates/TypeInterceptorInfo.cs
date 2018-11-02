@@ -15,9 +15,19 @@ namespace Mimick.Fody
         #region Properties
 
         /// <summary>
+        /// Gets or sets the constructors.
+        /// </summary>
+        public ConstructorInterceptorInfo Constructors { get; set; }
+
+        /// <summary>
         /// Gets or sets the fields.
         /// </summary>
         public FieldInterceptorInfo[] Fields { get; set; }
+
+        /// <summary>
+        /// Gets or sets the implementations.
+        /// </summary>
+        public CustomAttribute[] Implements { get; set; }
 
         /// <summary>
         /// Gets or sets the methods.

@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 namespace Mimick.Fody.Weavers
 {
     /// <summary>
-    /// A class containing methods for weaving against a method body.
+    /// An emitter class containing methods for emitting against a method.
     /// </summary>
-    public class MethodWeaver
+    public class MethodEmitter
     {
-        private CodeWeaver code;
+        private CodeEmitter code;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MethodWeaver"/> class.
+        /// Initializes a new instance of the <see cref="MethodEmitter"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <param name="method">The method.</param>
-        public MethodWeaver(TypeWeaver parent, MethodReference method)
+        public MethodEmitter(TypeEmitter parent, MethodReference method)
         {
             Parent = parent;
             Target = method as MethodDefinition ?? method.Resolve();
@@ -34,9 +34,14 @@ namespace Mimick.Fody.Weavers
         public MethodBody Body => Target.Body;
 
         /// <summary>
-        /// Gets the parent type weaver.
+        /// Gets whether the method is static.
         /// </summary>
-        public TypeWeaver Parent
+        public bool IsStatic => Target.IsStatic;
+
+        /// <summary>
+        /// Gets the parent type emitter.
+        /// </summary>
+        public TypeEmitter Parent
         {
             get;
         }
@@ -57,7 +62,7 @@ namespace Mimick.Fody.Weavers
         /// <param name="type">The variable type.</param>
         /// <param name="name">The variable name.</param>
         /// <returns>A <see cref="Variable"/> value.</returns>
-        public Variable CreateVariable(TypeReference type, string name = null)
+        public Variable EmitLocal(TypeReference type, string name = null)
         {
             var variable = new VariableDefinition(type);
             Body.Variables.Add(variable);
@@ -76,9 +81,9 @@ namespace Mimick.Fody.Weavers
         }
 
         /// <summary>
-        /// Gets a code weaver which can be used to weave the method body instructions.
+        /// Gets a code emitter which can be used to weave the method body instructions.
         /// </summary>
-        /// <returns>A <see cref="CodeWeaver"/> value.</returns>
-        public CodeWeaver GetWeaver() => code ?? (code = new CodeWeaver(this));
+        /// <returns>A <see cref="CodeEmitter"/> value.</returns>
+        public CodeEmitter GetIL() => code ?? (code = new CodeEmitter(this));
     }
 }

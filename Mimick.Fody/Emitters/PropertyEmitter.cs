@@ -8,31 +8,40 @@ using System.Threading.Tasks;
 namespace Mimick.Fody.Weavers
 {
     /// <summary>
-    /// A class containing methods for weaving against a property.
+    /// An emitter class containing methods for emitting against a property.
     /// </summary>
-    public class PropertyWeaver
+    public class PropertyEmitter
     {
-        private MethodWeaver getter;
-        private MethodWeaver setter;
+        private MethodEmitter getter;
+        private MethodEmitter setter;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PropertyWeaver"/> class.
+        /// Initializes a new instance of the <see cref="PropertyEmitter"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <param name="property">The property.</param>
-        public PropertyWeaver(TypeWeaver parent, PropertyReference property)
+        public PropertyEmitter(TypeEmitter parent, PropertyReference property)
         {
+            BackingField = property.GetBackingField();
             Parent = parent;
             Target = property as PropertyDefinition ?? property.Resolve();
 
             if (Target.GetMethod != null)
-                getter = new MethodWeaver(parent, Target.GetMethod);
+                getter = new MethodEmitter(parent, Target.GetMethod);
 
             if (Target.SetMethod != null)
-                setter = new MethodWeaver(parent, Target.SetMethod);
+                setter = new MethodEmitter(parent, Target.SetMethod);
         }
 
         #region Properties
+
+        /// <summary>
+        /// Gets or sets the backing field.
+        /// </summary>
+        public FieldReference BackingField
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Gets whether the property has an existing getter method.
@@ -45,9 +54,14 @@ namespace Mimick.Fody.Weavers
         public bool HasSetter => Target.SetMethod != null;
 
         /// <summary>
+        /// Gets whether the property is static.
+        /// </summary>
+        public bool IsStatic => (Target.GetMethod ?? Target.SetMethod).IsStatic;
+
+        /// <summary>
         /// Gets the parent type weaver.
         /// </summary>
-        public TypeWeaver Parent
+        public TypeEmitter Parent
         {
             get;
         }
@@ -66,7 +80,7 @@ namespace Mimick.Fody.Weavers
         /// Gets or creates a method weaver for the property getter.
         /// </summary>
         /// <returns></returns>
-        public MethodWeaver GetGetter()
+        public MethodEmitter GetGetter()
         {
             if (getter != null)
                 return getter;
@@ -78,14 +92,14 @@ namespace Mimick.Fody.Weavers
 
             Parent.Context.AddCompilerGenerated(method);
 
-            return new MethodWeaver(Parent, method);
+            return getter = new MethodEmitter(Parent, method);
         }
 
         /// <summary>
         /// Gets or creates a method weaver for the property setter.
         /// </summary>
         /// <returns></returns>
-        public MethodWeaver GetSetter()
+        public MethodEmitter GetSetter()
         {
             if (setter != null)
                 return setter;
@@ -100,7 +114,7 @@ namespace Mimick.Fody.Weavers
 
             Parent.Context.AddCompilerGenerated(method);
 
-            return new MethodWeaver(Parent, method);
+            return setter = new MethodEmitter(Parent, method);
         }
     }
 }

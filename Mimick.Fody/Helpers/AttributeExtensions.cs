@@ -18,7 +18,7 @@ static class AttributeExtensions
 
     public static T GetProperty<T>(this CustomAttribute a, string name, T notFound = default(T))
     {
-        var value = a == null ? null : a.Properties.Where(x => x.Name == name).Select(x => x.Argument.Value).FirstOrDefault();
+        var value = a?.Properties.Where(x => x.Name == name).Select(x => x.Argument.Value).FirstOrDefault();
         return value == null ? notFound : (T)value;
     }
 

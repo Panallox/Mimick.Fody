@@ -10,17 +10,17 @@ using System.Threading.Tasks;
 namespace Mimick.Fody.Weavers
 {
     /// <summary>
-    /// A weaver class containing methods for weaving code.
+    /// An emitter class containing methods for emitting code.
     /// </summary>
-    public class CodeWeaver
+    public class CodeEmitter
     {
         private Queue<TryBlock> tryBlocks;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CodeWeaver"/> class.
+        /// Initializes a new instance of the <see cref="CodeEmitter"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
-        public CodeWeaver(MethodWeaver parent)
+        public CodeEmitter(MethodEmitter parent)
         {
             IL = parent.Target.Body.GetILProcessor();
             Insert = CodeInsertion.Append;
@@ -55,7 +55,7 @@ namespace Mimick.Fody.Weavers
         /// <summary>
         /// Gets the parent method weaver.
         /// </summary>
-        public MethodWeaver Parent
+        public MethodEmitter Parent
         {
             get;
         }
@@ -95,21 +95,21 @@ namespace Mimick.Fody.Weavers
         /// <summary>
         /// Create a new label within the method.
         /// </summary>
-        public Label CreateLabel() => new Label();
+        public Label EmitLabel() => new Label();
 
         /// <summary>
         /// Create a new local variable within the method.
         /// </summary>
         /// <param name="type">The variable type.</param>
         /// <param name="name">The variable name.</param>
-        public Variable CreateLocal(TypeReference type, string name = null) => Parent.CreateVariable(type, name);
+        public Variable EmitLocal(TypeReference type, string name = null) => Parent.EmitLocal(type, name);
 
         /// <summary>
         /// Emit a debug command within the method body.
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns></returns>
-        public CodeWeaver Debug(string message)
+        public CodeEmitter Debug(string message)
         {
             Emit(Instruction.Create(OpCodes.Ldstr, message));
             Emit(Instruction.Create(OpCodes.Call, Parent.Parent.Context.Refs.DebugWriteLine));
@@ -120,13 +120,13 @@ namespace Mimick.Fody.Weavers
         /// Emit code within the method body.
         /// </summary>
         /// <param name="code">The code.</param>
-        public CodeWeaver Emit(Instruction code)
+        public CodeEmitter Emit(Instruction code)
         {
             if (code == null)
                 return this;
 
             if (Insert != CodeInsertion.Append && Position == null)
-                throw new NotSupportedException("Cannot insert relative to a position without a position");
+                throw new NotSupportedException($"Cannot insert relative to a position without a position (mode is {Insert} in {Parent.Target.FullName})");
                         
             switch (Insert)
             {
@@ -596,6 +596,13 @@ namespace Mimick.Fody.Weavers
         /// <param name="value">The value.</param>
         /// <returns></returns>
         public static Instruction String(string value) => Instruction.Create(OpCodes.Ldstr, value);
+
+        /// <summary>
+        /// A this stack load code only if the provided variable requires it.
+        /// </summary>
+        /// <param name="variable">The variable.</param>
+        /// <returns></returns>
+        public static Instruction ThisIf(Variable variable) => variable.IsThisNeeded ? Instruction.Create(OpCodes.Ldarg_0) : (Instruction)null;
 
         /// <summary>
         /// An unbox code.

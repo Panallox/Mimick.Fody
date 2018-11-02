@@ -40,6 +40,8 @@ public partial class ModuleWeaver : BaseModuleWeaver
         WeaveMethodInterceptors();
         WeavePropertyInterceptors();
         WeaveFieldInterceptors();
+        WeaveConstructorInterceptors();
+        WeaveImplementations();
     }
 
     /// <summary>

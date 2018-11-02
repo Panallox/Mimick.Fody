@@ -58,11 +58,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Candidates\ConstructorInterceptorInfo.cs" />
     <Compile Include="Candidates\FieldInterceptorInfo.cs" />
     <Compile Include="Candidates\MethodInterceptorInfo.cs" />
     <Compile Include="Candidates\PropertyInterceptorInfo.cs" />
     <Compile Include="Candidates\TypeInterceptorInfo.cs" />
+    <Compile Include="CommonWeaver.cs" />
     <Compile Include="ConstructorsWeaver.cs" />
+    <Compile Include="Emitters\EventEmitter.cs" />
     <Compile Include="FieldsWeaver.cs" />
     <Compile Include="Helpers\AttributeExtensions.cs" />
     <Compile Include="Helpers\DebugExtensions.cs" />
@@ -70,6 +73,8 @@
     <Compile Include="Helpers\MethodExtensions.cs" />
     <Compile Include="Helpers\ModuleExtensions.cs" />
     <Compile Include="Helpers\PropertyExtensions.cs" />
+    <Compile Include="Helpers\TypeExtensions.cs" />
+    <Compile Include="ImplementsWeaver.cs" />
     <Compile Include="MethodsWeaver.cs" />
     <Compile Include="ModuleWeaver.cs" />
     <Compile Include="PropertiesWeaver.cs" />
@@ -77,11 +82,11 @@
     <Compile Include="WeaveCandidates.cs" />
     <Compile Include="WeaveContext.cs" />
     <Compile Include="WeaveReferences.cs" />
-    <Compile Include="Weavers\CodeWeaver.cs" />
-    <Compile Include="Weavers\MethodWeaver.cs" />
-    <Compile Include="Weavers\PropertyWeaver.cs" />
-    <Compile Include="Weavers\TypeWeaver.cs" />
-    <Compile Include="Weavers\Variable.cs" />
+    <Compile Include="Emitters\CodeEmitter.cs" />
+    <Compile Include="Emitters\MethodEmitter.cs" />
+    <Compile Include="Emitters\PropertyEmitter.cs" />
+    <Compile Include="Emitters\TypeEmitter.cs" />
+    <Compile Include="Emitters\Variable.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Mimick\Mimick.csproj">

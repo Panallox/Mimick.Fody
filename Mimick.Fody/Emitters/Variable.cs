@@ -51,7 +51,7 @@ namespace Mimick.Fody.Weavers
         /// <summary>
         /// Gets whether the variable requires the <see cref="Codes.This"/> value loading onto the instruction set.
         /// </summary>
-        public bool IsThisNeeded => IsField && !((FieldReference)Reference).Resolve().IsStatic;
+        public bool IsThisNeeded => IsField && !(Reference as FieldDefinition ?? ((FieldReference)Reference).Resolve()).IsStatic;
 
         /// <summary>
         /// Gets the variable reference.

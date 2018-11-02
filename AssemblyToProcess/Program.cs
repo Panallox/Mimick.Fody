@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -28,9 +29,6 @@ namespace AssemblyToProcess
             var context = FrameworkContext.Instance;
             var dependencies = context.Dependencies;
 
-            var working = new Example<int>();
-            working.Testing();
-
             Console.WriteLine("Creating testing<T>");
             var testing = new Testing<int>();
 
@@ -43,37 +41,46 @@ namespace AssemblyToProcess
             Console.WriteLine("Calling testing");
             Console.WriteLine($"Value is {testing.testing}");
 
+            testing.Other = "Hello!!";
+            Console.WriteLine($"Other is now {testing.Other}");
+
             Console.WriteLine("Done");
             Console.ReadLine();
         }
     }
 
+    [PropertyChanged]
     public class Testing<T>
     {
         [Prop]
         public string testing;
 
+        public string Other { get; set; }
+
+        public event PropertyChangedEventHandler TestEvent;
+
+        public Testing()
+        {
+            Console.WriteLine("I am the constructor");
+        }
+
         [Test]
         public void Print(T value) => Console.WriteLine($"Value is {value}");
 
         [Test]
-        public void PrintFor<U>(U value, T other) => Console.WriteLine($"Value<U> is {value} and {other}");
-    }
+        public void PrintFor<U>(U value, T other) => Console.WriteLine($"Value<U> is {value} and {other} and {testing}");
 
-    public class Example<T>
-    {
-        static TestAttribute att;
-        static MethodInfo mi;
-        
-        static Example()
+        [PostConstruct]
+        public void AfterInit()
         {
-            att = new TestAttribute();
-            mi = typeof(Example<T>).GetMethod("Testing");
+            Console.WriteLine("I have been invoked after the constructor");
         }
 
-        public void Testing()
+        [PreConstruct]
+        public void BeforeInit()
         {
-            var args = new MethodInterceptionArgs(this, new object[0], null, mi);
+            Console.WriteLine("I have been invoked before the constructor");
         }
     }
+    
 }

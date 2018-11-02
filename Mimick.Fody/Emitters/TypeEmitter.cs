@@ -9,20 +9,20 @@ using System.Threading.Tasks;
 namespace Mimick.Fody.Weavers
 {
     /// <summary>
-    /// A weaver class containing methods for weaving against an existing or new type.
+    /// An emitter class containing methods and properties for emitting against a type.
     /// </summary>
-    public class TypeWeaver
+    public class TypeEmitter
     {
-        private MethodWeaver[] constructors;
-        private MethodWeaver staticConstructor;
+        private MethodEmitter[] constructors;
+        private MethodEmitter staticConstructor;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TypeWeaver" /> class.
+        /// Initializes a new instance of the <see cref="TypeEmitter" /> class.
         /// </summary>
         /// <param name="module">The module.</param>
         /// <param name="type">The type.</param>
         /// <param name="context">The context.</param>
-        public TypeWeaver(ModuleDefinition module, TypeReference type, WeaveContext context)
+        public TypeEmitter(ModuleDefinition module, TypeReference type, WeaveContext context)
         {
             Context = context;
             Module = module;
@@ -58,13 +58,36 @@ namespace Mimick.Fody.Weavers
         #endregion
 
         /// <summary>
-        /// Performs an implicit conversion from <see cref="TypeWeaver"/> to <see cref="TypeDefinition"/>.
+        /// Performs an implicit conversion from <see cref="TypeEmitter"/> to <see cref="TypeDefinition"/>.
         /// </summary>
         /// <param name="weaver">The weaver.</param>
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator TypeDefinition(TypeWeaver weaver) => weaver.Target;
+        public static implicit operator TypeDefinition(TypeEmitter weaver) => weaver.Target;
+
+        /// <summary>
+        /// Create a new event within the type. If an event already exists with the provided name, type
+        /// and static modifier, then the existing field will be returned.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        /// <param name="toStatic"></param>
+        /// <returns></returns>
+        public EventEmitter EmitEvent(string name, TypeReference type, bool toStatic = false)
+        {
+            var existing = Target.Events.FirstOrDefault(a => a.Name == name && a.EventType.FullName == type.FullName);
+
+            if (existing != null)
+                return new EventEmitter(this, existing);
+
+            var evt = new EventDefinition(name, EventAttributes.None, type);
+            Target.Events.Add(evt);
+
+            Context.AddCompilerGenerated(evt);
+
+            return new EventEmitter(this, evt);
+        }
 
         /// <summary>
         /// Create a new field within the type. If a field already exists with the provided name, type
@@ -74,7 +97,7 @@ namespace Mimick.Fody.Weavers
         /// <param name="type">The type.</param>
         /// <param name="toStatic">Whether the field should be static.</param>
         /// <returns>A <see cref="Variable"/> instance.</returns>
-        public Variable CreateField(string name, TypeReference type, bool toStatic = false)
+        public Variable EmitField(string name, TypeReference type, bool toStatic = false)
         {
             var existing = Target.Fields.FirstOrDefault(a => a.Name == name && a.FieldType.FullName == type.FullName && a.IsStatic == toStatic);
 
@@ -89,6 +112,9 @@ namespace Mimick.Fody.Weavers
             var field = new FieldDefinition(name, attributes, type);
             Target.Fields.Add(field);
 
+            Context.AddCompilerGenerated(field);
+            Context.AddNonSerialized(field);
+
             return new Variable(field);
         }
 
@@ -98,33 +124,43 @@ namespace Mimick.Fody.Weavers
         /// <param name="name">The name.</param>
         /// <param name="type">The type.</param>
         /// <param name="toStatic">Whether the field should be static.</param>
-        /// <returns>A <see cref="PropertyWeaver"/> instance.</returns>
-        public PropertyWeaver CreateProperty(string name, TypeReference type, bool toStatic = false)
+        /// <param name="toBackingField">Whether the property should have a corresponding backing field.</param>
+        /// <returns>A <see cref="PropertyEmitter"/> instance.</returns>
+        public PropertyEmitter EmitProperty(string name, TypeReference type, bool toStatic = false, bool toBackingField = false)
         {
             var existing = Target.Properties.FirstOrDefault(a => a.Name == name && a.PropertyType.FullName == type.FullName);
 
             if (existing != null)
-                throw new NotSupportedException($"A property exists in '{type.FullName}' named '{name}'");
+                throw new NotSupportedException($"A property exists in '{Target.FullName}' named '{name}'");
+
+            if (toBackingField)
+            {
+                var field = $"<{name}>k__BackingField";
+                EmitField(field, type, toStatic: toStatic);
+            }
 
             var attributes = PropertyAttributes.SpecialName;
             var property = new PropertyDefinition(name, attributes, type);
             Target.Properties.Add(property);
 
-            return new PropertyWeaver(this, property);
+            Context.AddCompilerGenerated(property);
+            Context.AddNonSerialized(property);
+
+            return new PropertyEmitter(this, property);
         }
 
         /// <summary>
-        /// Gets a collection of method weavers for the constructors of the type, where each constructor
+        /// Gets a collection of method emitters for the constructors of the type, where each constructor
         /// does not call a reference to another self-constructor.
         /// </summary>
-        /// <returns>A collection of <see cref="MethodWeaver"/> values.</returns>
-        public MethodWeaver[] GetConstructors()
+        /// <returns>A collection of <see cref="MethodEmitter"/> values.</returns>
+        public MethodEmitter[] GetConstructors()
         {
             if (constructors != null)
                 return constructors;
 
             var candidates = Target.Methods.Where(m => m.Name == ".ctor" && m.IsSpecialName);
-            var match = new List<MethodWeaver>();
+            var match = new List<MethodEmitter>();
 
             foreach (var candidate in candidates)
             {
@@ -146,7 +182,7 @@ namespace Mimick.Fody.Weavers
                 }
 
                 if (!ignore)
-                    match.Add(new MethodWeaver(this, candidate));
+                    match.Add(new MethodEmitter(this, candidate));
             }
 
             return constructors = match.ToArray();
@@ -168,13 +204,13 @@ namespace Mimick.Fody.Weavers
         }
 
         /// <summary>
-        /// Gets a method weaver for the provided method name and parameter types. If no parameter types are provided then the
+        /// Gets a method emitter for the provided method name and parameter types. If no parameter types are provided then the
         /// first matching method is used.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="parameters">The parameter types.</param>
-        /// <returns>A <see cref="MethodWeaver"/> value.</returns>
-        public MethodWeaver GetMethod(string name, params Type[] parameters)
+        /// <returns>A <see cref="MethodEmitter"/> value.</returns>
+        public MethodEmitter GetMethod(string name, params Type[] parameters)
         {
             var candidates = Target.Methods.Where(m => m.Name == name);
 
@@ -186,34 +222,50 @@ namespace Mimick.Fody.Weavers
             if (method == null)
                 throw new MissingMethodException($"Cannot find method '{name}' in '{Target.FullName}'");
 
-            return new MethodWeaver(this, method);
+            return new MethodEmitter(this, method);
         }
 
         /// <summary>
-        /// Gets a method weaver for the provided method.
+        /// Gets a method emitter for the provided method.
         /// </summary>
         /// <param name="method">The method.</param>
-        /// <returns>A <see cref="MethodWeaver"/> value.</returns>
-        public MethodWeaver GetMethod(MethodReference method)
+        /// <returns>A <see cref="MethodEmitter"/> value.</returns>
+        public MethodEmitter GetMethod(MethodReference method)
         {
             if (method.DeclaringType.FullName != Target.FullName)
                 throw new NotSupportedException($"Cannot reference method '{method.FullName}' from '{Target.FullName}'");
 
-            return new MethodWeaver(this, method);
+            return new MethodEmitter(this, method);
         }
 
         /// <summary>
-        /// Gets a method weaver for the static constructor of the type.
+        /// Gets a property emitter for the provided property name and return type.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="returnType">The return type.</param>
+        /// <returns></returns>
+        public PropertyEmitter GetProperty(string name, TypeReference returnType)
+        {
+            var match = Target.Properties.FirstOrDefault(p => p.Name == name && p.PropertyType.FullName == returnType.FullName);
+
+            if (match == null)
+                throw new MissingMemberException($"Cannot find a property '{name}' with type '{returnType.FullName}' in '{Target.FullName}'");
+
+            return new PropertyEmitter(this, match);
+        }
+
+        /// <summary>
+        /// Gets a method emitter for the static constructor of the type.
         /// </summary>
         /// <returns></returns>
-        public MethodWeaver GetStaticConstructor()
+        public MethodEmitter GetStaticConstructor()
         {
             if (staticConstructor == null)
             {
-                var method = Target.Methods.Where(m => m.Name == ".cctor" && m.IsStatic).FirstOrDefault();
+                var method = Target.Methods.Where(m => m.IsConstructor && m.IsStatic).FirstOrDefault();
 
                 if (method != null)
-                    staticConstructor = new MethodWeaver(this, method);
+                    staticConstructor = new MethodEmitter(this, method);
                 else
                 {
                     method = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Private, Module.TypeSystem.Void);
@@ -226,11 +278,11 @@ namespace Mimick.Fody.Weavers
 
                     Target.Methods.Add(method);
 
-                    staticConstructor = new MethodWeaver(this, method);
-                    staticConstructor.GetWeaver().Emit(Codes.Return);
+                    staticConstructor = new MethodEmitter(this, method);
+                    staticConstructor.GetIL().Emit(Codes.Return);
                 }
 
-                var code = staticConstructor.GetWeaver();
+                var code = staticConstructor.GetIL();
                 code.Insert = CodeInsertion.Before;
                 code.Position = code.GetLast();
             }

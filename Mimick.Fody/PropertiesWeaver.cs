@@ -23,7 +23,7 @@ public partial class ModuleWeaver
 
         foreach (var item in candidates)
         {
-            var weaver = new TypeWeaver(Context.Module, item.Type, Context);
+            var weaver = new TypeEmitter(Context.Module, item.Type, Context);
 
             foreach (var property in item.Properties)
                 WeavePropertyInterceptors(weaver, property);
@@ -35,12 +35,13 @@ public partial class ModuleWeaver
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="item"></param>
-    public void WeavePropertyInterceptors(TypeWeaver parent, PropertyInterceptorInfo item)
+    public void WeavePropertyInterceptors(TypeEmitter parent, PropertyInterceptorInfo item)
     {
         var property = item.Property;
-        var getter = property.GetMethod != null ? new MethodWeaver(parent, property.GetMethod) : null;
-        var setter = property.SetMethod != null ? new MethodWeaver(parent, property.SetMethod) : null;
+        var getter = property.GetMethod != null ? new MethodEmitter(parent, property.GetMethod) : null;
+        var setter = property.SetMethod != null ? new MethodEmitter(parent, property.SetMethod) : null;
         var count = item.Interceptors.Length;
+        var weaver = new PropertyEmitter(parent, property);
 
         if (count == 0)
             return;
@@ -50,7 +51,7 @@ public partial class ModuleWeaver
 
         for (int i = 0; i < count; i++)
         {
-            var variables = WeavePropertyAttributeVariable(item.Property, getter, setter, item.Interceptors[i]);
+            var variables = CreateAttribute(weaver, getter, setter, item.Interceptors[i]);
 
             gInterceptors[i] = variables[0];
             sInterceptors[i] = variables[1];
@@ -60,7 +61,7 @@ public partial class ModuleWeaver
         var hasSetter = sInterceptors.Any(i => i != null);
 
         var type = property.PropertyType;
-        var info = WeavePropertyVariable(property, parent);
+        var info = CreatePropertyInfo(weaver);
         var field = property.GetBackingField();
         var backing = (Variable)null;
 
@@ -69,17 +70,15 @@ public partial class ModuleWeaver
 
         if (getter != null && hasGetter)
         {
-            var il = getter.GetWeaver();
-            var result = getter.CreateVariable(property.PropertyType);
+            var il = getter.GetIL();
+            var result = getter.EmitLocal(property.PropertyType);
 
             il.Position = il.GetFirst();
             il.Insert = CodeInsertion.Before;
             
             if (backing != null)
             {
-                if (backing.IsThisNeeded)
-                    il.Emit(Codes.This);
-
+                il.Emit(Codes.ThisIf(backing));
                 il.Emit(Codes.Load(backing));
                 il.Emit(Codes.Store(result));
             }
@@ -92,8 +91,8 @@ public partial class ModuleWeaver
             il.Try();
 
             var leave = WeaveMethodReturnsRoute(getter, result, true);
-            var cancel = il.CreateLabel();
-            var args = il.CreateLocal(Context.Refs.PropertyInterceptionArgs);
+            var cancel = il.EmitLabel();
+            var args = il.EmitLocal(Context.Refs.PropertyInterceptionArgs);
 
             il.Emit(getter.Target.IsStatic ? Codes.Null : Codes.This);
             il.Emit(Codes.Load(info));
@@ -109,6 +108,7 @@ public partial class ModuleWeaver
                 if (inc == null)
                     continue;
 
+                il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
                 il.Emit(Codes.Invoke(Context.Refs.PropertyGetInterceptorOnGet));
@@ -124,6 +124,7 @@ public partial class ModuleWeaver
                 if (inc == null)
                     continue;
 
+                il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
                 il.Emit(Codes.Invoke(Context.Refs.PropertyGetInterceptorOnExit));
@@ -136,7 +137,7 @@ public partial class ModuleWeaver
 
             if (setter != null || backing != null)
             {
-                var unchanged = il.CreateLabel();
+                var unchanged = il.EmitLabel();
 
                 il.Emit(Codes.Load(args));
                 il.Emit(Codes.Invoke(Context.Refs.PropertyInterceptionArgsIsDirtyGet));
@@ -165,13 +166,13 @@ public partial class ModuleWeaver
 
         if (setter != null && hasSetter)
         {
-            var il = setter.GetWeaver();
+            var il = setter.GetIL();
 
             il.Position = il.GetFirst();
             il.Insert = CodeInsertion.Before;
 
-            var args = il.CreateLocal(Context.Refs.PropertyInterceptionArgs);
-            var cancel = il.CreateLabel();
+            var args = il.EmitLocal(Context.Refs.PropertyInterceptionArgs);
+            var cancel = il.EmitLabel();
             var argument = new Variable(setter.Target.Parameters.First());
 
             il.Try();
@@ -190,6 +191,7 @@ public partial class ModuleWeaver
                 if (inc == null)
                     continue;
 
+                il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
                 il.Emit(Codes.Invoke(Context.Refs.PropertySetInterceptorOnSet));
@@ -219,6 +221,7 @@ public partial class ModuleWeaver
                 if (inc == null)
                     continue;
 
+                il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
                 il.Emit(Codes.Invoke(Context.Refs.PropertySetInterceptorOnExit));
@@ -226,114 +229,5 @@ public partial class ModuleWeaver
 
             il.EndTry();
         }
-    }
-
-    /// <summary>
-    /// Weave a variable store for a provided custom attribute.
-    /// </summary>
-    /// <param name="property">The property.</param>
-    /// <param name="getter">The getter method weaver.</param>
-    /// <param name="setter">The setter method weaver.</param>
-    /// <param name="attribute">The attribute.</param>
-    /// <returns></returns>
-    public Variable[] WeavePropertyAttributeVariable(PropertyDefinition property, MethodWeaver getter, MethodWeaver setter, CustomAttribute attribute)
-    {
-        var options = attribute.GetAttribute<CompilationOptionsAttribute>();
-        var scope = options.GetProperty("Scope", notFound: AttributeScope.Singleton);
-        var isStatic = (getter ?? setter).Target.IsStatic;
-        var context = (getter ?? setter).Parent.Context;
-
-        if (scope == AttributeScope.Instanced && isStatic)
-            scope = AttributeScope.Singleton;
-
-        var isGet = attribute.HasInterface<IPropertyGetInterceptor>();
-        var isSet = attribute.HasInterface<IPropertySetInterceptor>();
-
-        switch (scope)
-        {
-            case AttributeScope.Instanced:
-                var field = (getter ?? setter).Parent.CreateField($"<>__interceptor${attribute.AttributeType.Name}", attribute.AttributeType);
-                var ctors = (getter ?? setter).Parent.GetConstructors();
-                var def = (FieldDefinition)field;
-                context.AddCompilerGenerated(def);
-                context.AddNonSerialized(def);
-                foreach (var ctor in ctors)
-                {
-                    var cil = ctor.GetWeaver();
-                    cil.Insert = CodeInsertion.Before;
-                    cil.Position = cil.GetFirst();
-                    cil.Emit(Codes.Nop);
-                    cil.Emit(Codes.This);
-                    cil.Emit(Codes.Create(attribute.Constructor));
-                    cil.Emit(Codes.Store(field));
-                }
-                return new[] { isGet ? field : null, isSet ? field : null };
-
-            case AttributeScope.Singleton:
-                var sfield = (getter ?? setter).Parent.CreateField($"<>__interceptor${attribute.AttributeType.Name}", attribute.AttributeType, toStatic: true);
-                var sil = (getter ?? setter).Parent.GetStaticConstructor().GetWeaver();
-                var sdef = (FieldDefinition)sfield;
-                context.AddCompilerGenerated(sdef);
-                context.AddNonSerialized(sdef);
-                sil.Emit(Codes.Nop);
-                sil.Emit(Codes.Create(attribute.Constructor));
-                sil.Emit(Codes.Store(sfield));
-                return new[] { isGet ? sfield : null, isSet ? sfield : null };
-        }
-
-        var variables = new Variable[2];
-        var methods = new[] { getter, setter };
-
-        for (int i = 0; i < 2; i++)
-        {
-            if (i == 0 && !isGet)
-                continue;
-            if (i == 1 && !isSet)
-                continue;
-
-            var method = methods[i];
-
-            if (method == null)
-                continue;
-
-            var il = method.GetWeaver();
-
-            variables[i] = method.CreateVariable(attribute.AttributeType);
-            il.Emit(Codes.Nop);
-            il.Emit(Codes.Create(attribute.Constructor));
-            il.Emit(Codes.Store(variables[i]));
-        }
-
-        return variables;
-    }
-
-    /// <summary>
-    /// Weave a variable store for the provided property.
-    /// </summary>
-    /// <param name="property">The property.</param>
-    /// <param name="weaver">The type weaver.</param>
-    /// <returns></returns>
-    public Variable WeavePropertyVariable(PropertyDefinition property, TypeWeaver weaver)
-    {
-        var field = weaver.CreateField($"<>__property{property.Name}", Context.Refs.PropertyInfo, toStatic: true);
-        var il = weaver.GetStaticConstructor().GetWeaver();
-        var flags = BindingFlags.NonPublic | BindingFlags.Public;
-        var isStatic = (property.GetMethod ?? property.SetMethod).IsStatic;
-        var def = (FieldDefinition)field;
-
-        weaver.Context.AddCompilerGenerated(def);
-        weaver.Context.AddNonSerialized(def);
-
-        flags |= isStatic ? BindingFlags.Static : BindingFlags.Instance;
-
-        il.Emit(Codes.Nop);
-        il.Emit(Codes.LoadToken(weaver.Target.GetGeneric()));
-        il.Emit(Codes.InvokeStatic(Context.Refs.TypeGetTypeFromHandle));
-        il.Emit(Codes.String(property.Name));
-        il.Emit(Codes.Int((int)flags));
-        il.Emit(Codes.Invoke(Context.Refs.TypeGetProperty));
-        il.Emit(Codes.Store(field));
-
-        return field;
     }
 }

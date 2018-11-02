@@ -74,6 +74,7 @@ namespace Mimick.Fody
         public MethodReference TypeMakeGenericType { get; set; }
 
         // properties
+        public MethodReference InstanceAwareInstanceSet { get; set; }
         public MethodReference MethodInterceptionArgsCancelGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnSet { get; set; }
@@ -134,6 +135,7 @@ namespace Mimick.Fody
             TypeMakeGenericType = module.Method<Type>("MakeGenericType");
 
             // properties
+            InstanceAwareInstanceSet = module.Setter<IInstanceAware>("Instance");
             MethodInterceptionArgsCancelGet = module.Getter<MethodInterceptionArgs>("Cancel");
             MethodInterceptionArgsReturnGet = module.Getter<MethodInterceptionArgs>("Return");
             MethodInterceptionArgsReturnSet = module.Setter<MethodInterceptionArgs>("Return");
