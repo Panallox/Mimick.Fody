@@ -198,7 +198,7 @@ public partial class ModuleWeaver
             var il = ctor.GetIL();
 
             il.Insert = CodeInsertion.Before;
-            il.Position = il.GetFirst();
+            il.Position = il.GetConstructorBaseOrThis()?.Next ?? il.GetFirst();
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.This);

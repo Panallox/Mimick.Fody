@@ -40,6 +40,9 @@ public partial class ModuleWeaver
                 
         if (interfaceType == null)
             return;
+
+        if (interfaceType.HasGenericParameters)
+            throw new NotSupportedException($"Cannot implement interface {interfaceType.FullName} due to generic parameters");
         
         if (!implementType.Interfaces.Any(i => i.InterfaceType.FullName == interfaceType.FullName))
             throw new NotSupportedException($"Cannot implement attribute '{implementType.FullName}' as it does not implement '{interfaceType.FullName}'");
@@ -65,38 +68,41 @@ public partial class ModuleWeaver
     /// <param name="evt">The event.</param>
     public void WeaveImplementedEvent(TypeEmitter emitter, Variable field, EventReference evt)
     {
-        var eventType = evt.EventType.Import();
-        var emitted = emitter.EmitEvent(evt.Name, eventType);
-        var implemented = field.Type.GetEvent(evt.Name, eventType);
+        var implemented = field.Type.GetEvent(evt.Name, evt.EventType);
 
         if (implemented == null)
             throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement event '{evt.Name}'");
 
-        var add = emitted.GetAdd();
-        var ail = add.GetIL();
-        var interfaceAdd = evt.Resolve().AddMethod.GetGeneric().Import();
+        var emitted = emitter.EmitEvent(evt.Name, implemented.EventType);
+        var definition = implemented.Resolve();
 
-        //add.EmitOverride(interfaceAdd);
+        if (!emitted.HasAdd)
+        {
+            var add = emitted.GetAdd();
+            var ail = add.GetIL();
+            var interfaceAdd = definition.AddMethod.Import();
 
-        ail.Emit(Codes.Nop);
-        ail.Emit(Codes.ThisIf(field));
-        ail.Emit(Codes.Load(field));
-        ail.Emit(Codes.Arg(add.IsStatic ? 0 : 1));
-        ail.Emit(Codes.Invoke(interfaceAdd));
-        ail.Emit(Codes.Return);
+            ail.Emit(Codes.Nop);
+            ail.Emit(Codes.ThisIf(field));
+            ail.Emit(Codes.Load(field));
+            ail.Emit(Codes.Arg(add.IsStatic ? 0 : 1));
+            ail.Emit(Codes.Invoke(interfaceAdd.GetGeneric()));
+            ail.Emit(Codes.Return);
+        }
 
-        var remove = emitted.GetRemove();
-        var ril = remove.GetIL();
-        var interfaceRemove = evt.Resolve().RemoveMethod.GetGeneric().Import();
+        if (!emitted.HasRemove)
+        {
+            var remove = emitted.GetRemove();
+            var ril = remove.GetIL();
+            var interfaceRemove = definition.RemoveMethod.Import();
 
-        //remove.EmitOverride(interfaceRemove);
-
-        ril.Emit(Codes.Nop);
-        ril.Emit(Codes.ThisIf(field));
-        ril.Emit(Codes.Load(field));
-        ril.Emit(Codes.Arg(remove.IsStatic ? 0 : 1));
-        ril.Emit(Codes.Invoke(interfaceRemove));
-        ril.Emit(Codes.Return);
+            ril.Emit(Codes.Nop);
+            ril.Emit(Codes.ThisIf(field));
+            ril.Emit(Codes.Load(field));
+            ril.Emit(Codes.Arg(remove.IsStatic ? 0 : 1));
+            ril.Emit(Codes.Invoke(interfaceRemove.GetGeneric()));
+            ril.Emit(Codes.Return);
+        }
     }
 
     /// <summary>
@@ -107,17 +113,24 @@ public partial class ModuleWeaver
     /// <param name="method">The method.</param>
     public void WeaveImplementedMethod(TypeEmitter emitter, Variable field, MethodReference method)
     {
+        var resolved = method.Resolve();
+        
         var definition = method.Resolve();
         var emitted = emitter.EmitMethod(
             method.Name,
-            method.ReturnType,
-            parameterTypes: method.HasParameters ? method.Parameters.Select(p => p.ParameterType).ToArray() : null,
+            method.ReturnType.Import(),
+            parameterTypes: method.HasParameters ? method.Parameters.Select(p => p.ParameterType.Import()).ToArray() : null,
             genericTypes: method.HasGenericParameters ? method.GenericParameters.ToArray() : null,
             toStatic: definition.IsStatic,
             toPrivate: definition.IsPrivate
         );
 
-        emitted.EmitOverride(definition.GetGeneric().Import());
+        var implemented = field.Type.GetMethod(method.Name, method.ReturnType, method.Parameters.Select(p => p.ParameterType).ToArray(), method.GenericParameters.ToArray());
+
+        if (implemented == null)
+            throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement method '{method.FullName}'");
+
+        var imported = implemented.Import();
 
         var il = emitted.GetIL();
 
@@ -128,7 +141,7 @@ public partial class ModuleWeaver
         for (int i = 0, count = method.Parameters.Count; i < count; i++)
             il.Emit(Codes.Arg(i + 1));
 
-        il.Emit(Codes.Invoke(definition.GetGeneric().Import()));
+        il.Emit(Codes.Invoke(imported.GetGeneric()));
         il.Emit(Codes.Return);
     }
 
@@ -140,7 +153,7 @@ public partial class ModuleWeaver
     /// <param name="property">The property.</param>
     public void WeaveImplementedProperty(TypeEmitter emitter, Variable field, PropertyDefinition property)
     {
-        var emitted = emitter.EmitProperty(property.Name, property.PropertyType, toBackingField: true);
+        var emitted = emitter.EmitProperty(property.Name, property.PropertyType.Import(), toBackingField: true);
         var implemented = field.Type.GetProperty(property.Name, property.PropertyType)?.Resolve();
 
         if (implemented == null)
@@ -148,34 +161,30 @@ public partial class ModuleWeaver
 
         var source = new PropertyEmitter(emitter, implemented);
 
-        if (source.HasGetter)
+        if (source.HasGetter && !emitted.HasGetter)
         {
             var getter = emitted.GetGetter();
             var il = getter.GetIL();
-            var propertyGet = property.GetMethod.Import();
-
-            //getter.EmitOverride(propertyGet);
+            var propertyGet = implemented.GetMethod.Import();
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.ThisIf(field));
             il.Emit(Codes.Load(field));
-            il.Emit(Codes.Invoke(propertyGet.Resolve().GetGeneric().Import()));
+            il.Emit(Codes.Invoke(propertyGet.GetGeneric()));
             il.Emit(Codes.Return);
         }
 
-        if (source.HasSetter)
+        if (source.HasSetter && !emitted.HasSetter)
         {
             var setter = emitted.GetSetter();
             var il = setter.GetIL();
-            var propertySet = property.SetMethod.Import();
-
-            //setter.EmitOverride(propertySet);
+            var propertySet = implemented.SetMethod.Import();
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.ThisIf(field));
             il.Emit(Codes.Load(field));
             il.Emit(Codes.Arg(setter.Target.IsStatic ? 0 : 1));
-            il.Emit(Codes.Invoke(propertySet.Resolve().GetGeneric().Import()));
+            il.Emit(Codes.Invoke(propertySet.GetGeneric()));
             il.Emit(Codes.Return);
         }
     }

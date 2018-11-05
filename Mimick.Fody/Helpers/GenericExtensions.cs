@@ -21,8 +21,8 @@ static class GenericExtensions
 
         return field;
     }
-
-    public static MethodReference GetGeneric(this MethodDefinition method)
+    
+    public static MethodReference GetGeneric(this MethodReference method)
     {
         if (method.HasGenericParameters)
         {
@@ -35,7 +35,8 @@ static class GenericExtensions
         }
         else if (method.DeclaringType.HasGenericParameters)
         {
-            var generic = method.DeclaringType.GetGeneric();
+            var def = method.Resolve();
+            var generic = def.DeclaringType.GetGeneric();
             var self = new MethodReference(method.Name, method.ReturnType, generic);
 
             self.CallingConvention = method.CallingConvention;

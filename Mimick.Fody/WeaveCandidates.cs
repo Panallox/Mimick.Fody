@@ -203,23 +203,33 @@ namespace Mimick.Fody
         private void Initialize()
         {
             foreach (var x in module.Types)
-            {
-                var m = x.Module;
+                InitializeBy(x);
+        }
 
-                if (m.Name == "System" || m.Name == "mscorlib" || m.Name == "netstandard" || m.Name == "WindowsBase" || m.Name == "testhost")
-                    continue;
+        /// <summary>
+        /// Initialize a candidate by scanning a type.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        private void InitializeBy(TypeDefinition type)
+        {
+            var m = type.Module;
 
-                if (m.Name.StartsWith("System.") || m.Name.StartsWith("Microsoft.") || m.Name.StartsWith("Windows."))
-                    continue;
+            foreach (var s in type.NestedTypes)
+                InitializeBy(s);
 
-                if (x.Namespace.StartsWith("System."))
-                    continue;
+            if (m.Name == "System" || m.Name == "mscorlib" || m.Name == "netstandard" || m.Name == "WindowsBase" || m.Name == "testhost")
+                return;
 
-                if (x.IsInterface || !x.IsClass)
-                    continue;
+            if (m.Name.StartsWith("System.") || m.Name.StartsWith("Microsoft.") || m.Name.StartsWith("Windows."))
+                return;
 
-                Types.Add(x);
-            }
+            if (type.Namespace.StartsWith("System."))
+                return;
+
+            if (type.IsInterface || !type.IsClass)
+                return;
+
+            Types.Add(type);
         }
     }
 }

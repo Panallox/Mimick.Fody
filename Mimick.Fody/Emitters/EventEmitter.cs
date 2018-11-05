@@ -28,12 +28,40 @@ namespace Mimick.Fody
 
             if (Target.AddMethod != null)
                 add = new MethodEmitter(parent, Target.AddMethod);
+            else
+            {
+                var existing = parent.Target.GetMethod($"add_{Target.Name}", parent.Context.Module.TypeSystem.Void, new[] { evt.EventType }, new GenericParameter[0]);
+                if (existing != null)
+                {
+                    Target.AddMethod = existing.Resolve();
+                    add = new MethodEmitter(parent, Target.AddMethod);
+                }
+            }
 
             if (Target.RemoveMethod != null)
                 remove = new MethodEmitter(parent, Target.RemoveMethod);
+            else
+            {
+                var existing = parent.Target.GetMethod($"remove_{Target.Name}", parent.Context.Module.TypeSystem.Void, new[] { evt.EventType }, new GenericParameter[0]);
+                if (existing != null)
+                {
+                    Target.RemoveMethod = existing.Resolve();
+                    remove = new MethodEmitter(parent, Target.RemoveMethod);
+                }
+            }
         }
 
         #region Properties
+
+        /// <summary>
+        /// Gets whether the event add method exists.
+        /// </summary>
+        public bool HasAdd => add != null;
+
+        /// <summary>
+        /// Gets whether the event remove method exists.
+        /// </summary>
+        public bool HasRemove => remove != null;
         
         /// <summary>
         /// Gets the parent emitter.

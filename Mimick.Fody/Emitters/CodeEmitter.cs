@@ -282,6 +282,44 @@ namespace Mimick.Fody.Weavers
         }
 
         /// <summary>
+        /// Gets the first code within the method body where the constructors calls either the <c>base</c>
+        /// constructor method, or a corresponding <c>this</c> constructor method.
+        /// </summary>
+        /// <returns></returns>
+        public Instruction GetConstructorBaseOrThis()
+        {
+            var m = Parent.Target;
+
+            if (m.IsStatic || m.IsAbstract)
+                return null;
+
+            var il = Body.Instructions;
+
+            for (int i = 0, count = il.Count; i < count; i++)
+            {
+                var it = il[i];
+
+                if (it.OpCode == OpCodes.Call ||
+                    it.OpCode == OpCodes.Callvirt)
+                {
+                    var def = (it.Operand as MethodReference)?.Resolve();
+
+                    if (def == null || !def.IsConstructor)
+                        return null;
+
+                    var sub = m.DeclaringType.BaseType;
+
+                    if (def.DeclaringType.FullName == m.DeclaringType.FullName || def.DeclaringType.FullName == sub.FullName)
+                        return it;
+
+                    break;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Gets the first code within the method body.
         /// </summary>
         /// <returns></returns>

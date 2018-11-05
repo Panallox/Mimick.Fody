@@ -48,12 +48,12 @@ public partial class ModuleWeaver : BaseModuleWeaver
         Context.Candidates = new WeaveCandidates(ModuleDefinition);
         Context.Refs = new WeaveReferences(ModuleDefinition);
         GlobalContext = Context;
-        
+
+        WeaveImplementations();
         WeaveMethodInterceptors();
         WeavePropertyInterceptors();
         WeaveFieldInterceptors();
         WeaveConstructorInterceptors();
-        //WeaveImplementations();
     }
 
     /// <summary>

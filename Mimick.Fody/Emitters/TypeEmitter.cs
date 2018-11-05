@@ -81,7 +81,7 @@ namespace Mimick.Fody.Weavers
             if (existing != null)
                 return new EventEmitter(this, existing);
             
-            var evt = new EventDefinition(name, EventAttributes.None, type);
+            var evt = new EventDefinition(name, EventAttributes.None, type.Import());
             Target.Events.Add(evt);
 
             Context.AddCompilerGenerated(evt);
@@ -140,7 +140,7 @@ namespace Mimick.Fody.Weavers
             if (existing.Any())
                 return new MethodEmitter(this, existing.First());
 
-            var attributes = MethodAttributes.Final | MethodAttributes.NewSlot | MethodAttributes.Virtual | (toPrivate ? MethodAttributes.Private : MethodAttributes.Public);
+            var attributes = MethodAttributes.Final | MethodAttributes.Virtual | (toPrivate ? MethodAttributes.Private : MethodAttributes.Public);
 
             if (toStatic)
                 attributes |= MethodAttributes.Static;

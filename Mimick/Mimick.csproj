@@ -54,8 +54,11 @@
     <Compile Include="Aspect\MethodInterceptionArgs.cs" />
     <Compile Include="Aspect\ParameterInterceptionArgs.cs" />
     <Compile Include="Aspect\PropertyInterceptionArgs.cs" />
+    <Compile Include="Attributes\AutowireAttribute.cs" />
     <Compile Include="Attributes\ConfigurationAttribute.cs" />
     <Compile Include="Attributes\PostConstructAttribute.cs" />
+    <Compile Include="Attributes\PreConstructAttribute.cs" />
+    <Compile Include="Attributes\PropertyChangedAttribute.cs" />
     <Compile Include="Attributes\ValueAttribute.cs" />
     <Compile Include="Configuration\AppConfigConfigurationSource.cs" />
     <Compile Include="Configuration\Assemblies.cs" />

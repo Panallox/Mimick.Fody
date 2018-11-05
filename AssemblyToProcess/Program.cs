@@ -29,21 +29,35 @@ namespace AssemblyToProcess
             var context = FrameworkContext.Instance;
             var dependencies = context.Dependencies;
 
-            var testing = new Testing<int>();
-            Console.WriteLine($"Field = {testing.MyField}");
-            Console.WriteLine($"Property = {testing.MyProperty}");
+            dependencies.Register<Service>("svc");
 
-            Console.WriteLine($"Port = {testing.MyPort}");
+            var testing = new Testing<int>();
+
+            Console.WriteLine("-- PropertyChanged");
+            var prop = testing as INotifyPropertyChanged;
+            prop.PropertyChanged += (s, e) => Console.WriteLine($"The property '{e.PropertyName}' has been changed!");
+
+            testing.MyProperty = "One";
+            testing.MyProperty = "Two";
+
+            var inner = new Testing<int>.InnerConverter<long>();
+            inner.Testing();
             
             Console.WriteLine("Done");
             Console.ReadLine();
         }
     }
 
+    public class Service
+    {
+        public void Print() => Console.WriteLine("Service print was called");
+    }
+
+    [PropertyChanged]
     public class Testing<T>
     {
         [Value("Testing")]
-        public string MyField;
+        public string myField;
 
         [Value("Port")]
         public int MyPort;
@@ -51,15 +65,35 @@ namespace AssemblyToProcess
         [Value("Testing")]
         public string MyProperty { get; set; }
 
-        public Testing()
-        { 
+        [Autowire]
+        public Service MyService { get; set; }
+
+        [Autowire("svc")]
+        public Service MyNamedService { get; set; }
+
+        public Testing() : base()
+        {
+
         }
 
+        [PreConstruct]
+        private void InitializeBefore() => Console.WriteLine($"I initialize before");
+
+        [Autowire]
         [PostConstruct]
-        private void Initialize()
+        private void Initialize(Service svc = null) => Console.WriteLine($"I initialize after (myField = {myField}) where service = {svc}");
+
+        public class InnerConverter<U> : ITesting<T, U>
         {
-            Console.WriteLine("I am now initialized");
+            public T convert(U inbound) => default(T);
+
+            public void Testing([Value("Testing")] string name = null) => Console.WriteLine($"Inner testing = {name}");
         }
+    }
+
+    public interface ITesting<T, U>
+    {
+        T convert(U inbound);
     }
     
 }

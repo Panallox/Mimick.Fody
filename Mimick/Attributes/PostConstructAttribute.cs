@@ -10,6 +10,9 @@ namespace Mimick
     /// <summary>
     /// Indicates that the associated method should be called immediately after the object has been initialized.
     /// </summary>
+    /// <remarks>
+    /// This attribute cannot be used against generic methods.
+    /// </remarks>
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class PostConstructAttribute : Attribute, IInjectAfterInitializer
     {

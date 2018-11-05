@@ -14,10 +14,26 @@ static class TypeExtensions
         => ModuleWeaver.GlobalModule.ImportReference(type);
 
     public static TypeReference Import(this TypeReference type)
-        => ModuleWeaver.GlobalModule.ImportReference(type) ?? type;
+        => ModuleWeaver.GlobalModule.ImportReference(type) ?? throw new InvalidOperationException($"Cannot import type {type.FullName}");
 
     public static EventReference GetEvent(this TypeReference type, string name, TypeReference eventType)
         => type.Resolve().Events.FirstOrDefault(e => e.Name == name && e.EventType.FullName == eventType.FullName);
+
+    public static MethodReference GetMethod(this TypeReference type, string name, TypeReference returnType, TypeReference[] parameterTypes, GenericParameter[] genericTypes)
+    {
+        foreach (var method in type.Resolve().Methods.Where(m => m.Name == name && m.ReturnType.FullName == returnType.FullName))
+        {
+            if (!method.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(parameterTypes.Select(p => p.FullName)))
+                continue;
+
+            if (!method.GenericParameters.Select(p => p.Name).SequenceEqual(genericTypes.Select(p => p.Name)))
+                continue;
+
+            return method;
+        }
+
+        return null;
+    }
 
     public static PropertyReference GetProperty(this TypeReference type, string name, TypeReference returnType)
         => type.Resolve().Properties.FirstOrDefault(p => p.Name == name && p.PropertyType.FullName == returnType.FullName);

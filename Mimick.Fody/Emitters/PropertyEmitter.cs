@@ -28,9 +28,27 @@ namespace Mimick.Fody.Weavers
 
             if (Target.GetMethod != null)
                 getter = new MethodEmitter(parent, Target.GetMethod);
+            else
+            {
+                var existing = Parent.Target.GetMethod($"get_{Target.Name}", Target.PropertyType, new TypeReference[0], new GenericParameter[0]);
+                if (existing != null)
+                {
+                    Target.GetMethod = existing.Resolve();
+                    getter = new MethodEmitter(parent, Target.GetMethod);
+                }
+            }
 
             if (Target.SetMethod != null)
                 setter = new MethodEmitter(parent, Target.SetMethod);
+            else
+            {
+                var existing = Parent.Target.GetMethod($"set_{Target.Name}", Target.Module.TypeSystem.Void, new[] { Target.PropertyType }, new GenericParameter[0]);
+                if (existing != null)
+                {
+                    Target.SetMethod = existing.Resolve();
+                    setter = new MethodEmitter(parent, Target.SetMethod);
+                }
+            }
         }
 
         #region Properties
@@ -85,7 +103,7 @@ namespace Mimick.Fody.Weavers
             if (getter != null)
                 return getter;
 
-            var attributes = MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+            var attributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public;
             var method = new MethodDefinition($"get_{Target.Name}", attributes, Target.PropertyType);
             Parent.Target.Methods.Add(method);
             Target.GetMethod = method;
@@ -104,7 +122,7 @@ namespace Mimick.Fody.Weavers
             if (setter != null)
                 return setter;
 
-            var attributes = MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+            var attributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public;
             var method = new MethodDefinition($"set_{Target.Name}", attributes, Target.Module.TypeSystem.Void);
             var parameter = new ParameterDefinition("value", ParameterAttributes.None, Target.PropertyType);
 

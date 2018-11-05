@@ -38,8 +38,16 @@ public partial class ModuleWeaver
 
         foreach (var init in item.Initializers)
         {
+            var parameters = init.Parameters;
+
+            if (parameters.Any(p => !p.IsOptional))
+                throw new NotSupportedException($"Cannot use constructor injection against a method with non-optional parameters");
+
             var after = init.GetAttribute<IInjectAfterInitializer>();
             var before = init.GetAttribute<IInjectBeforeInitializer>();
+
+            if (init.HasGenericParameters)
+                throw new NotSupportedException($"Cannot use constructor injection against a generic method");
 
             foreach (var ctor in constructors)
             {
@@ -47,7 +55,7 @@ public partial class ModuleWeaver
                 var st = init.IsStatic;
 
                 il.Insert = CodeInsertion.Before;
-                il.Position = before != null ? il.GetFirst() : il.GetLast();
+                il.Position = before != null ? (il.GetConstructorBaseOrThis()?.Next ?? il.GetFirst()) : il.GetLast();
 
                 if (!st)
                     il.Emit(Codes.This);
@@ -60,6 +68,9 @@ public partial class ModuleWeaver
                     var generic = (GenericInstanceType)type;
                     method = init.MakeGeneric(generic.GenericArguments.ToArray());
                 }
+
+                foreach (var param in parameters)
+                    il.Emit(Codes.Load(param.Constant));
 
                 il.Emit(st ? Codes.InvokeStatic(method) : Codes.Invoke(method));
 
