@@ -107,5 +107,14 @@ namespace Mimick.Configuration
         /// The value of the configuration; otherwise, the <paramref name="orDefault" /> value.
         /// </returns>
         public T Get<T>(string name, T orDefault = default(T)) => (T)Get(name, typeof(T), orDefault);
+
+        /// <summary>
+        /// Refreshes all configuration sources of the context, resulting in all internal caches being reloaded.
+        /// </summary>
+        public void Refresh()
+        {
+            foreach (var source in sources)
+                source.Refresh();
+        }
     }
 }

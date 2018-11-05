@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Mimick.Aspect;
 using Mimick.Fody.Weavers;
@@ -13,6 +15,11 @@ using Mono.Cecil;
 /// </summary>
 public partial class ModuleWeaver
 {
+    /// <summary>
+    /// A unique identifier for attribute variables containing properties or constructor arguments.
+    /// </summary>
+    private int id = 0;
+
     /// <summary>
     /// Create an array variable containing the arguments of the method invocation.
     /// </summary>
@@ -145,7 +152,10 @@ public partial class ModuleWeaver
         var type = attribute.AttributeType;
         var variable = method.EmitLocal(type);
         var il = method.GetIL();
-
+                
+        foreach (var arg in attribute.ConstructorArguments)
+            CreateAttributeParameter(method, attribute, arg);
+        
         il.Emit(Codes.Create(attribute.Constructor));
         il.Emit(Codes.Store(variable));
 
@@ -169,6 +179,18 @@ public partial class ModuleWeaver
     {
         var type = attribute.AttributeType;
         var name = $"<{type.Name}>k__Attribute";
+
+        if (attribute.HasProperties || attribute.HasConstructorArguments)
+        {
+            var identifier = Interlocked.Increment(ref id);
+            name = $"<{type.Name}${identifier}>k__Attribute";
+        }
+
+        var existing = emitter.GetField(name, type, toStatic: false);
+
+        if (existing != null)
+            return existing;
+
         var field = emitter.EmitField(name, type);
         
         foreach (var ctor in emitter.GetConstructors())
@@ -180,11 +202,16 @@ public partial class ModuleWeaver
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.This);
+            
+            foreach (var arg in attribute.ConstructorArguments)
+                CreateAttributeParameter(ctor, attribute, arg);
+
             il.Emit(Codes.Create(attribute.Constructor));
             il.Emit(Codes.Store(field));
 
             if (attribute.HasInterface<IInstanceAware>())
             {
+                il.Emit(Codes.ThisIf(field));
                 il.Emit(Codes.Load(field));
                 il.Emit(Codes.This);
                 il.Emit(Codes.Invoke(Context.Refs.InstanceAwareInstanceSet));
@@ -209,10 +236,69 @@ public partial class ModuleWeaver
         var il = emitter.GetStaticConstructor().GetIL();
 
         il.Emit(Codes.Nop);
+
+        foreach (var arg in attribute.ConstructorArguments)
+            CreateAttributeParameter(emitter.GetStaticConstructor(), attribute, arg);
+
         il.Emit(Codes.Create(attribute.Constructor));
         il.Emit(Codes.Store(field));
 
         return field;
+    }
+
+    /// <summary>
+    /// Creates a reference to a parameter used in a custom attribute.
+    /// </summary>
+    /// <param name="emitter">The emitter.</param>
+    /// <param name="attribute">The attribute.</param>
+    /// <param name="arg">The argument.</param>
+    public void CreateAttributeParameter(MethodEmitter emitter, CustomAttribute attribute, CustomAttributeArgument arg)
+    {
+        var il = emitter.GetIL();
+
+        if (arg.Value == null)
+        {
+            il.Emit(Codes.Null);
+            return;
+        }
+        
+        var type = arg.Type;
+
+        if (type.IsArray)
+        {
+            var elements = (arg.Value as IEnumerable).Cast<CustomAttributeArgument>().ToArray();
+
+            il.Emit(Codes.Int(elements.Length));
+            il.Emit(Codes.CreateArray(type.GetElementType()));
+
+            if (elements.Length == 0)
+                return;
+
+            il.Emit(Codes.Duplicate);
+
+            for (int i = 0, count = elements.Length; i < count; i++)
+            {
+                il.Emit(Codes.Int(i));
+
+                if (elements[i].Value == null)
+                {
+                    il.Emit(Codes.Null);
+                    il.Emit(Codes.StoreArray);
+                }
+                else
+                {
+                    il.Emit(Codes.Load(elements[i].Value));
+                    il.Emit(Codes.StoreArray);
+                }
+
+                if (i + 1 < count)
+                    il.Emit(Codes.Duplicate);
+            }
+        }
+        else
+        {
+            il.Emit(Codes.Load(arg.Value));
+        }
     }
 
     /// <summary>

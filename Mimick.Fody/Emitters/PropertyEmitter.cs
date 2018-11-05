@@ -85,7 +85,7 @@ namespace Mimick.Fody.Weavers
             if (getter != null)
                 return getter;
 
-            var attributes = MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public;
+            var attributes = MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             var method = new MethodDefinition($"get_{Target.Name}", attributes, Target.PropertyType);
             Parent.Target.Methods.Add(method);
             Target.GetMethod = method;
@@ -104,7 +104,7 @@ namespace Mimick.Fody.Weavers
             if (setter != null)
                 return setter;
 
-            var attributes = MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public;
+            var attributes = MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             var method = new MethodDefinition($"set_{Target.Name}", attributes, Target.Module.TypeSystem.Void);
             var parameter = new ParameterDefinition("value", ParameterAttributes.None, Target.PropertyType);
 

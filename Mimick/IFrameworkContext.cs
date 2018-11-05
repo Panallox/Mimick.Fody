@@ -15,6 +15,14 @@ namespace Mimick
         #region Properties
 
         /// <summary>
+        /// Gets the configuration context managing the application configuration values.
+        /// </summary>
+        IConfigurationContext Configurations
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the dependency context managing the dependency instances.
         /// </summary>
         IDependencyContext Dependencies

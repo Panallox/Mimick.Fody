@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mimick.Configuration
@@ -12,7 +13,10 @@ namespace Mimick.Configuration
     /// </summary>
     class AppConfigConfigurationSource : IConfigurationSource
     {
+        private readonly ReaderWriterLockSlim locking = new ReaderWriterLockSlim();
+
         private System.Configuration.Configuration configuration;
+        private Dictionary<string, string> values;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -27,7 +31,20 @@ namespace Mimick.Configuration
         /// </summary>
         public void Initialize()
         {
-            configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            locking.EnterWriteLock();
+
+            try
+            {
+                configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                values = new Dictionary<string, string>();
+
+                foreach (KeyValueConfigurationElement element in configuration.AppSettings.Settings)
+                    values.Add(element.Key, element.Value);
+            }
+            finally
+            {
+                locking.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -39,9 +56,21 @@ namespace Mimick.Configuration
         /// </returns>
         public string Resolve(string name)
         {
-            var settings = configuration.AppSettings.Settings;
-            var match = settings[name];
-            return match?.Value;
+            locking.EnterReadLock();
+
+            try
+            {
+                return values.TryGetValue(name, out var value) ? value : null;
+            }
+            finally
+            {
+                locking.ExitReadLock();
+            }
         }
+
+        /// <summary>
+        /// Refresh the configuration source causing any cached values to be reloaded from the source.
+        /// </summary>
+        public void Refresh() => Initialize();
     }
 }

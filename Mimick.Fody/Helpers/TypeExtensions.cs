@@ -10,6 +10,12 @@ using Mono.Cecil;
 /// </summary>
 static class TypeExtensions
 {
+    public static TypeReference ToReference(this Type type)
+        => ModuleWeaver.GlobalModule.ImportReference(type);
+
+    public static TypeReference Import(this TypeReference type)
+        => ModuleWeaver.GlobalModule.ImportReference(type) ?? type;
+
     public static EventReference GetEvent(this TypeReference type, string name, TypeReference eventType)
         => type.Resolve().Events.FirstOrDefault(e => e.Name == name && e.EventType.FullName == eventType.FullName);
 

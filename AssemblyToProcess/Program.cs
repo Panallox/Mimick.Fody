@@ -29,57 +29,36 @@ namespace AssemblyToProcess
             var context = FrameworkContext.Instance;
             var dependencies = context.Dependencies;
 
-            Console.WriteLine("Creating testing<T>");
             var testing = new Testing<int>();
+            Console.WriteLine($"Field = {testing.MyField}");
+            Console.WriteLine($"Property = {testing.MyProperty}");
 
-            Console.WriteLine("Calling print(T)");
-            testing.Print(1234);
-
-            Console.WriteLine("Calling print<U>(U)");
-            testing.PrintFor("Hello world", 456);
-
-            Console.WriteLine("Calling testing");
-            Console.WriteLine($"Value is {testing.testing}");
-
-            testing.Other = "Hello!!";
-            Console.WriteLine($"Other is now {testing.Other}");
-
+            Console.WriteLine($"Port = {testing.MyPort}");
+            
             Console.WriteLine("Done");
             Console.ReadLine();
         }
     }
 
-    [PropertyChanged]
     public class Testing<T>
     {
-        [Prop]
-        public string testing;
+        [Value("Testing")]
+        public string MyField;
 
-        public string Other { get; set; }
+        [Value("Port")]
+        public int MyPort;
 
-        public event PropertyChangedEventHandler TestEvent;
+        [Value("Testing")]
+        public string MyProperty { get; set; }
 
         public Testing()
-        {
-            Console.WriteLine("I am the constructor");
+        { 
         }
-
-        [Test]
-        public void Print(T value) => Console.WriteLine($"Value is {value}");
-
-        [Test]
-        public void PrintFor<U>(U value, T other) => Console.WriteLine($"Value<U> is {value} and {other} and {testing}");
 
         [PostConstruct]
-        public void AfterInit()
+        private void Initialize()
         {
-            Console.WriteLine("I have been invoked after the constructor");
-        }
-
-        [PreConstruct]
-        public void BeforeInit()
-        {
-            Console.WriteLine("I have been invoked before the constructor");
+            Console.WriteLine("I am now initialized");
         }
     }
     

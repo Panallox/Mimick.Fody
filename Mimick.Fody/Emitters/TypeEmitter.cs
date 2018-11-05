@@ -80,7 +80,7 @@ namespace Mimick.Fody.Weavers
 
             if (existing != null)
                 return new EventEmitter(this, existing);
-
+            
             var evt = new EventDefinition(name, EventAttributes.None, type);
             Target.Events.Add(evt);
 
@@ -116,6 +116,53 @@ namespace Mimick.Fody.Weavers
             Context.AddNonSerialized(field);
 
             return new Variable(field);
+        }
+
+        /// <summary>
+        /// Create a new method within the type. If a method already exists with the provided name, return type,
+        /// and parameter information, then the existing method will be returned.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="returnType"></param>
+        /// <param name="parameterTypes"></param>
+        /// <param name="genericTypes"></param>
+        /// <returns></returns>
+        public MethodEmitter EmitMethod(string name, TypeReference returnType, TypeReference[] parameterTypes = null, GenericParameter[] genericTypes = null, bool toStatic = false, bool toPrivate = false)
+        {
+            var existing = Target.Methods.Where(m => m.Name == name && m.ReturnType.FullName == returnType.FullName && m.IsStatic == toStatic);
+
+            if (parameterTypes != null)
+                existing = existing.Where(m => m.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(parameterTypes.Select(p => p.FullName)));
+
+            if (genericTypes != null)
+                existing = existing.Where(m => m.GenericParameters.Select(p => p.Name).SequenceEqual(genericTypes.Select(p => p.Name)));
+
+            if (existing.Any())
+                return new MethodEmitter(this, existing.First());
+
+            var attributes = MethodAttributes.Final | MethodAttributes.NewSlot | MethodAttributes.Virtual | (toPrivate ? MethodAttributes.Private : MethodAttributes.Public);
+
+            if (toStatic)
+                attributes |= MethodAttributes.Static;
+            
+            var method = new MethodDefinition(name, attributes, returnType);
+            
+            if (parameterTypes != null)
+            {
+                foreach (var type in parameterTypes)
+                    method.Parameters.Add(new ParameterDefinition(type));
+            }
+            
+            if (genericTypes != null)
+            {
+                foreach (var type in genericTypes)
+                    method.GenericParameters.Add(new GenericParameter(type.Name, method));
+            }
+
+            Target.Methods.Add(method);
+            Context.AddCompilerGenerated(method);
+
+            return new MethodEmitter(this, method);
         }
 
         /// <summary>
@@ -199,6 +246,23 @@ namespace Mimick.Fody.Weavers
 
             if (field == null)
                 throw new MissingFieldException($"Cannot find field '{name}' in '{Target.FullName}'");
+
+            return new Variable(field);
+        }
+
+        /// <summary>
+        /// Gets a variable for the provided field name and type.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="type">The type.</param>
+        /// <param name="toStatic">Whether the field should be static.</param>
+        /// <returns>A <see cref="Variable"/> value.</returns>
+        public Variable GetField(string name, TypeReference type, bool? toStatic = null)
+        {
+            var field = Target.Fields.FirstOrDefault(a => a.Name == name && a.FieldType.FullName == type.FullName && (toStatic == null || a.IsStatic == toStatic));
+
+            if (field == null)
+                return null;
 
             return new Variable(field);
         }

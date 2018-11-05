@@ -55,13 +55,34 @@ namespace Mimick.Fody
         {
             if (add != null)
                 return add;
-
-            var attributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public;
+            
+            var attributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             var method = new MethodDefinition($"add_{Target.Name}", attributes, Parent.Context.Module.TypeSystem.Void);
-            method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, Target.EventType));
+            method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, Target.EventType.Import()));
             Target.AddMethod = method;
+            Parent.Target.Methods.Add(method);
+            Parent.Context.AddCompilerGenerated(method);
 
             return add = new MethodEmitter(Parent, method);
+        }
+
+        /// <summary>
+        /// Gets or creates the <c>remove</c> method emitter.
+        /// </summary>
+        /// <returns></returns>
+        public MethodEmitter GetRemove()
+        {
+            if (remove != null)
+                return remove;
+
+            var attributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+            var method = new MethodDefinition($"remove_{Target.Name}", attributes, Parent.Context.Module.TypeSystem.Void);
+            method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, Target.EventType.Import()));
+            Target.RemoveMethod = method;
+            Parent.Target.Methods.Add(method);
+            Parent.Context.AddCompilerGenerated(method);
+
+            return remove = new MethodEmitter(Parent, method);
         }
     }
 }

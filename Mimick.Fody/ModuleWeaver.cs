@@ -15,6 +15,16 @@ public partial class ModuleWeaver : BaseModuleWeaver
     #region Properties
 
     /// <summary>
+    /// Gets or sets the global context.
+    /// </summary>
+    public static WeaveContext GlobalContext { get; set; }
+
+    /// <summary>
+    /// Gets or sets the global module definition.
+    /// </summary>
+    public static ModuleDefinition GlobalModule { get; set; }
+
+    /// <summary>
     /// Gets or sets the action used to log information.
     /// </summary>
     public static Action<string> Log { get; set; }
@@ -31,17 +41,19 @@ public partial class ModuleWeaver : BaseModuleWeaver
     /// </summary>
     public override void Execute()
     {
+        GlobalModule = ModuleDefinition;
         Log = LogInfo;
 
         Context = new WeaveContext(ModuleDefinition);
         Context.Candidates = new WeaveCandidates(ModuleDefinition);
         Context.Refs = new WeaveReferences(ModuleDefinition);
+        GlobalContext = Context;
         
         WeaveMethodInterceptors();
         WeavePropertyInterceptors();
         WeaveFieldInterceptors();
         WeaveConstructorInterceptors();
-        WeaveImplementations();
+        //WeaveImplementations();
     }
 
     /// <summary>

@@ -80,6 +80,12 @@ static class MethodExtensions
         return true;
     }
 
+    public static MethodReference Import(this MethodReference method)
+    {
+        ModuleWeaver.Log($"Attempting import of {method.FullName}");
+        return ModuleWeaver.GlobalModule.ImportReference(method);
+    }
+
     public static bool IsReturn(this MethodReference method)
     {
         if (method == null)

@@ -164,6 +164,21 @@ namespace Mimick.Fody.Weavers
         }
 
         /// <summary>
+        /// Emit a collection of codes within the method body.
+        /// </summary>
+        /// <param name="codes">The codes.</param>
+        public CodeEmitter Emit(IEnumerable<Instruction> codes)
+        {
+            foreach (var c in codes)
+            {
+                if (c != null)
+                    Emit(c);
+            }
+
+            return this;
+        }
+
+        /// <summary>
         /// Closes a <c>try</c> block.
         /// </summary>
         public void EndTry()
@@ -322,6 +337,11 @@ namespace Mimick.Fody.Weavers
     public static class Codes
     {
         #region Properties
+
+        /// <summary>
+        /// A duplicate code.
+        /// </summary>
+        public static Instruction Duplicate => Instruction.Create(OpCodes.Dup);
 
         /// <summary>
         /// A load array code.
@@ -507,6 +527,66 @@ namespace Mimick.Fody.Weavers
         /// <summary>
         /// A stack load code.
         /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public static IEnumerable<Instruction> Load(object value)
+        {
+            if (value == null)
+            {
+                yield return Null;
+                yield break;
+            }
+
+            var type = value.GetType();
+
+            if (type == typeof(string))
+            {
+                yield return String(value.ToString());
+                yield break;
+            }
+
+            if (type == typeof(TypeReference) || type.IsSubclassOf(typeof(TypeReference)))
+            {
+                foreach (var instruction in TypeOf((TypeReference)value))
+                    yield return instruction;
+
+                yield break;
+            }
+
+            if (type.IsEnum)
+                yield return Int((int)value);
+            else if (type == typeof(bool))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (bool)value ? 1 : 0);
+            else if (type == typeof(sbyte))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (sbyte)value);
+            else if (type == typeof(short))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (short)value);
+            else if (type == typeof(int))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (int)value);
+            else if (type == typeof(long))
+                yield return Instruction.Create(OpCodes.Ldc_I8, (long)value);
+            else if (type == typeof(byte))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (byte)value);
+            else if (type == typeof(ushort))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (ushort)value);
+            else if (type == typeof(uint))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (uint)value);
+            else if (type == typeof(ulong))
+                yield return Instruction.Create(OpCodes.Ldc_I8, (ulong)value);
+            else if (type == typeof(double))
+                yield return Instruction.Create(OpCodes.Ldc_I8, (double)value);
+            else if (type == typeof(float))
+                yield return Instruction.Create(OpCodes.Ldc_I4, (float)value);
+
+            if (type.IsValueType)
+                yield return Box(type.IsEnum ? Enum.GetUnderlyingType(type).ToReference() : type.ToReference());
+
+            yield break;
+        }
+
+        /// <summary>
+        /// A stack load code.
+        /// </summary>
         /// <param name="variable">The variable.</param>
         public static Instruction Load(Variable variable)
         {
@@ -603,6 +683,17 @@ namespace Mimick.Fody.Weavers
         /// <param name="variable">The variable.</param>
         /// <returns></returns>
         public static Instruction ThisIf(Variable variable) => variable.IsThisNeeded ? Instruction.Create(OpCodes.Ldarg_0) : (Instruction)null;
+
+        /// <summary>
+        /// A <c>typeof</c> code.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        public static IEnumerable<Instruction> TypeOf(TypeReference type)
+        {
+            yield return LoadToken(type);
+            yield return InvokeStatic(ModuleWeaver.GlobalContext.Refs.TypeGetTypeFromHandle);
+        }
 
         /// <summary>
         /// An unbox code.

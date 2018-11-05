@@ -52,5 +52,10 @@ namespace Mimick
         /// <returns>The value of the configuration; otherwise, the <paramref name="orDefault"/> value.</returns>
         /// <exception cref="InvalidCastException">If the property value cannot be converted to the expected type.</exception>
         T Get<T>(string name, T orDefault = default(T));
+
+        /// <summary>
+        /// Refreshes all configuration sources of the context, resulting in all internal caches being reloaded.
+        /// </summary>
+        void Refresh();
     }
 }

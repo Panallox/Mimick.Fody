@@ -139,6 +139,8 @@ namespace Mimick
                 source.Initialize();
                 context.Add(source);
             }
+
+            Configurations = context;
         }
     }
 }

@@ -23,5 +23,10 @@ namespace Mimick
         /// <param name="name">The property name.</param>
         /// <returns>The property value; otherwise, <c>null</c> if the property could not be resolved from this source.</returns>
         string Resolve(string name);
+
+        /// <summary>
+        /// Refresh the configuration source causing any cached values to be reloaded from the source.
+        /// </summary>
+        void Refresh();
     }
 }

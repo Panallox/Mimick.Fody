@@ -81,6 +81,15 @@ namespace Mimick.Fody.Weavers
         }
 
         /// <summary>
+        /// Signs the method as an override of the provided method.
+        /// </summary>
+        /// <param name="method">The method.</param>
+        public void EmitOverride(MethodReference method)
+        {
+            Target.Overrides.Add(method);
+        }
+
+        /// <summary>
         /// Gets a code emitter which can be used to weave the method body instructions.
         /// </summary>
         /// <returns>A <see cref="CodeEmitter"/> value.</returns>
