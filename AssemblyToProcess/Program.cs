@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Mimick;
 using Mimick.Aspect;
@@ -31,17 +32,6 @@ namespace AssemblyToProcess
 
             dependencies.Register<Service>("svc");
 
-            var testing = new Testing<int>();
-
-            Console.WriteLine("-- PropertyChanged");
-            var prop = testing as INotifyPropertyChanged;
-            prop.PropertyChanged += (s, e) => Console.WriteLine($"The property '{e.PropertyName}' has been changed!");
-
-            testing.MyProperty = "One";
-            testing.MyProperty = "Two";
-
-            var inner = new Testing<int>.InnerConverter<long>();
-            inner.Testing();
             
             Console.WriteLine("Done");
             Console.ReadLine();
@@ -63,6 +53,7 @@ namespace AssemblyToProcess
         public int MyPort;
 
         [Value("Testing")]
+        [NotEmpty]
         public string MyProperty { get; set; }
 
         [Autowire]
@@ -70,6 +61,13 @@ namespace AssemblyToProcess
 
         [Autowire("svc")]
         public Service MyNamedService { get; set; }
+
+        [IgnoreChange]
+        [Minimum(10)]
+        public int MyChanged { get; set; }
+
+        [NotEmpty]
+        public List<string> MyList { get; set; }
 
         public Testing() : base()
         {
@@ -83,17 +81,10 @@ namespace AssemblyToProcess
         [PostConstruct]
         private void Initialize(Service svc = null) => Console.WriteLine($"I initialize after (myField = {myField}) where service = {svc}");
 
-        public class InnerConverter<U> : ITesting<T, U>
-        {
-            public T convert(U inbound) => default(T);
+        [Disposable]
+        private void DisposeInstance() => Console.WriteLine($"I am being disposed!");
 
-            public void Testing([Value("Testing")] string name = null) => Console.WriteLine($"Inner testing = {name}");
-        }
+        [Disposable]
+        private void DisposeAgain() => Console.WriteLine($"I am being disposed a second time!");
     }
-
-    public interface ITesting<T, U>
-    {
-        T convert(U inbound);
-    }
-    
 }

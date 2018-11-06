@@ -43,14 +43,23 @@ public partial class ModuleWeaver
 
         if (interfaceType.HasGenericParameters)
             throw new NotSupportedException($"Cannot implement interface {interfaceType.FullName} due to generic parameters");
-        
+
+        var field = CreateAttribute(emitter, attribute);
+
+        WeaveImplementation(emitter, implementType, interfaceType, field);
+    }
+
+    public void WeaveImplementation(TypeEmitter emitter, TypeDefinition implementType, TypeDefinition interfaceType, Variable field)
+    {
         if (!implementType.Interfaces.Any(i => i.InterfaceType.FullName == interfaceType.FullName))
             throw new NotSupportedException($"Cannot implement attribute '{implementType.FullName}' as it does not implement '{interfaceType.FullName}'");
-        
-        var field = CreateAttribute(emitter, attribute);
+
+        if (emitter.Target.Interfaces.Any(i => i.InterfaceType.FullName == interfaceType.FullName))
+            return;
+
         emitter.Target.Interfaces.Add(new InterfaceImplementation(interfaceType.Import()));
 
-        foreach (var method in interfaceType.Methods)
+        foreach (var method in interfaceType.Methods.Concat(interfaceType.Interfaces.Select(i => i.InterfaceType.Resolve()).SelectMany(i => i.Methods)))
             WeaveImplementedMethod(emitter, field, method);
 
         foreach (var property in interfaceType.Properties)
@@ -114,15 +123,14 @@ public partial class ModuleWeaver
     public void WeaveImplementedMethod(TypeEmitter emitter, Variable field, MethodReference method)
     {
         var resolved = method.Resolve();
-        
-        var definition = method.Resolve();
+
         var emitted = emitter.EmitMethod(
             method.Name,
             method.ReturnType.Import(),
-            parameterTypes: method.HasParameters ? method.Parameters.Select(p => p.ParameterType.Import()).ToArray() : null,
-            genericTypes: method.HasGenericParameters ? method.GenericParameters.ToArray() : null,
-            toStatic: definition.IsStatic,
-            toPrivate: definition.IsPrivate
+            parameterTypes: method.HasParameters ? method.Parameters.Select(p => p.ParameterType.Import()).ToArray() : new TypeReference[0],
+            genericTypes: method.HasGenericParameters ? method.GenericParameters.ToArray() : new GenericParameter[0],
+            toStatic: resolved.IsStatic,
+            toPrivate: resolved.IsPrivate
         );
 
         var implemented = field.Type.GetMethod(method.Name, method.ReturnType, method.Parameters.Select(p => p.ParameterType).ToArray(), method.GenericParameters.ToArray());

@@ -63,15 +63,26 @@ public partial class ModuleWeaver
         var options = attribute.GetAttribute<CompilationOptionsAttribute>();
         var scope = options.GetProperty("Scope", notFound: AttributeScope.Singleton);
 
-        if (scope == AttributeScope.Instanced && method.Target.IsStatic)
-            scope = AttributeScope.Singleton;
-
+        if (scope == AttributeScope.Instanced && attribute.HasConstructorArguments)
+            scope = AttributeScope.MultiInstanced;
+        
+        switch (scope)
+        {
+            case AttributeScope.Instanced:
+            case AttributeScope.MultiInstanced:
+                if (method.Target.IsStatic)
+                    scope = AttributeScope.Singleton;
+                break;
+        }
+        
         switch (scope)
         {
             case AttributeScope.Adhoc:
                 return CreateAttributeAdhoc(method, attribute);
             case AttributeScope.Instanced:
                 return CreateAttributeInstanced(method.Parent, attribute);
+            case AttributeScope.MultiInstanced:
+                return CreateAttributeMultiInstanced(method.Parent, attribute);
             case AttributeScope.Singleton:
                 return CreateAttributeSingleton(method.Parent, attribute);
             default:
@@ -94,6 +105,8 @@ public partial class ModuleWeaver
         {
             case AttributeScope.Adhoc:
             case AttributeScope.Instanced:
+                return CreateAttributeInstanced(emitter, attribute);
+            case AttributeScope.MultiInstanced:
                 return CreateAttributeInstanced(emitter, attribute);
             case AttributeScope.Singleton:
                 return CreateAttributeSingleton(emitter, attribute);
@@ -133,6 +146,9 @@ public partial class ModuleWeaver
             case AttributeScope.Instanced:
                 var instanced = CreateAttributeInstanced(property.Parent, attribute);
                 return new[] { hasGet ? instanced : null, hasSet ? instanced : null };
+            case AttributeScope.MultiInstanced:
+                var multi = CreateAttributeMultiInstanced(property.Parent, attribute);
+                return new[] { hasGet ? multi : null, hasSet ? multi : null };
             case AttributeScope.Singleton:
                 var singleton = CreateAttributeSingleton(property.Parent, attribute);
                 return new[] { hasGet ? singleton : null, hasSet ? singleton : null };
@@ -166,6 +182,9 @@ public partial class ModuleWeaver
             il.Emit(Codes.Invoke(Context.Refs.InstanceAwareInstanceSet));
         }
 
+        foreach (var prop in attribute.Properties)
+            CreateAttributeProperty(method, attribute, variable, prop);
+
         return variable;
     }
 
@@ -179,12 +198,6 @@ public partial class ModuleWeaver
     {
         var type = attribute.AttributeType;
         var name = $"<{type.Name}>k__Attribute";
-
-        if (attribute.HasProperties || attribute.HasConstructorArguments)
-        {
-            var identifier = Interlocked.Increment(ref id);
-            name = $"<{type.Name}${identifier}>k__Attribute";
-        }
 
         var existing = emitter.GetField(name, type, toStatic: false);
 
@@ -216,6 +229,59 @@ public partial class ModuleWeaver
                 il.Emit(Codes.This);
                 il.Emit(Codes.Invoke(Context.Refs.InstanceAwareInstanceSet));
             }
+
+            foreach (var prop in attribute.Properties)
+                CreateAttributeProperty(ctor, attribute, field, prop);
+        }
+
+        return field;
+    }
+
+    /// <summary>
+    /// Creates an multi-instance-level field used to retain an instance of an attribute.
+    /// </summary>
+    /// <param name="emitter">The type weaver.</param>
+    /// <param name="attribute">The attribute.</param>
+    /// <returns></returns>
+    public Variable CreateAttributeMultiInstanced(TypeEmitter emitter, CustomAttribute attribute)
+    {
+        var index = Interlocked.Increment(ref id);
+        var type = attribute.AttributeType;
+        var name = $"<{type.Name}${index}>k__Attribute";
+
+        var existing = emitter.GetField(name, type, toStatic: false);
+
+        if (existing != null)
+            return existing;
+
+        var field = emitter.EmitField(name, type);
+
+        foreach (var ctor in emitter.GetConstructors())
+        {
+            var il = ctor.GetIL();
+
+            il.Insert = CodeInsertion.Before;
+            il.Position = il.GetConstructorBaseOrThis()?.Next ?? il.GetFirst();
+
+            il.Emit(Codes.Nop);
+            il.Emit(Codes.This);
+
+            foreach (var arg in attribute.ConstructorArguments)
+                CreateAttributeParameter(ctor, attribute, arg);
+
+            il.Emit(Codes.Create(attribute.Constructor));
+            il.Emit(Codes.Store(field));
+
+            if (attribute.HasInterface<IInstanceAware>())
+            {
+                il.Emit(Codes.ThisIf(field));
+                il.Emit(Codes.Load(field));
+                il.Emit(Codes.This);
+                il.Emit(Codes.Invoke(Context.Refs.InstanceAwareInstanceSet));
+            }
+
+            foreach (var prop in attribute.Properties)
+                CreateAttributeProperty(ctor, attribute, field, prop);
         }
 
         return field;
@@ -233,15 +299,19 @@ public partial class ModuleWeaver
         var name = $"<{type.Name}>k__Attribute";
         var field = emitter.EmitField(name, type, toStatic: true);
 
-        var il = emitter.GetStaticConstructor().GetIL();
+        var emit = emitter.GetStaticConstructor();
+        var il = emit.GetIL();
 
         il.Emit(Codes.Nop);
 
         foreach (var arg in attribute.ConstructorArguments)
-            CreateAttributeParameter(emitter.GetStaticConstructor(), attribute, arg);
+            CreateAttributeParameter(emit, attribute, arg);
 
         il.Emit(Codes.Create(attribute.Constructor));
         il.Emit(Codes.Store(field));
+
+        foreach (var prop in attribute.Properties)
+            CreateAttributeProperty(emit, attribute, field, prop);
 
         return field;
     }
@@ -261,7 +331,7 @@ public partial class ModuleWeaver
             il.Emit(Codes.Null);
             return;
         }
-        
+                
         var type = arg.Type;
 
         if (type.IsArray)
@@ -299,6 +369,27 @@ public partial class ModuleWeaver
         {
             il.Emit(Codes.Load(arg.Value));
         }
+    }
+
+    /// <summary>
+    /// Creates a reference to a property used in a custom attribute.
+    /// </summary>
+    /// <param name="emitter">The emitter.</param>
+    /// <param name="attribute">The attribute.</param>
+    /// <param name="field">The attribute variable.</param>
+    /// <param name="property">The property.</param>
+    public void CreateAttributeProperty(MethodEmitter emitter, CustomAttribute attribute, Variable field, Mono.Cecil.CustomAttributeNamedArgument property)
+    {
+        var il = emitter.GetIL();
+        var member = field.Type.Resolve().Properties.FirstOrDefault(p => p.Name == property.Name)?.SetMethod;
+
+        if (member == null)
+            throw new MissingMemberException($"Cannot resolve property {property.Name} of {attribute.AttributeType.Name} as there is no setter");
+
+        il.Emit(Codes.ThisIf(field));
+        il.Emit(Codes.Load(field));
+        CreateAttributeParameter(emitter, attribute, property.Argument);
+        il.Emit(Codes.Invoke(member.Import()));
     }
 
     /// <summary>

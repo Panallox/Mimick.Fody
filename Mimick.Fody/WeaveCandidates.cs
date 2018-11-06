@@ -102,7 +102,13 @@ namespace Mimick.Fody
 
             foreach (var type in Types.Select(a => a.Resolve()).Where(a => !a.IsEnum && !a.IsInterface))
             {
-                var implements = type.CustomAttributes.Where(a => a.GetAttribute<CompilationImplementsAttribute>() != null);
+                var implements = type.CustomAttributes.Where(a => a.GetAttribute<CompilationImplementsAttribute>() != null).ToList();
+                
+                foreach (var member in type.GetMembers())
+                {
+                    var inner = member.Resolve().CustomAttributes.Where(c => c.GetAttribute<CompilationImplementsAttribute>() != null);
+                    implements.AddRange(inner);
+                }
 
                 if (implements.Any())
                     list.Add(new TypeInterceptorInfo { Implements = implements.ToArray(), Type = type });

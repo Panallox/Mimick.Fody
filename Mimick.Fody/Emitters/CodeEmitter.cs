@@ -169,6 +169,9 @@ namespace Mimick.Fody.Weavers
         /// <param name="codes">The codes.</param>
         public CodeEmitter Emit(IEnumerable<Instruction> codes)
         {
+            if (codes == null)
+                return this;
+
             foreach (var c in codes)
             {
                 if (c != null)
@@ -612,11 +615,11 @@ namespace Mimick.Fody.Weavers
             else if (type == typeof(ulong))
                 yield return Instruction.Create(OpCodes.Ldc_I8, (ulong)value);
             else if (type == typeof(double))
-                yield return Instruction.Create(OpCodes.Ldc_I8, (double)value);
+                yield return Instruction.Create(OpCodes.Ldc_R8, (double)value);
             else if (type == typeof(float))
-                yield return Instruction.Create(OpCodes.Ldc_I4, (float)value);
+                yield return Instruction.Create(OpCodes.Ldc_R4, (float)value);
 
-            if (type.IsValueType)
+            if (type.IsEnum)
                 yield return Box(type.IsEnum ? Enum.GetUnderlyingType(type).ToReference() : type.ToReference());
 
             yield break;

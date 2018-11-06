@@ -69,6 +69,7 @@
     <Compile Include="FieldsWeaver.cs" />
     <Compile Include="Helpers\AttributeExtensions.cs" />
     <Compile Include="Helpers\DebugExtensions.cs" />
+    <Compile Include="Helpers\EnumerableExtensions.cs" />
     <Compile Include="Helpers\EventExtensions.cs" />
     <Compile Include="Helpers\GenericExtensions.cs" />
     <Compile Include="Helpers\MethodExtensions.cs" />

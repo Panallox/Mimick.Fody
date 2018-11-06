@@ -132,11 +132,11 @@ namespace Mimick.Fody.Weavers
             var existing = Target.Methods.Where(m => m.Name == name && m.ReturnType.FullName == returnType.FullName && m.IsStatic == toStatic);
 
             if (parameterTypes != null)
-                existing = existing.Where(m => m.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(parameterTypes.Select(p => p.FullName)));
+                existing = existing.Where(m => m.Parameters.Count == parameterTypes.Length && m.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(parameterTypes.Select(p => p.FullName)));
 
             if (genericTypes != null)
-                existing = existing.Where(m => m.GenericParameters.Select(p => p.Name).SequenceEqual(genericTypes.Select(p => p.Name)));
-
+                existing = existing.Where(m => m.GenericParameters.Count == genericTypes.Length && m.GenericParameters.Select(p => p.Name).SequenceEqual(genericTypes.Select(p => p.Name)));
+            
             if (existing.Any())
                 return new MethodEmitter(this, existing.First());
 
@@ -147,13 +147,13 @@ namespace Mimick.Fody.Weavers
             
             var method = new MethodDefinition(name, attributes, returnType);
             
-            if (parameterTypes != null)
+            if (parameterTypes != null && parameterTypes.Length > 0)
             {
                 foreach (var type in parameterTypes)
                     method.Parameters.Add(new ParameterDefinition(type));
             }
             
-            if (genericTypes != null)
+            if (genericTypes != null && genericTypes.Length > 0)
             {
                 foreach (var type in genericTypes)
                     method.GenericParameters.Add(new GenericParameter(type.Name, method));
