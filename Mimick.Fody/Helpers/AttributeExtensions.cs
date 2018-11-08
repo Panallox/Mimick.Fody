@@ -10,6 +10,24 @@ using System.Threading.Tasks;
 /// </summary>
 static class AttributeExtensions
 {
+    private static readonly string AttributeUsageFullName = typeof(AttributeUsageAttribute).FullName;
+
+    public static IEnumerable<CustomAttribute> GetCustomAttributes(this ICustomAttributeProvider member)
+    {
+        if (member.HasCustomAttributes)
+        {
+            foreach (var attribute in member.CustomAttributes.Where(a => !a.AttributeType.IsSystem()))
+            {
+                yield return attribute;
+
+                foreach (var child in attribute.AttributeType.Resolve().GetCustomAttributes())
+                    yield return child;
+            }
+        }
+
+        yield break;
+    }
+
     public static CustomAttribute GetAttribute<T>(this CustomAttribute a) where T : Attribute
     {
         var match = typeof(T).FullName;

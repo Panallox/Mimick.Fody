@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -41,9 +42,9 @@ namespace Mimick
         FrameworkContext(FrameworkConfiguration configurator)
         {
             configuration = configurator;
-            Dependencies = new DependencyContext();
 
             InitializeConfigurations();
+            InitializeDependencies();
         }
 
         /// <summary>
@@ -141,6 +142,30 @@ namespace Mimick
             }
 
             Configurations = context;
+        }
+
+        /// <summary>
+        /// Initializes the dependencies of the framework.
+        /// </summary>
+        private void InitializeDependencies()
+        {
+            var assemblies = configuration.AssembliesConfig.All;
+            var types = assemblies.SelectMany(a => a.GetTypes()).Where(a => a.GetAttributeInherited<FrameworkAttribute>(false) != null);
+
+            Dependencies = new DependencyContext();
+
+            foreach (var type in types)
+            {
+                var component = type.GetAttributeInherited<ComponentAttribute>();
+
+                if (component != null)
+                {
+                    var configurator = Dependencies.Register(type);
+
+                    if (component.Scope == Scope.Adhoc)
+                        configurator.Adhoc();
+                }
+            }
         }
     }
 }

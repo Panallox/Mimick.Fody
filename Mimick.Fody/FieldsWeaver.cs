@@ -47,8 +47,8 @@ public partial class ModuleWeaver
 
         var getter = property.GetGetter();
         var setter = property.GetSetter();
-        
-        var search = field.IsPrivate ? emitter.Target.Methods : Context.Candidates.SelectMany(a => a.Resolve().Methods);
+
+        var search = field.IsPrivate ? (field.DeclaringType.HasAsyncStateMachine() ? emitter.Target.GetMethodsInNested() : emitter.Target.Methods) : Context.Candidates.SelectMany(a => a.Resolve().Methods);
 
         foreach (var method in search)
         {
@@ -60,8 +60,8 @@ public partial class ModuleWeaver
             foreach (var i in il)
             {
                 var reference = i.Operand as FieldReference ?? i.Operand as FieldDefinition;
-                
-                if (reference == null || !reference.IsGenericMatch(path))
+                                
+                if (reference == null || (!reference.IsGenericMatch(path) && !reference.IsGenericMatch(field.FullName)))
                     continue;
 
                 var declaring = reference.DeclaringType;
@@ -78,12 +78,12 @@ public partial class ModuleWeaver
                 
                 if (i.OpCode == OpCodes.Ldfld || i.OpCode == OpCodes.Ldsfld)
                 {
-                    i.OpCode = getter.Target.IsAbstract ? OpCodes.Callvirt : OpCodes.Call;
+                    i.OpCode = getter.Target.IsAbstract && !getter.Target.IsStatic ? OpCodes.Callvirt : OpCodes.Call;
                     i.Operand = get;
                 }
                 else if (i.OpCode == OpCodes.Stfld || i.OpCode == OpCodes.Stsfld)
                 {
-                    i.OpCode = setter.Target.IsAbstract ? OpCodes.Callvirt : OpCodes.Call;
+                    i.OpCode = setter.Target.IsAbstract && !getter.Target.IsStatic ? OpCodes.Callvirt : OpCodes.Call;
                     i.Operand = set;
                 }
             }

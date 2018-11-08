@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Mono.Cecil;
@@ -47,6 +48,35 @@ static class TypeExtensions
         return null;
     }
 
+    public static IEnumerable<MethodDefinition> GetMethodsInNested(this TypeReference type)
+    {
+        var def = type as TypeDefinition ?? type.Resolve();
+        return def.Methods.Concat(def.NestedTypes.SelectMany(a => GetMethodsInNested(a)));
+    }
+
     public static PropertyReference GetProperty(this TypeReference type, string name, TypeReference returnType)
         => type.Resolve().Properties.FirstOrDefault(p => p.Name == name && p.PropertyType.FullName == returnType.FullName);
+
+    public static bool HasAsyncStateMachine(this TypeReference type)
+    {
+        var def = type as TypeDefinition ?? type.Resolve();
+        return def.NestedTypes.Any(a => a.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IAsyncStateMachine).FullName));
+    }
+
+    public static bool IsSystem(this TypeReference type)
+    {
+        var def = type as TypeDefinition ?? type.Resolve();
+        var m = def.Module;
+
+        if (m.Name == "System" || m.Name == "mscorlib" || m.Name == "netstandard" || m.Name == "WindowsBase" || m.Name == "testhost")
+            return true;
+
+        if (m.Name.StartsWith("System.") || m.Name.StartsWith("Microsoft.") || m.Name.StartsWith("Windows."))
+            return true;
+
+        if (type.Namespace == "System" || type.Namespace.StartsWith("System."))
+            return true;
+
+        return false;
+    }
 }

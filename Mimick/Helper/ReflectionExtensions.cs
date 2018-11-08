@@ -13,6 +13,34 @@ namespace Mimick
     static class ReflectionExtensions
     {
         /// <summary>
+        /// Gets an attribute from the provided member of the provided type, including any attributes inherited.
+        /// </summary>
+        /// <typeparam name="T">The type of the attribute.</typeparam>
+        /// <param name="member">The member.</param>
+        /// <param name="inherit">Whether inherited attributes should also be selected.</param>
+        /// <returns>The matched attribute value; otherwise, <c>null</c>.</returns>
+        public static T GetAttributeInherited<T>(this MemberInfo member, bool inherit = false) where T : Attribute
+        {
+            foreach (var attribute in member.GetCustomAttributes(inherit))
+            {
+                var type = attribute.GetType();
+
+                if (type.IsSystem())
+                    continue;
+
+                if (attribute is T match)
+                    return match;
+
+                match = type.GetAttributeInherited<T>(inherit);
+
+                if (match != null)
+                    return match;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Determines whether the constructor is both default (no required parameters) and accessible (public).
         /// </summary>
         /// <param name="method">The method.</param>
@@ -42,7 +70,7 @@ namespace Mimick
             if (m.StartsWith("System.") || m.StartsWith("Microsoft.") || m.StartsWith("Windows."))
                 return true;
 
-            if (type.Namespace.StartsWith("System."))
+            if (type.Namespace == "System" || type.Namespace.StartsWith("System."))
                 return true;
 
             return false;

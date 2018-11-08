@@ -14,17 +14,19 @@ namespace Mimick.Fody.Weavers
     {
         private MethodEmitter getter;
         private MethodEmitter setter;
+        private bool toStatic;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyEmitter"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <param name="property">The property.</param>
-        public PropertyEmitter(TypeEmitter parent, PropertyReference property)
+        public PropertyEmitter(TypeEmitter parent, PropertyReference property, bool isStatic = false)
         {
             BackingField = property.GetBackingField();
             Parent = parent;
             Target = property as PropertyDefinition ?? property.Resolve();
+            toStatic = isStatic;
 
             if (Target.GetMethod != null)
                 getter = new MethodEmitter(parent, Target.GetMethod);
@@ -74,7 +76,14 @@ namespace Mimick.Fody.Weavers
         /// <summary>
         /// Gets whether the property is static.
         /// </summary>
-        public bool IsStatic => (Target.GetMethod ?? Target.SetMethod).IsStatic;
+        public bool IsStatic
+        {
+            get
+            {
+                var method = Target.GetMethod ?? Target.SetMethod;
+                return method?.IsStatic ?? toStatic;
+            }
+        }
 
         /// <summary>
         /// Gets the parent type weaver.
@@ -104,6 +113,10 @@ namespace Mimick.Fody.Weavers
                 return getter;
 
             var attributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public;
+
+            if (IsStatic)
+                attributes |= MethodAttributes.Static;
+
             var method = new MethodDefinition($"get_{Target.Name}", attributes, Target.PropertyType);
             Parent.Target.Methods.Add(method);
             Target.GetMethod = method;
@@ -123,6 +136,10 @@ namespace Mimick.Fody.Weavers
                 return setter;
 
             var attributes = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Public;
+
+            if (IsStatic)
+                attributes |= MethodAttributes.Static;
+
             var method = new MethodDefinition($"set_{Target.Name}", attributes, Target.Module.TypeSystem.Void);
             var parameter = new ParameterDefinition("value", ParameterAttributes.None, Target.PropertyType);
 

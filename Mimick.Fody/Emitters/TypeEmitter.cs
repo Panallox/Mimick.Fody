@@ -193,7 +193,7 @@ namespace Mimick.Fody.Weavers
             Context.AddCompilerGenerated(property);
             Context.AddNonSerialized(property);
 
-            return new PropertyEmitter(this, property);
+            return new PropertyEmitter(this, property, toStatic);
         }
 
         /// <summary>

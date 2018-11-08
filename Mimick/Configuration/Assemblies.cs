@@ -27,8 +27,13 @@ namespace Mimick
         /// </summary>
         public static Assembly This
         {
-            get { return Assembly.GetExecutingAssembly(); }
+            get { return Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly(); }
         }
+
+        /// <summary>
+        /// Gets the configured list of assemblies.
+        /// </summary>
+        internal List<Assembly> All => assemblies;
 
         #endregion
 

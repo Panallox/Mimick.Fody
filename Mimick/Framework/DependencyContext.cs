@@ -191,7 +191,7 @@ namespace Mimick.Framework
             var implements = new List<Type>(GetImplementedTypes(concreteType));
             
             if (names == null || names.Length == 0)
-                names = implements.Concat(new[] { interfaceType, concreteType }).Distinct().Select(t => t.Name).ToArray();
+                names = implements.Concat(new[] { interfaceType, concreteType }).Where(t => t != null).Distinct().Select(t => t.Name).ToArray();
 
             var constructor = CreateConstructor(concreteType);
             var entry = new DependencyEntry(interfaceType, concreteType, constructor, new SingletonLifetime(constructor));

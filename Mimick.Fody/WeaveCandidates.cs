@@ -52,7 +52,7 @@ namespace Mimick.Fody
                 var ctors = new ConstructorInterceptorInfo { Initializers = new MethodDefinition[0] };
                 var item = new TypeInterceptorInfo { Constructors = ctors, Type = type };
 
-                ctors.Initializers = type.Methods.Where(m => !m.IsAbstract).Where(m => m.CustomAttributes.Any(a => a.HasInterface<IInjectBeforeInitializer>() || a.HasInterface<IInjectAfterInitializer>())).ToArray();
+                ctors.Initializers = type.Methods.Where(m => !m.IsAbstract).Where(m => m.GetCustomAttributes().Any(a => a.HasInterface<IInjectBeforeInitializer>() || a.HasInterface<IInjectAfterInitializer>())).ToArray();
 
                 if (ctors.Initializers.Length > 0)
                     list.Add(item);
@@ -76,7 +76,7 @@ namespace Mimick.Fody
                 
                 foreach (var field in type.Fields)
                 {
-                    var attributes = field.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+                    var attributes = field.GetCustomAttributes().Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
 
                     if (attributes.Any())
                         fields.Add(new FieldInterceptorInfo { Field = field, Interceptors = attributes.ToArray() });
@@ -102,11 +102,12 @@ namespace Mimick.Fody
 
             foreach (var type in Types.Select(a => a.Resolve()).Where(a => !a.IsEnum && !a.IsInterface))
             {
-                var implements = type.CustomAttributes.Where(a => a.GetAttribute<CompilationImplementsAttribute>() != null).ToList();
+
+                var implements = type.GetCustomAttributes().Where(a => a.GetAttribute<CompilationImplementsAttribute>() != null).ToList();
                 
                 foreach (var member in type.GetMembers())
                 {
-                    var inner = member.Resolve().CustomAttributes.Where(c => c.GetAttribute<CompilationImplementsAttribute>() != null);
+                    var inner = member.Resolve().GetCustomAttributes().Where(c => c.GetAttribute<CompilationImplementsAttribute>() != null);
                     implements.AddRange(inner);
                 }
 
@@ -116,7 +117,7 @@ namespace Mimick.Fody
 
             return list;
         }
-
+                
         /// <summary>
         /// Gets a collection of type candidate results for types containing members which implement method interceptors.
         /// </summary>
@@ -130,12 +131,12 @@ namespace Mimick.Fody
                 var item = new TypeInterceptorInfo { Type = type };
                 var methods = new List<MethodInterceptorInfo>();
 
-                var top = type.CustomAttributes.Where(a => a.HasInterface<IMethodInterceptor>());
+                var top = type.GetCustomAttributes().Where(a => a.HasInterface<IMethodInterceptor>());
 
                 foreach (var method in type.Methods.Where(m => !m.IsAbstract))
                 {
-                    var these = method.CustomAttributes.Where(a => a.HasInterface<IMethodInterceptor>()).Concat(top);
-                    var parameters = method.Parameters.SelectMany(p => p.CustomAttributes.Where(a => a.HasInterface<IParameterInterceptor>())).Concat(method.CustomAttributes.Where(a => a.HasInterface<IParameterInterceptor>()));
+                    var these = method.GetCustomAttributes().Where(a => a.HasInterface<IMethodInterceptor>()).Concat(top);
+                    var parameters = method.Parameters.SelectMany(p => p.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>())).Concat(method.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>()));
 
                     if (these.Any() || parameters.Any())
                     {
@@ -167,11 +168,11 @@ namespace Mimick.Fody
                 var item = new TypeInterceptorInfo { Type = type };
                 var properties = new List<PropertyInterceptorInfo>();
 
-                var top = type.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+                var top = type.GetCustomAttributes().Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
 
                 foreach (var property in type.Properties)
                 {
-                    var attributes = property.CustomAttributes.Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>()).Concat(top);
+                    var attributes = property.GetCustomAttributes().Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>()).Concat(top);
 
                     if (attributes.Any())
                         properties.Add(new PropertyInterceptorInfo { Interceptors = attributes.ToArray(), Property = property });
@@ -223,13 +224,7 @@ namespace Mimick.Fody
             foreach (var s in type.NestedTypes)
                 InitializeBy(s);
 
-            if (m.Name == "System" || m.Name == "mscorlib" || m.Name == "netstandard" || m.Name == "WindowsBase" || m.Name == "testhost")
-                return;
-
-            if (m.Name.StartsWith("System.") || m.Name.StartsWith("Microsoft.") || m.Name.StartsWith("Windows."))
-                return;
-
-            if (type.Namespace.StartsWith("System."))
+            if (type.IsSystem())
                 return;
 
             if (type.IsInterface || !type.IsClass)
