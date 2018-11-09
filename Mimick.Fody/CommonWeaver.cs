@@ -467,6 +467,12 @@ public partial class ModuleWeaver
 
         var id = method.Target.GetHashString();
         var name = $"<{method.Target.Name}${id}${param.Index}>k__ParameterInfo";
+
+        var existing = parent.GetField(name, Context.Refs.PropertyInfo, toStatic: true);
+
+        if (existing != null)
+            return existing;
+
         var field = parent.EmitField(name, Context.Refs.PropertyInfo, toStatic: true);
 
         var il = parent.GetStaticConstructor().GetIL();

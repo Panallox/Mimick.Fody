@@ -42,10 +42,10 @@ public partial class ModuleWeaver
     /// <param name="item">The method information.</param>
     public void WeaveMethodInterceptors(MethodEmitter weaver, MethodInterceptorInfo item)
     {
-        var pAttributes = item.ParameterInterceptors;
+        var pAttributes = item.Parameters.SelectMany(p => p.Attributes.Select(a => new { Index = p.Index, Attribute = a })).ToArray();
         var mAttributes = item.MethodInterceptors;
 
-        var pInterceptors = new Variable[item.ParameterInterceptors.Length];
+        var pInterceptors = new Variable[pAttributes.Length];
         var mInterceptors = new Variable[item.MethodInterceptors.Length];
 
         var method = weaver.Target;
@@ -68,15 +68,26 @@ public partial class ModuleWeaver
 
         var leave = WeaveMethodReturnsRoute(weaver, result, mInterceptors.Length > 0);
         var cancel = il.EmitLabel();
-
+        
         for (int i = 0, count = pInterceptors.Length; i < count; i++)
-            pInterceptors[i] = CreateAttribute(weaver, pAttributes[i]);
+            pInterceptors[i] = CreateAttribute(weaver, pAttributes[i].Attribute);
 
         for (int i = 0, count = mInterceptors.Length; i < count; i++)
             mInterceptors[i] = CreateAttribute(weaver, mAttributes[i]);
         
         foreach (var attribute in mAttributes)
             weaver.Target.CustomAttributes.Remove(attribute);
+
+        foreach (var parameter in item.Parameters)
+        {
+            foreach (var attribute in parameter.Attributes)
+            {
+                if (parameter.Index == -1)
+                    weaver.Target.CustomAttributes.Remove(attribute);
+                else
+                    weaver.Target.Parameters[parameter.Index].CustomAttributes.Remove(attribute);
+            }
+        }
 
         var hasMethod = mInterceptors.Length > 0;
         var hasParams = pInterceptors.Length > 0;
@@ -103,26 +114,31 @@ public partial class ModuleWeaver
             for (int i = 0, count = pInterceptors.Length; i < count; i++)
             {
                 var inc = pInterceptors[i];
-                var prm = method.Parameters[i];
-                var pVariable = new Variable(prm);
-                var pInfo = CreateParameterInfo(weaver, prm);
+                var parameters = pAttributes[i].Index == -1 ? method.Parameters.ToArray() : new[] { method.Parameters[pAttributes[i].Index] };
 
-                il.Emit(method.IsStatic ? Codes.Null : Codes.This);
-                il.Emit(Codes.Load(pInfo));
-                il.Emit(Codes.Arg(pVariable));
-                il.Emit(Codes.Box(prm.ParameterType));
-                il.Emit(Codes.Create(Context.Refs.ParameterInterceptionArgsCtor));
-                il.Emit(Codes.Store(pEventArgs));
+                for (int j = 0, pCount = parameters.Length; j < pCount; j++)
+                {
+                    var prm = parameters[j];
+                    var pVariable = new Variable(prm);
+                    var pInfo = CreateParameterInfo(weaver, prm);
 
-                il.Emit(Codes.ThisIf(inc));
-                il.Emit(Codes.Load(inc));
-                il.Emit(Codes.Load(pEventArgs));
-                il.Emit(Codes.Invoke(Context.Refs.ParameterInterceptorOnEnter));
+                    il.Emit(method.IsStatic ? Codes.Null : Codes.This);
+                    il.Emit(Codes.Load(pInfo));
+                    il.Emit(Codes.Arg(pVariable));
+                    il.Emit(Codes.Box(prm.ParameterType));
+                    il.Emit(Codes.Create(Context.Refs.ParameterInterceptionArgsCtor));
+                    il.Emit(Codes.Store(pEventArgs));
 
-                il.Emit(Codes.Load(pEventArgs));
-                il.Emit(Codes.Invoke(Context.Refs.ParameterInterceptionArgsValueGet));
-                il.Emit(Codes.Unbox(prm.ParameterType));
-                il.Emit(Codes.Store(pVariable));
+                    il.Emit(Codes.ThisIf(inc));
+                    il.Emit(Codes.Load(inc));
+                    il.Emit(Codes.Load(pEventArgs));
+                    il.Emit(Codes.Invoke(Context.Refs.ParameterInterceptorOnEnter));
+
+                    il.Emit(Codes.Load(pEventArgs));
+                    il.Emit(Codes.Invoke(Context.Refs.ParameterInterceptionArgsValueGet));
+                    il.Emit(Codes.Unbox(prm.ParameterType));
+                    il.Emit(Codes.Store(pVariable));
+                }
             }
         }
 

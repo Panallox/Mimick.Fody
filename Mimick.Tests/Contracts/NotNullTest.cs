@@ -17,35 +17,20 @@ namespace Mimick.Tests.Contracts
         public void Initialize() => target = new NotNullContracts();
 
         [TestMethod]
-        public void ShouldPassWhenNotNullIsNotPresent()
-        {
-            target.PassIfNull(null);
-        }
+        public void ShouldPassWhenNotNullIsNotPresent() => target.PassIfNull(null);
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void ShouldFailWhenNotNullArgumentIsPassedNull()
-        {
-            target.ThrowIfNull(null);
-        }
+        public void ShouldFailWhenNotNullArgumentIsPassedNull() => target.ThrowIfNull(null);
 
         [TestMethod]
-        public void ShouldPassWhenNotNullArgumentIsPassedValid()
-        {
-            target.ThrowIfNull(new object());
-        }
+        public void ShouldPassWhenNotNullArgumentIsPassedValid() => target.ThrowIfNull(new object());
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void ShouldFailWhenNotNullMethodIsPassedNull()
-        {
-            target.ThrowIfAnyNull(new object(), null);
-        }
+        public void ShouldFailWhenNotNullMethodIsPassedNull() => target.ThrowIfAnyNull(new object(), null);
 
         [TestMethod]
-        public void ShouldPassWhenNotNullMethodIsPassedValid()
-        {
-            target.ThrowIfAnyNull(new object(), new object());
-        }
+        public void ShouldPassWhenNotNullMethodIsPassedValid() => target.ThrowIfAnyNull(new object(), new object());
     }
 }

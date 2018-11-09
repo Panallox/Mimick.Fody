@@ -88,6 +88,7 @@
     <Compile Include="Helper\CollectionExtensions.cs" />
     <Compile Include="Helper\ReflectionExtensions.cs" />
     <Compile Include="Helper\TypeHelper.cs" />
+    <Compile Include="Helper\ValueHelper.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="IConfigurationContext.cs" />
     <Compile Include="IConfigurationSource.cs" />

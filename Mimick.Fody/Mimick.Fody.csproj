@@ -61,6 +61,7 @@
     <Compile Include="Candidates\ConstructorInterceptorInfo.cs" />
     <Compile Include="Candidates\FieldInterceptorInfo.cs" />
     <Compile Include="Candidates\MethodInterceptorInfo.cs" />
+    <Compile Include="Candidates\ParameterInterceptorInfo.cs" />
     <Compile Include="Candidates\PropertyInterceptorInfo.cs" />
     <Compile Include="Candidates\TypeInterceptorInfo.cs" />
     <Compile Include="CommonWeaver.cs" />

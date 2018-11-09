@@ -15,10 +15,37 @@ namespace Mimick
         /// <summary>
         /// Initializes a new instance of the <see cref="ComponentAttribute" /> class.
         /// </summary>
-        public ComponentAttribute()
+        public ComponentAttribute() : this(null, Scope.Singleton)
         {
-            Name = null;
-            Scope = Scope.Singleton;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentAttribute" /> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        public ComponentAttribute(string name) : this(name, Scope.Singleton)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentAttribute"/> class.
+        /// </summary>
+        /// <param name="scope">The scope.</param>
+        public ComponentAttribute(Scope scope) : this(null, scope)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentAttribute"/> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="scope">The scope.</param>
+        public ComponentAttribute(string name, Scope scope)
+        {
+            Name = name;
+            Scope = scope;
         }
 
         #region Properties
@@ -29,7 +56,7 @@ namespace Mimick
         /// </summary>
         public string Name
         {
-            get; set;
+            get;
         }
 
         /// <summary>
@@ -37,7 +64,7 @@ namespace Mimick
         /// </summary>
         public Scope Scope
         {
-            get; set;
+            get;
         }
 
         #endregion

@@ -136,12 +136,22 @@ namespace Mimick.Fody
                 foreach (var method in type.Methods.Where(m => !m.IsAbstract))
                 {
                     var these = method.GetCustomAttributes().Where(a => a.HasInterface<IMethodInterceptor>()).Concat(top);
-                    var parameters = method.Parameters.SelectMany(p => p.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>())).Concat(method.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>()));
+                    var parameters = method.Parameters.Where(p => p.GetCustomAttributes().Any(a => a.HasInterface<IParameterInterceptor>())).Select(p => new ParameterInterceptorInfo { Index = p.Index, Attributes = p.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>()).ToArray() });
+                    var allParameters = new ParameterInterceptorInfo { Index = -1, Attributes = method.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>()).ToArray() };
 
-                    if (these.Any() || parameters.Any())
+                    if (these.Any() || parameters.Any() || allParameters.Attributes.Length > 0)
                     {
                         var generic = type.HasGenericParameters ? method.MakeGeneric(type.GenericParameters.ToArray()) : method;
-                        methods.Add(new MethodInterceptorInfo { Method = generic.Resolve(), MethodInterceptors = these.ToArray(), ParameterInterceptors = parameters.ToArray() });
+
+                        if (allParameters.Attributes.Length > 0)
+                            parameters = parameters.Concat(new[] { allParameters });
+
+                        methods.Add(new MethodInterceptorInfo
+                        {
+                            Method = generic.Resolve(),
+                            MethodInterceptors = these.ToArray(),
+                            Parameters = parameters.ToArray()
+                        });
                     }
                 }
 

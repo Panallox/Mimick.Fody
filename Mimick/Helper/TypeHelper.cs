@@ -72,5 +72,58 @@ namespace Mimick
 
             throw ex;
         }
+
+        /// <summary>
+        /// Gets a default value for the provided type.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The default value.</returns>
+        public static object Default(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Boolean:
+                    return default(bool);
+                case TypeCode.Byte:
+                    return default(byte);
+                case TypeCode.Char:
+                    return default(char);
+                case TypeCode.DateTime:
+                    return default(DateTime);
+                case TypeCode.DBNull:
+                    return default(DBNull);
+                case TypeCode.Decimal:
+                    return default(decimal);
+                case TypeCode.Double:
+                    return default(double);
+                case TypeCode.Empty:
+                    return null;
+                case TypeCode.Int16:
+                    return default(short);
+                case TypeCode.Int32:
+                    return default(int);
+                case TypeCode.Int64:
+                    return default(long);
+                case TypeCode.Object:
+                    return default(object);
+                case TypeCode.SByte:
+                    return default(sbyte);
+                case TypeCode.Single:
+                    return default(float);
+                case TypeCode.String:
+                    return default(string);
+                case TypeCode.UInt16:
+                    return default(ushort);
+                case TypeCode.UInt32:
+                    return default(uint);
+                case TypeCode.UInt64:
+                    return default(ulong);
+                default:
+                    throw new ArgumentException($"Cannot get default value of '{type.FullName}'");
+            }
+        }
     }
 }

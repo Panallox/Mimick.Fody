@@ -13,7 +13,7 @@ namespace Mimick.Fody
     public class MethodInterceptorInfo
     {
         #region Properties
-
+        
         /// <summary>
         /// Gets or sets the method.
         /// </summary>
@@ -27,7 +27,7 @@ namespace Mimick.Fody
         /// <summary>
         /// Gets or sets the parameter interceptors.
         /// </summary>
-        public CustomAttribute[] ParameterInterceptors { get; set; }
+        public ParameterInterceptorInfo[] Parameters { get; set; }
 
         #endregion
     }

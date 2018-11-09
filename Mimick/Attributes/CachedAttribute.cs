@@ -25,7 +25,33 @@ namespace Mimick
         /// <summary>
         /// Initializes a new instance of the <see cref="CachedAttribute" /> class.
         /// </summary>
-        public CachedAttribute() => cache = new Cache<string, object>();
+        public CachedAttribute() : this(int.MaxValue, int.MaxValue)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CachedAttribute" /> class.
+        /// </summary>
+        /// <param name="maxCount">The maximum count.</param>
+        public CachedAttribute(int maxCount) : this(maxCount, int.MaxValue)
+        {
+
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CachedAttribute"/> class.
+        /// </summary>
+        /// <param name="maxCount">The maximum count.</param>
+        /// <param name="maxTime">The maximum time in milliseconds.</param>
+        public CachedAttribute(int maxCount, int maxTimeMilliseconds)
+        {
+            cache = new Cache<string, object>()
+            {
+                MaximumCount = maxCount,
+                MaximumTime = TimeSpan.FromMilliseconds(maxTimeMilliseconds)
+            };
+        }
 
         /// <summary>
         /// Called when a method has been invoked, and executes before the method body.
