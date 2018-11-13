@@ -1,3 +1,5 @@
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/ifjrmddnbmedidb0?svg=true&style=flat)](https://ci.appveyor.com/project/Epoque1/mimick-fody) 
+
 ## This is an add-in for [Fody](http://github.com/Fody/Fody)
 
 This framework introduces automated behaviour when developing an application, and provides dependency injection support, and dependency resolution.
