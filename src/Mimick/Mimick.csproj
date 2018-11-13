@@ -86,9 +86,9 @@
     <Compile Include="Framework\DependencyContext.cs" />
     <Compile Include="Framework\FrameworkContext.cs" />
     <Compile Include="Helper\CollectionExtensions.cs" />
+    <Compile Include="Helper\NumberHelper.cs" />
     <Compile Include="Helper\ReflectionExtensions.cs" />
     <Compile Include="Helper\TypeHelper.cs" />
-    <Compile Include="Helper\ValueHelper.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="IConfigurationContext.cs" />
     <Compile Include="IConfigurationSource.cs" />
@@ -99,6 +99,12 @@
     <Compile Include="Lifetime\AdhocLifetime.cs" />
     <Compile Include="Lifetime\SingletonLifetime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Values\Constant.cs" />
+    <Compile Include="Values\Node.cs" />
+    <Compile Include="Values\Operator.cs" />
+    <Compile Include="Values\Value.cs" />
+    <Compile Include="Values\ValueParser.cs" />
+    <Compile Include="Values\Variable.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

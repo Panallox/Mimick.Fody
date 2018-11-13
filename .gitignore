@@ -240,3 +240,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 Tools/*.dll
+src/Tools/*.dll

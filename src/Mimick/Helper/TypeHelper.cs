@@ -27,6 +27,41 @@ namespace Mimick
         public static readonly Type UInt64 = typeof(ulong);
 
         /// <summary>
+        /// Converts a provided value into a corresponding type best matched to the content.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>The converted value.</returns>
+        public static object AutoConvert(string value)
+        {
+            if (value == null)
+                return null;
+
+            var trim = value.Trim();
+            var length = trim.Length;
+
+            if (length == 0)
+                return value;
+
+            var c = trim[0];
+
+            if (c == 'T' || c == 't' || c == 'F' || c == 'f')
+            {
+                if (length == 4 && trim.Equals("true", StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (length == 5 && trim.Equals("false", StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            if (char.IsNumber(c) || (c == '-' && length > 1 && char.IsNumber(trim[1])))
+            {
+                if (double.TryParse(trim, out var number))
+                    return NumberHelper.Shrink(number);
+            }
+
+            return value;
+        }
+
+        /// <summary>
         /// Converts a provided value into the requested type.
         /// </summary>
         /// <param name="value">The value.</param>

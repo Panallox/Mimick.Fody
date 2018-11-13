@@ -4,21 +4,32 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mimick.Aspect;
+using Mimick.Values;
 
 namespace Mimick
 {
     /// <summary>
     /// Indicates that the associated field, property, or parameter should be populated from a value matching the provided descriptor.
     /// </summary>
-    [CompilationOptions(Scope = AttributeScope.Instanced)]
+    /// <remarks>
+    /// The value can be anything ranging from: a basic, constant value ("text", "1234"); a complex value which is computed during runtime
+    /// when the value is resolved ("2 * 3 * 4", "'Test ' + 1"); or a value which contains a configuration which must be resolved ("{my.configuration}")
+    /// </remarks>
+    [CompilationOptions(Scope = AttributeScope.MultiInstanced)]
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property)]
     public sealed class ValueAttribute : Attribute, IParameterInterceptor, IPropertyGetInterceptor
     {
+        private readonly Value value;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ValueAttribute" /> class.
         /// </summary>
         /// <param name="pattern">The pattern.</param>
-        public ValueAttribute(string pattern) => Pattern = pattern;
+        public ValueAttribute(string pattern)
+        {
+            Pattern = pattern;
+            value = new Value(pattern);
+        }
 
         #region Properties
 
@@ -92,8 +103,24 @@ namespace Mimick
         private object Resolve(Type type)
         {
             var orDefault = type.IsValueType && type != typeof(string) ? Activator.CreateInstance(type) : null;
+
+            if (value.IsSimple && !value.IsVariable)
+                return TypeHelper.Convert(value.Evaluate().ToString(), type);
+
             var context = FrameworkContext.Instance;
-            return context.Configurations.Get(Pattern, type, orDefault);
+
+            if (value.Variables.Count > 0)
+            {
+                foreach (var variable in value.Variables)
+                    variable.Value = TypeHelper.AutoConvert(context.Configurations.Get(variable.Expression));
+            }
+
+            var result = value.Evaluate();
+
+            if (type == result.GetType())
+                return result;
+
+            return TypeHelper.Convert(result.ToString(), type);
         }
     }
 }

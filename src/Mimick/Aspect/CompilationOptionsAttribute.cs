@@ -51,13 +51,18 @@ namespace Mimick.Aspect
         /// </summary>
         /// <remarks>
         /// <para>If an attribute marked as <see cref="MultiInstanced"/> is associated with a member or
-        /// class which is <c>static</c> the scope is changed to <see cref="Singleton"/></para>
+        /// class which is <c>static</c> the scope is changed to <see cref="MultiSingleton"/></para>
         /// </remarks>
         MultiInstanced = 3,
 
         /// <summary>
         /// An attribute should persist as a singleton within the runtime.
         /// </summary>
-        Singleton = 4
+        Singleton = 4,
+
+        /// <summary>
+        /// An attribute should persist as a singleton within the runtime, with one instance per usage.
+        /// </summary>
+        MultiSingleton = 5
     }
 }

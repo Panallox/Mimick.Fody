@@ -8,6 +8,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mimick", "Mimick\Mimick.csproj", "{A72F6288-D4DA-43AB-A1FF-48B94C250D17}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyToProcess", "AssemblyToProcess\AssemblyToProcess.csproj", "{8743DA02-2D95-4EC5-AABF-42391939B22F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9ACC6BDF-0954-4460-8258-2B43610148AB} = {9ACC6BDF-0954-4460-8258-2B43610148AB}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mimick.Tests", "Mimick.Tests\Mimick.Tests.csproj", "{F582BA45-8789-4715-BF3A-F206E2377BB0}"
 EndProject

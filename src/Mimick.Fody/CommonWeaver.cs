@@ -69,9 +69,12 @@ public partial class ModuleWeaver
         switch (scope)
         {
             case AttributeScope.Instanced:
-            case AttributeScope.MultiInstanced:
                 if (method.Target.IsStatic)
                     scope = AttributeScope.Singleton;
+                break;
+            case AttributeScope.MultiInstanced:
+                if (method.Target.IsStatic)
+                    scope = AttributeScope.MultiSingleton;
                 break;
         }
         
@@ -85,6 +88,8 @@ public partial class ModuleWeaver
                 return CreateAttributeMultiInstanced(method.Parent, attribute);
             case AttributeScope.Singleton:
                 return CreateAttributeSingleton(method.Parent, attribute);
+            case AttributeScope.MultiSingleton:
+                return CreateAttributeMultiSingleton(method.Parent, attribute);
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope {scope}");
         }
@@ -110,6 +115,8 @@ public partial class ModuleWeaver
                 return CreateAttributeInstanced(emitter, attribute);
             case AttributeScope.Singleton:
                 return CreateAttributeSingleton(emitter, attribute);
+            case AttributeScope.MultiSingleton:
+                return CreateAttributeMultiSingleton(emitter, attribute);
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope '{scope}'");
         }
@@ -131,8 +138,13 @@ public partial class ModuleWeaver
         var options = attribute.GetAttribute<CompilationOptionsAttribute>();
         var scope = options.GetProperty("Scope", notFound: AttributeScope.Singleton);
 
-        if (scope == AttributeScope.Instanced && sta)
-            scope = AttributeScope.Singleton;
+        if (sta)
+        {
+            if (scope == AttributeScope.Instanced)
+                scope = AttributeScope.Singleton;
+            else if (scope == AttributeScope.MultiInstanced)
+                scope = AttributeScope.MultiSingleton;
+        }
 
         var hasGet = attribute.HasInterface<IPropertyGetInterceptor>();
         var hasSet = attribute.HasInterface<IPropertySetInterceptor>();
@@ -152,6 +164,9 @@ public partial class ModuleWeaver
             case AttributeScope.Singleton:
                 var singleton = CreateAttributeSingleton(property.Parent, attribute);
                 return new[] { hasGet ? singleton : null, hasSet ? singleton : null };
+            case AttributeScope.MultiSingleton:
+                var multiSingleton = CreateAttributeMultiSingleton(property.Parent, attribute);
+                return new[] { hasGet ? multiSingleton : null, hasSet ? multiSingleton : null };
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope '{scope}'");
         }
@@ -283,6 +298,36 @@ public partial class ModuleWeaver
             foreach (var prop in attribute.Properties)
                 CreateAttributeProperty(ctor, attribute, field, prop);
         }
+
+        return field;
+    }
+
+    /// <summary>
+    /// Creates a multi-singleton field used to retain an instance of an attribute.
+    /// </summary>
+    /// <param name="emitter">The type weaver.</param>
+    /// <param name="attribute">The attribute.</param>
+    /// <returns></returns>
+    public Variable CreateAttributeMultiSingleton(TypeEmitter emitter, CustomAttribute attribute)
+    {
+        var index = Interlocked.Increment(ref id);
+        var type = attribute.AttributeType;
+        var name = $"<{type.Name}${index}>k__Attribute";
+        var field = emitter.EmitField(name, type, toStatic: true);
+
+        var emit = emitter.GetStaticConstructor();
+        var il = emit.GetIL();
+
+        il.Emit(Codes.Nop);
+
+        foreach (var arg in attribute.ConstructorArguments)
+            CreateAttributeParameter(emit, attribute, arg);
+
+        il.Emit(Codes.Create(attribute.Constructor));
+        il.Emit(Codes.Store(field));
+
+        foreach (var prop in attribute.Properties)
+            CreateAttributeProperty(emit, attribute, field, prop);
 
         return field;
     }

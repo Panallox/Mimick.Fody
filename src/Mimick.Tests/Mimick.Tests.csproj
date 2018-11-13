@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CachedTest.cs" />
     <Compile Include="Contracts\NotEmptyTest.cs" />
     <Compile Include="Contracts\NotNullTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
