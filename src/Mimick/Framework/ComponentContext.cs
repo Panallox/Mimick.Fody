@@ -1,55 +1,52 @@
-﻿using Mimick.Lifetime;
+﻿using Mimick.Designers;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mimick.Framework
 {
     /// <summary>
-    /// A class representing a default implementation of the dependency context.
+    /// A class representing a default implementation of the component context.
     /// </summary>
-    sealed class DependencyContext : IDependencyContext
+    sealed class ComponentContext : IComponentContext
     {
         /// <summary>
         /// The entries across all implementations.
         /// </summary>
-        private readonly IList<DependencyEntry> allEntries;
+        private readonly IList<ComponentDescriptor> allEntries;
 
         /// <summary>
         /// The entries where one concrete type implements an interface type.
         /// </summary>
-        private readonly IDictionary<Type, DependencyEntry> implementedEntries;
+        private readonly IDictionary<Type, ComponentDescriptor> implementedEntries;
 
         /// <summary>
         /// The entries where a concrete type has been provided one or more names.
         /// </summary>
-        private readonly IDictionary<string, DependencyEntry> namedEntries;
+        private readonly IDictionary<string, ComponentDescriptor> namedEntries;
 
         /// <summary>
-        /// The entries where a concrete type is mapped directly to the dependency.
+        /// The entries where a concrete type is mapped directly to the component.
         /// </summary>
-        private readonly IDictionary<Type, DependencyEntry> typedEntries;
+        private readonly IDictionary<Type, ComponentDescriptor> typedEntries;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DependencyContext" /> class.
+        /// Initializes a new instance of the <see cref="ComponentContext" /> class.
         /// </summary>
-        public DependencyContext()
+        public ComponentContext()
         {
-            allEntries = new ReadWriteList<DependencyEntry>();
-            implementedEntries = new ReadWriteDictionary<Type, DependencyEntry>();
-            namedEntries = new ReadWriteDictionary<string, DependencyEntry>();
-            typedEntries = new ReadWriteDictionary<Type, DependencyEntry>();
+            allEntries = new ReadWriteList<ComponentDescriptor>();
+            implementedEntries = new ReadWriteDictionary<Type, ComponentDescriptor>();
+            namedEntries = new ReadWriteDictionary<string, ComponentDescriptor>();
+            typedEntries = new ReadWriteDictionary<Type, ComponentDescriptor>();
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="DependencyContext"/> class.
+        /// Finalizes an instance of the <see cref="ComponentContext"/> class.
         /// </summary>
-        ~DependencyContext()
+        ~ComponentContext()
         {
             Dispose(false);
         }
@@ -109,84 +106,110 @@ namespace Mimick.Framework
         }
 
         /// <summary>
-        /// Register a provided type within the dependency provider using the default singleton lifetime.
+        /// Registers all classes within the provided assembly which have been decorated with <see cref="ComponentAttribute" />.
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        public void RegisterAssembly(Assembly assembly)
+        {
+            if (assembly == null)
+                throw new ArgumentNullException("assembly");
+
+            var candidates = assembly.GetTypes().Where(a => a.GetAttributeInherited<FrameworkAttribute>() != null);
+
+            foreach (var candidate in candidates)
+            {
+                var decoration = candidate.GetAttributeInherited<ComponentAttribute>();
+
+                if (decoration != null)
+                    Register(candidate, decoration.Name).ToScope(decoration.Scope);
+            }
+        }
+
+        /// <summary>
+        /// Registers all classes within an assembly containing the provided type, which have been decorated with <see cref="ComponentAttribute" />.
+        /// </summary>
+        /// <typeparam name="T">The type of the target assembly.</typeparam>
+        public void RegisterAssembly<T>() => RegisterAssembly(Assembly.GetAssembly(typeof(T)));
+
+        /// <summary>
+        /// Register a provided type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <typeparam name="TConcrete">The type.</typeparam>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register<TConcrete>() where TConcrete : class => Register(null, typeof(TConcrete), null);
+        public IComponentRegistration Register<TConcrete>() where TConcrete : class => Register(null, typeof(TConcrete), null);
 
         /// <summary>
-        /// Register a provided type within the dependency provider using the default singleton lifetime.
+        /// Register a provided type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <typeparam name="TConcrete"></typeparam>
-        /// <param name="names">An optional collection of identifiers which the dependencies will be stored under.</param>
+        /// <param name="names">An optional collection of identifiers which the components will be stored under.</param>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register<TConcrete>(params string[] names) where TConcrete : class => Register(null, typeof(TConcrete), names);
+        public IComponentRegistration Register<TConcrete>(params string[] names) where TConcrete : class => Register(null, typeof(TConcrete), names);
 
         /// <summary>
-        /// Register a provided interface and concrete type within the dependency provider using the default singleton lifetime.
+        /// Register a provided interface and concrete type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <typeparam name="TInterface">The interface type.</typeparam>
         /// <typeparam name="TConcrete">The concrete type.</typeparam>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register<TInterface, TConcrete>() where TConcrete : class, TInterface => Register(typeof(TInterface), typeof(TConcrete), null);
+        public IComponentRegistration Register<TInterface, TConcrete>() where TConcrete : class, TInterface => Register(typeof(TInterface), typeof(TConcrete), null);
 
         /// <summary>
-        /// Register a provided interface and concrete type within the dependency provider using the default singleton lifetime.
+        /// Register a provided interface and concrete type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <typeparam name="TInterface">The interface type.</typeparam>
         /// <typeparam name="TConcrete">The concrete type.</typeparam>
-        /// <param name="names">An optional collection of identifiers which the dependencies will be stored under.</param>
+        /// <param name="names">An optional collection of identifiers which the components will be stored under.</param>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register<TInterface, TConcrete>(params string[] names) where TConcrete : class, TInterface => Register(typeof(TInterface), typeof(TConcrete), names);
+        public IComponentRegistration Register<TInterface, TConcrete>(params string[] names) where TConcrete : class, TInterface => Register(typeof(TInterface), typeof(TConcrete), names);
 
         /// <summary>
-        /// Register a provided type within the dependency provider using the default singleton lifetime.
+        /// Register a provided type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register(Type type) => Register(null, type, null);
+        public IComponentRegistration Register(Type type) => Register(null, type, null);
 
         /// <summary>
-        /// Register a provided type within the dependency provider using the default singleton lifetime.
+        /// Register a provided type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <param name="type">The type.</param>
-        /// <param name="names">An optional collection of identifiers which the dependencies will be stored under.</param>
+        /// <param name="names">An optional collection of identifiers which the components will be stored under.</param>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register(Type type, params string[] names) => Register(null, type, names);
+        public IComponentRegistration Register(Type type, params string[] names) => Register(null, type, names);
 
         /// <summary>
-        /// Register a provided interface and concrete type within the dependency provider using the default singleton lifetime.
+        /// Register a provided interface and concrete type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <param name="interfaceType">The interface type.</param>
         /// <param name="concreteType">The concrete type.</param>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register(Type interfaceType, Type concreteType) => Register(interfaceType, concreteType, null);
+        public IComponentRegistration Register(Type interfaceType, Type concreteType) => Register(interfaceType, concreteType, null);
 
         /// <summary>
-        /// Register a provided interface and concrete type within the dependency provider using the default singleton lifetime.
+        /// Register a provided interface and concrete type within the component provider using the default singleton lifetime.
         /// </summary>
         /// <param name="interfaceType">The interface type.</param>
         /// <param name="concreteType">The concrete type.</param>
-        /// <param name="names">An optional collection of identifiers which the dependencies will be stored under.</param>
+        /// <param name="names">An optional collection of identifiers which the components will be stored under.</param>
         /// <returns>
-        /// A configurator which can be used to further configure the dependency state.
+        /// A configurator which can be used to further configure the component state.
         /// </returns>
-        public IDependencyConfigurator Register(Type interfaceType, Type concreteType, params string[] names)
+        public IComponentRegistration Register(Type interfaceType, Type concreteType, params string[] names)
         {
             var implements = new List<Type>(GetImplementedTypes(concreteType));
             
@@ -194,7 +217,9 @@ namespace Mimick.Framework
                 names = implements.Concat(new[] { interfaceType, concreteType }).Where(t => t != null).Distinct().Select(t => t.Name).ToArray();
 
             var constructor = CreateConstructor(concreteType);
-            var entry = new DependencyEntry(interfaceType, concreteType, constructor, new SingletonLifetime(constructor));
+            var entry = new ComponentDescriptor(concreteType, constructor, interfaceType != null ? new[] { interfaceType } : Type.EmptyTypes, names);
+
+            entry.Designer = new SingletonDesigner(constructor);
 
             foreach (var implementedType in implements)
             {
@@ -207,7 +232,7 @@ namespace Mimick.Framework
             if (interfaceType != null)
             {
                 if (implementedEntries.TryGetValue(interfaceType, out var existing))
-                    throw new ArgumentException($"Conflicting '{interfaceType.FullName}' dependency, adding '{concreteType.FullName}' against '{existing.ConcreteType.FullName}'");
+                    throw new ArgumentException($"Conflicting '{interfaceType.FullName}' component, adding '{concreteType.FullName}' against '{existing.Type.FullName}'");
 
                 implementedEntries.Add(interfaceType, entry);
             }
@@ -221,41 +246,41 @@ namespace Mimick.Framework
                     continue;
 
                 if (namedEntries.TryGetValue(name, out var existing))
-                    throw new ArgumentException($"Conflicting named '{name}' dependency, adding '{concreteType.FullName}' against '{existing.ConcreteType.FullName}'");
+                    throw new ArgumentException($"Conflicting named '{name}' component, adding '{concreteType.FullName}' against '{existing.Type.FullName}'");
 
                 namedEntries.Add(name, entry);
             }
 
             allEntries.Add(entry);
 
-            return new DependencyConfigurator(new[] { entry });
+            return new ComponentRegistration(new[] { entry });
         }
 
         /// <summary>
-        /// Resolve a dependency of the provided type.
+        /// Resolve a component of the provided type.
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>
         /// <returns>
-        /// The resolved dependency instance.
+        /// The resolved component instance.
         /// </returns>
         public T Resolve<T>() where T : class => Resolve(typeof(T), null) as T;
 
         /// <summary>
-        /// Resolve a dependency of the provided type with the provided name.
+        /// Resolve a component of the provided type with the provided name.
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>
-        /// <param name="name">The dependency name.</param>
+        /// <param name="name">The component name.</param>
         /// <returns>
-        /// The resolved dependency instance.
+        /// The resolved component instance.
         /// </returns>
         public T Resolve<T>(string name) where T : class => Resolve(typeof(T), name) as T;
 
         /// <summary>
-        /// Resolve a dependency with the provided name.
+        /// Resolve a component with the provided name.
         /// </summary>
-        /// <param name="name">The dependency name.</param>
+        /// <param name="name">The component name.</param>
         /// <returns>
-        /// The resolved dependency instance.
+        /// The resolved component instance.
         /// </returns>
         /// <exception cref="ArgumentNullException">name</exception>
         /// <exception cref="ArgumentException"></exception>
@@ -265,43 +290,43 @@ namespace Mimick.Framework
                 throw new ArgumentNullException("name");
 
             if (namedEntries.TryGetValue(name, out var named))
-                return named.Lifetime.Resolve();
+                return named.Designer.GetComponent();
 
-            throw new ArgumentException($"Cannot resolve dependency with name '{name}'");
+            throw new ArgumentException($"Cannot resolve component with name '{name}'");
         }
 
         /// <summary>
-        /// Resolve a dependency of the provided type.
+        /// Resolve a component of the provided type.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns>
-        /// The resolve dependency instance.
+        /// The resolve component instance.
         /// </returns>
         public object Resolve(Type type) => Resolve(type, null);
 
         /// <summary>
-        /// Resolve a dependency of the provided type with the provided name.
+        /// Resolve a component of the provided type with the provided name.
         /// </summary>
         /// <param name="type">The type.</param>
-        /// <param name="name">The dependency name.</param>
+        /// <param name="name">The component name.</param>
         /// <returns>
-        /// The resolve dependency instance.
+        /// The resolve component instance.
         /// </returns>
         public object Resolve(Type type, string name)
         {
             if (name != null && namedEntries.TryGetValue(name, out var named))
-                return named.Lifetime.Resolve();
+                return named.Designer.GetComponent();
 
             if (type.IsInterface && implementedEntries.TryGetValue(type, out var implemented))
-                return implemented.Lifetime.Resolve();
+                return implemented.Designer.GetComponent();
 
             if (typedEntries.TryGetValue(type, out var typed))
-                return typed.Lifetime.Resolve();
+                return typed.Designer.GetComponent();
 
             if (implementedEntries.TryGetValue(type, out var optimisticImplemented))
-                return optimisticImplemented.Lifetime.Resolve();
+                return optimisticImplemented.Designer.GetComponent();
 
-            throw new ArgumentException($"Cannot resolve dependency for type '{type.FullName}'");
+            throw new ArgumentException($"Cannot resolve component for type '{type.FullName}'");
         }
     }
 }

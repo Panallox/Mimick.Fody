@@ -107,12 +107,12 @@ namespace Mimick
             if (value.IsSimple && !value.IsVariable)
                 return TypeHelper.Convert(value.Evaluate().ToString(), type);
 
-            var context = FrameworkContext.Instance;
+            var context = FrameworkContext.Current;
 
             if (value.Variables.Count > 0)
             {
                 foreach (var variable in value.Variables)
-                    variable.Value = TypeHelper.AutoConvert(context.Configurations.Get(variable.Expression));
+                    variable.Value = TypeHelper.AutoConvert(context.ConfigurationContext.Resolve(variable.Expression));
             }
 
             var result = value.Evaluate();

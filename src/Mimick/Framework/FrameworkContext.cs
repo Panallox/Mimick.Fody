@@ -1,171 +1,66 @@
-﻿using Mimick.Configuration;
-using Mimick.Core;
-using Mimick.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Mimick.Framework;
 
 namespace Mimick
 {
     /// <summary>
-    /// A class representing the 
+    /// A class representing the current framework context of the application, implemented as a singleton pattern.
     /// </summary>
     public sealed class FrameworkContext : IFrameworkContext
     {
         /// <summary>
-        /// The singleton instance of the framework context.
+        /// The singleton implementation which maintains the current framework context instance.
         /// </summary>
-        private static IFrameworkContext instance = null;
+        private static readonly Lazy<FrameworkContext> current = new Lazy<FrameworkContext>(() => new FrameworkContext());
 
-        /// <summary>
-        /// The synchronization root used when creating the context.
-        /// </summary>
-        private static readonly object syncRoot = new object();
-
-        /// <summary>
-        /// Initializes the <see cref="FrameworkContext" /> class.
-        /// </summary>
-        static FrameworkContext()
-        {
-            TypeDescriptor.AddAttributes(typeof(Guid), new TypeConverterAttribute(typeof(GuidTypeConverter)));
-        }
-
-        private FrameworkConfiguration configuration;
-
+        private ComponentContext componentContext;
+        private ConfigurationContext configurationContext;
+        private volatile bool initialized;
+        
         /// <summary>
         /// Prevents a default instance of the <see cref="FrameworkContext" /> class from being created.
         /// </summary>
-        FrameworkContext(FrameworkConfiguration configurator)
+        private FrameworkContext()
         {
-            configuration = configurator;
-
-            InitializeConfigurations();
-            InitializeDependencies();
-        }
-
-        /// <summary>
-        /// Finalizes an instance of the <see cref="FrameworkContext"/> class.
-        /// </summary>
-        ~FrameworkContext()
-        {
-            Dispose(false);
+            componentContext = new ComponentContext();
+            configurationContext = new ConfigurationContext();
+            initialized = false;
         }
 
         #region Properties
 
         /// <summary>
-        /// Gets the application instance of the framework context.
+        /// Gets the current framework context associated with the application.
         /// </summary>
-        public static IFrameworkContext Instance
-        {
-            get
-            {
-                lock (syncRoot)
-                {
-                    return instance ?? throw new NotSupportedException($"Cannot access the framework until configuration has been completed");
-                }
-            }
-        }
+        public static IFrameworkContext Current => current.Value;
 
         /// <summary>
-        /// Gets the configuration context managing the application configuration values.
+        /// Gets the component context responsible for maintaining and resolving components.
         /// </summary>
-        public IConfigurationContext Configurations
-        {
-            get; private set;
-        }
-        
+        public IComponentContext ComponentContext => componentContext;
+
         /// <summary>
-        /// Gets the dependency context managing the dependency instances.
+        /// Gets the configuration context responsible for maintaining and resolving configurations.
         /// </summary>
-        public IDependencyContext Dependencies
-        {
-            get; private set;
-        }
+        public IConfigurationContext ConfigurationContext => configurationContext;
 
         #endregion
 
         /// <summary>
-        /// Initialize and configure the framework using the provided configuration settings.
+        /// Initialize the framework context in preparation for usage. This method must be called before the framework can be used.
         /// </summary>
-        /// <param name="configuration">The configuration settings.</param>
-        public static void Configure(FrameworkConfiguration configuration)
+        public void Initialize()
         {
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
+            if (initialized)
+                throw new InvalidProgramException("Cannot initialize the framework more than once");
 
-            if (instance == null)
-            {
-                lock (syncRoot)
-                {
-                    if (instance == null)
-                        instance = new FrameworkContext(configuration);
-                }
-            }
-        }
-        
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            initialized = true;
 
-        /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-                Dependencies.Dispose();
-        }
-
-        /// <summary>
-        /// Initializes the configurations of the framework.
-        /// </summary>
-        private void InitializeConfigurations()
-        {
-            var context = new ConfigurationContext();
-
-            foreach (var source in configuration.ConfigurationsConfig.Sources)
-            {
-                source.Initialize();
-                context.Add(source);
-            }
-
-            Configurations = context;
-        }
-
-        /// <summary>
-        /// Initializes the dependencies of the framework.
-        /// </summary>
-        private void InitializeDependencies()
-        {
-            var assemblies = configuration.AssembliesConfig.All;
-            var types = assemblies.SelectMany(a => a.GetTypes()).Where(a => a.GetAttributeInherited<FrameworkAttribute>(false) != null);
-
-            Dependencies = new DependencyContext();
-
-            foreach (var type in types)
-            {
-                var component = type.GetAttributeInherited<ComponentAttribute>();
-
-                if (component != null)
-                {
-                    var configurator = Dependencies.Register(type, component.Name);
-
-                    if (component.Scope == Scope.Adhoc)
-                        configurator.Adhoc();
-                }
-            }
+            configurationContext.Initialize();
         }
     }
 }

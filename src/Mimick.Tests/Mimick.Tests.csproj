@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInitializer.cs" />
     <Compile Include="Attributes\Behaviours\DisposableTest.cs" />
+    <Compile Include="Attributes\Behaviours\FreezableTest.cs" />
     <Compile Include="Attributes\Behaviours\PropertyChangedTest.cs" />
     <Compile Include="Attributes\Behaviours\PropertyChangingTest.cs" />
     <Compile Include="Attributes\CachedTest.cs" />

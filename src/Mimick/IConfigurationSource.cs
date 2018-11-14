@@ -7,26 +7,33 @@ using System.Threading.Tasks;
 namespace Mimick
 {
     /// <summary>
-    /// An interface representing a configuration source which holds values which can be resolved.
+    /// An interface representing a source which loads and resolves configuration values.
     /// </summary>
-    public interface IConfigurationSource : IDisposable
+    public interface IConfigurationSource
     {
         /// <summary>
-        /// Initialize the configuration source by performing any preparatory operations.
+        /// Called when the configuration source has been requested and must prepare for resolution.
         /// </summary>
-        /// <exception cref="InvalidOperationException">If the configuration source could not be initialized.</exception>
-        void Initialize();
+        void Load();
 
         /// <summary>
-        /// Resolve a configuration value with the provided property name.
+        /// Called when the configuration source must be refreshed and all existing values reloaded into memory.
         /// </summary>
-        /// <param name="name">The property name.</param>
-        /// <returns>The property value; otherwise, <c>null</c> if the property could not be resolved from this source.</returns>
+        void Refresh();
+
+        /// <summary>
+        /// Resolve the value of a configuration with the provided name.
+        /// </summary>
+        /// <param name="name">The configuration name.</param>
+        /// <returns>The configuration value; otherwise, <c>null</c> if the configuration could not be found.</returns>
         string Resolve(string name);
 
         /// <summary>
-        /// Refresh the configuration source causing any cached values to be reloaded from the source.
+        /// Attempt to resolve the value of a configuration with the provided name, and return whether it was resolved successfully.
         /// </summary>
-        void Refresh();
+        /// <param name="name">The configuration name.</param>
+        /// <param name="value">The configuration value.</param>
+        /// <returns><c>true</c> if the configuration is resolved; otherwise, <c>false</c>.</returns>
+        bool TryResolve(string name, out string value);
     }
 }

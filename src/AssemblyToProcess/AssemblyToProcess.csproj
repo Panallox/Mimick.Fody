@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\Behaviours\DisposableAttributes.cs" />
+    <Compile Include="Attributes\Behaviours\FreezableAttributes.cs" />
     <Compile Include="Attributes\Behaviours\PropertyChangedAttributes.cs" />
     <Compile Include="Attributes\Behaviours\PropertyChangingAttributes.cs" />
     <Compile Include="Attributes\CachedAttributes.cs" />

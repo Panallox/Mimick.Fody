@@ -7,29 +7,33 @@ using System.Threading.Tasks;
 namespace Mimick
 {
     /// <summary>
-    /// An interface representing the framework context for the Mimick framework. A framework context is created once per application,
-    /// and persists until the application has been terminated, or the <c>Dispose</c> method is called.
+    /// An interface representing the current instance of the framework context active within the application.
     /// </summary>
-    public interface IFrameworkContext : IDisposable
+    public interface IFrameworkContext
     {
         #region Properties
 
         /// <summary>
-        /// Gets the configuration context managing the application configuration values.
+        /// Gets the component context responsible for maintaining and resolving components.
         /// </summary>
-        IConfigurationContext Configurations
+        IComponentContext ComponentContext
         {
             get;
         }
 
         /// <summary>
-        /// Gets the dependency context managing the dependency instances.
+        /// Gets the configuration context responsible for maintaining and resolving configurations.
         /// </summary>
-        IDependencyContext Dependencies
+        IConfigurationContext ConfigurationContext
         {
             get;
         }
 
         #endregion
+
+        /// <summary>
+        /// Initialize the framework context in preparation for usage. This method must be called before the framework can be used.
+        /// </summary>
+        void Initialize();
     }
 }

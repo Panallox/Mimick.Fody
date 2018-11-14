@@ -7,55 +7,52 @@ using System.Threading.Tasks;
 namespace Mimick
 {
     /// <summary>
-    /// An interface representing a configuration provider which resolves configuration values from the configuration sources.
+    /// An interface representing the configurations context of the framework, which is the central source for resolving configuration values.
     /// </summary>
     public interface IConfigurationContext
     {
-        #region Properties
+        /// <summary>
+        /// Register a configuration source within the configuration context.
+        /// </summary>
+        /// <param name="source">The configuration source.</param>
+        /// <returns>A configurator which can be used to further configure the source.</returns>
+        IConfigurationRegistration Register(IConfigurationSource source);
 
         /// <summary>
-        /// Gets a configuration value with the provided property name.
+        /// Register a configuration source within the configuration context of the provided type. The configuration source must have a default constructor.
         /// </summary>
-        /// <param name="name">The property name.</param>
-        /// <returns>The value of the configuration; otherwise, <c>null</c>.</returns>
-        string this[string name]
-        {
-            get;
-        }
-
-        #endregion
+        /// <typeparam name="T">The type of the configuration source.</typeparam>
+        /// <returns>A configurator which can be used to further configure the source.</returns>
+        IConfigurationRegistration Register<T>() where T : IConfigurationSource;
 
         /// <summary>
-        /// Gets a configuration value with the provided property name.
+        /// Resolves the value of a configuration from the configuration context with the provided name.
         /// </summary>
-        /// <param name="name">The property name.</param>
-        /// <param name="orDefault">The optional value to produce if the configuration could not be found.</param>
-        /// <returns>The value of the configuration; otherwise, the <paramref name="orDefault"/> value.</returns>
-        string Get(string name, string orDefault = null);
+        /// <param name="name">The configuration name.</param>
+        /// <param name="or">The value to return if the configuration could not be resolved.</param>
+        /// <returns>The configuration value; otherwise, the value of <paramref name="or"/>.</returns>
+        string Resolve(string name, string or = null);
 
         /// <summary>
-        /// Gets a configuration value with the provided property name.
+        /// Resolves the value of a configuration from the configuration context with the provided name,
+        /// and attempts to automatically convert the value into the provided type.
         /// </summary>
-        /// <param name="name">The property name.</param>
-        /// <param name="type">The property type.</param>
-        /// <param name="orDefault">The optional value to produce if the configuration could not be found.</param>
-        /// <returns>The value of the configuration; otherwise, the <paramref name="orDefault"/> value.</returns>
-        /// <exception cref="InvalidCastException">If the property value cannot be converted to the expected type.</exception>
-        object Get(string name, Type type, object orDefault = null);
+        /// <param name="name">The configuration name.</param>
+        /// <param name="type">The configuration type.</param>
+        /// <param name="or">The value to return if the configuration could not be resolved.</param>
+        /// <returns>The configuration value; otherwise, the value of <paramref name="or"/>.</returns>
+        /// <exception cref="InvalidCastException">If the configuration value was found but could not be converted.</exception>
+        object Resolve(string name, Type type, object or = null);
 
         /// <summary>
-        /// Gets a configuration value with the provided property name.
+        /// Resolves the value of a configuration from the configuration context with the provided name,
+        /// and attempts to automatically convert the value into the provided type.
         /// </summary>
-        /// <typeparam name="T">The property type.</typeparam>
-        /// <param name="name">The property name.</param>
-        /// <param name="orDefault">The optional value to produce if the configuration could not be found.</param>
-        /// <returns>The value of the configuration; otherwise, the <paramref name="orDefault"/> value.</returns>
-        /// <exception cref="InvalidCastException">If the property value cannot be converted to the expected type.</exception>
-        T Get<T>(string name, T orDefault = default(T));
-
-        /// <summary>
-        /// Refreshes all configuration sources of the context, resulting in all internal caches being reloaded.
-        /// </summary>
-        void Refresh();
+        /// <typeparam name="T">The configuration type.</typeparam>
+        /// <param name="name">The configuration name.</param>
+        /// <param name="or">The value to return if the configuration could not be resolved.</param>
+        /// <returns>The configuration value; otherwise, the value of <paramref name="or"/>.</returns>
+        /// <exception cref="InvalidCastException">If the configuration value was found but could not be converted.</exception>
+        T Resolve<T>(string name, T or = default(T));
     }
 }

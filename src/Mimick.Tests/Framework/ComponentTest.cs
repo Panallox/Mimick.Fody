@@ -11,10 +11,10 @@ namespace Mimick.Tests.Framework
     [TestClass]
     public class ComponentTest
     {
-        private static IDependencyContext container;
+        private static IComponentContext container;
 
         [ClassInitialize]
-        public static void BeforeClass(TestContext context) => container = FrameworkContext.Instance.Dependencies;
+        public static void BeforeClass(TestContext context) => container = FrameworkContext.Current.ComponentContext;
 
         [TestMethod]
         public void ShouldResolveByConcreteType() => Assert.IsNotNull(container.Resolve<ImplementedComponent>());

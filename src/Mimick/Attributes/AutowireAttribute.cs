@@ -83,6 +83,6 @@ namespace Mimick
         /// </summary>
         /// <param name="type">The dependency type.</param>
         /// <returns></returns>
-        private object Resolve(Type type) => FrameworkContext.Instance?.Dependencies?.Resolve(type, Name);
+        private object Resolve(Type type) => FrameworkContext.Current?.ComponentContext?.Resolve(type, Name);
     }
 }
