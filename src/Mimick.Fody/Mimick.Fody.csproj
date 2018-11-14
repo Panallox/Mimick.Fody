@@ -33,20 +33,20 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FodyHelpers, Version=3.2.13.0, Culture=neutral, PublicKeyToken=1ca091877d12ca03, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyHelpers.3.2.13\lib\net46\FodyHelpers.dll</HintPath>
+    <Reference Include="FodyHelpers, Version=3.2.17.0, Culture=neutral, PublicKeyToken=1ca091877d12ca03, processorArchitecture=MSIL">
+      <HintPath>..\packages\FodyHelpers.3.2.17\lib\net46\FodyHelpers.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.10.0.0, Culture=neutral, PublicKeyToken=1ca091877d12ca03, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyHelpers.3.2.13\lib\net46\Mono.Cecil.dll</HintPath>
+      <HintPath>..\packages\FodyHelpers.3.2.17\lib\net46\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb, Version=0.10.0.0, Culture=neutral, PublicKeyToken=1ca091877d12ca03, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyHelpers.3.2.13\lib\net46\Mono.Cecil.Mdb.dll</HintPath>
+      <HintPath>..\packages\FodyHelpers.3.2.17\lib\net46\Mono.Cecil.Mdb.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Pdb, Version=0.10.0.0, Culture=neutral, PublicKeyToken=1ca091877d12ca03, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyHelpers.3.2.13\lib\net46\Mono.Cecil.Pdb.dll</HintPath>
+      <HintPath>..\packages\FodyHelpers.3.2.17\lib\net46\Mono.Cecil.Pdb.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Rocks, Version=0.10.0.0, Culture=neutral, PublicKeyToken=1ca091877d12ca03, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyHelpers.3.2.13\lib\net46\Mono.Cecil.Rocks.dll</HintPath>
+      <HintPath>..\packages\FodyHelpers.3.2.17\lib\net46\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -105,8 +105,10 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Fody.3.2.17\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.3.2.17\build\Fody.targets'))" />
   </Target>
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)\Tools" />
   </Target>
+  <Import Project="..\packages\Fody.3.2.17\build\Fody.targets" Condition="Exists('..\packages\Fody.3.2.17\build\Fody.targets')" />
 </Project>

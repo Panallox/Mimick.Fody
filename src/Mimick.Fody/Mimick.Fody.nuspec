@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Mimick.Fody</id>
-    <version>1.0.0</version>
+    <version>$version$</version>
     <authors>Chris Copeland</authors>
     <owners>Chris Copeland</owners>
     <licenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</licenseUrl>
@@ -11,9 +11,12 @@
     <description>A framework for automating development in cross-platform C# environments.</description>
     <releaseNotes>Initial.</releaseNotes>
     <copyright>Copyright 2018</copyright>
-    <tags>Fody</tags>
+    <tags>Fody, Mimick, Cecil, DI, Framework</tags>
     <dependencies>
-      <dependency id="Fody" version ="[1.29,)"/>
+      <dependency id="Fody" version ="3.2.17"/>
     </dependencies>
   </metadata>
+  <files>
+	<file src="..\Mimick\bin\Release\Mimick.dll" target="
+  </files>
 </package>

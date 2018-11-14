@@ -28,6 +28,10 @@ namespace Mimick.Tests
                 .Register<AppConfigurationSource>();
 
             framework
+                .ConfigurationContext
+                .Register(new XmlConfigurationSource("Configuration.xml"));
+
+            framework
                 .Initialize();
         }
     }

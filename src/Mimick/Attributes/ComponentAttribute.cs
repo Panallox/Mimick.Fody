@@ -9,7 +9,7 @@ namespace Mimick
     /// <summary>
     /// Indicates that the associated class is a component of the framework, and should be registered when the framework initializes.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class ComponentAttribute : FrameworkAttribute
     {
         /// <summary>

@@ -61,6 +61,18 @@ namespace AssemblyToProcess.Attributes
         public string SimpleString { get; set; }
 
         /// <summary>
+        /// Gets a number processed from the associated value attribute sourced from an XML document.
+        /// </summary>
+        [Value("{//Configurations/Attribute/@Value}")]
+        public int XmlAttributeNumber { get; set; }
+
+        /// <summary>
+        /// Gets a string processed from the associated value attribute sourced from an XML document.
+        /// </summary>
+        [Value("{//Configurations/Element}")]
+        public string XmlElementString { get; set; }
+
+        /// <summary>
         /// Gets a value using a computed value from the parameter value attribute.
         /// </summary>
         /// <param name="number">The number.</param>

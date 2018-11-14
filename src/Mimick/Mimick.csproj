@@ -74,6 +74,7 @@
     <Compile Include="Attributes\SuppressAttribute.cs" />
     <Compile Include="Attributes\ValueAttribute.cs" />
     <Compile Include="Configurations\AppConfigurationSource.cs" />
+    <Compile Include="Configurations\XmlConfigurationSource.cs" />
     <Compile Include="Core\Cache.cs" />
     <Compile Include="Core\ReadWriteDictionary.cs" />
     <Compile Include="Core\ReadWriteList.cs" />

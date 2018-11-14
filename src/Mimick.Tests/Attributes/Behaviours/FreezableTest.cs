@@ -24,7 +24,7 @@ namespace Mimick.Tests.Attributes.Behaviours
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(FrozenException))]
         public void ShouldThrowExceptionOnSettersWhenFrozen()
         {
             var target = new FreezableAttributes();

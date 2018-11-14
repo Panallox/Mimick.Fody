@@ -45,5 +45,11 @@ namespace Mimick.Tests.Attributes
 
         [TestMethod]
         public void ShouldReturnValidMethodStringWhenComputed() => Assert.AreEqual("Testing 30 Result", target.GetComputedString());
+
+        [TestMethod]
+        public void ShouldReturnValidXmlAttributeNumber() => Assert.AreEqual(123, target.XmlAttributeNumber);
+
+        [TestMethod]
+        public void ShouldReturnValidXmlElementString() => Assert.AreEqual("Hello", target.XmlElementString);
     }
 }

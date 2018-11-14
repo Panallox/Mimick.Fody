@@ -29,6 +29,22 @@ namespace Mimick
         /// <summary>
         /// Freezes the object instance and prevents further modifications to the fields and properties of the instance.
         /// </summary>
+        /// <exception cref="FrozenException">If the object has already been frozen.</exception>
         void Freeze();
+    }
+
+    /// <summary>
+    /// An exception class thrown when an attempt is made to modify a frozen object.
+    /// </summary>
+    public class FrozenException : Exception
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FrozenException" /> class.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public FrozenException(string message) : base(message)
+        {
+
+        }
     }
 }

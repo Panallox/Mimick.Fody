@@ -44,11 +44,11 @@ namespace Mimick
         /// <summary>
         /// Freezes the object instance and prevents further modifications to the fields and properties of the instance.
         /// </summary>
-        /// <exception cref="InvalidOperationException">The object has already been frozen</exception>
+        /// <exception cref="FrozenException">If the object has already been frozen.</exception>
         public void Freeze()
         {
             if (IsFrozen)
-                throw new InvalidOperationException("The object has already been frozen");
+                throw new FrozenException("The object has already been frozen");
 
             IsFrozen = true;
         }
@@ -78,7 +78,7 @@ namespace Mimick
         public void OnSet(PropertyInterceptionArgs e)
         {
             if (IsFrozen)
-                throw new InvalidOperationException("The object has been frozen and cannot receive updates");
+                throw new FrozenException("The object has been frozen and cannot receive updates");
         }
     }
 }
