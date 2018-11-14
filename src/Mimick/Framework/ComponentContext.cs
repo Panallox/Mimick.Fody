@@ -64,15 +64,7 @@ namespace Mimick.Framework
             if (candidates.Length != 1)
                 throw new MissingMethodException($"Cannot find a non-internal unique constructor for type '{type.FullName}'");
 
-            var constructor = candidates.First();
-            var method = new DynamicMethod(string.Empty, typeof(object), null);
-            var il = method.GetILGenerator();
-
-            il.Emit(OpCodes.Nop);
-            il.Emit(OpCodes.Newobj, constructor);
-            il.Emit(OpCodes.Ret);
-
-            return (Func<object>)method.CreateDelegate(typeof(Func<object>));
+            return () => Activator.CreateInstance(type);
         }
 
         /// <summary>

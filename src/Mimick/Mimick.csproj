@@ -1,119 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A72F6288-D4DA-43AB-A1FF-48B94C250D17}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Mimick</RootNamespace>
-    <AssemblyName>Mimick</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <Authors>Chris Copeland</Authors>
+    <Copyright>Chris Copeland</Copyright>
+    <Product>Mimick</Product>
+    <Version>1.0.0</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>Mimick</PackageId>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Aspect\CompilationImplementsAttribute.cs" />
-    <Compile Include="Aspect\CompilationOptionsAttribute.cs" />
-    <Compile Include="Aspect\IInjectAfterInitializer.cs" />
-    <Compile Include="Aspect\IInjectBeforeInitializer.cs" />
-    <Compile Include="Aspect\IInstanceAware.cs" />
-    <Compile Include="Aspect\IMethodInterceptor.cs" />
-    <Compile Include="Aspect\IntroducesAttribute.cs" />
-    <Compile Include="Aspect\IParameterInterceptor.cs" />
-    <Compile Include="Aspect\IPropertySetInterceptor.cs" />
-    <Compile Include="Aspect\IPropertyGetInterceptor.cs" />
-    <Compile Include="Aspect\MethodInterceptionArgs.cs" />
-    <Compile Include="Aspect\ParameterInterceptionArgs.cs" />
-    <Compile Include="Aspect\PropertyInterceptionArgs.cs" />
-    <Compile Include="Attributes\AutowireAttribute.cs" />
-    <Compile Include="Attributes\Base\ValidationAttribute.cs" />
-    <Compile Include="Attributes\Behaviour\FreezableAttribute.cs" />
-    <Compile Include="Attributes\Behaviour\PropertyChangingAttribute.cs" />
-    <Compile Include="Attributes\CachedAttribute.cs" />
-    <Compile Include="Attributes\ComponentAttribute.cs" />
-    <Compile Include="Attributes\ConfigurationAttribute.cs" />
-    <Compile Include="Attributes\Behaviour\DisposableAttribute.cs" />
-    <Compile Include="Attributes\Contracts\MaximumAttribute.cs" />
-    <Compile Include="Attributes\Contracts\MinimumAttribute.cs" />
-    <Compile Include="Attributes\Contracts\NotEmptyAttribute.cs" />
-    <Compile Include="Attributes\Contracts\NotNullAttribute.cs" />
-    <Compile Include="Attributes\FrameworkAttribute.cs" />
-    <Compile Include="Attributes\PostConstructAttribute.cs" />
-    <Compile Include="Attributes\PreConstructAttribute.cs" />
-    <Compile Include="Attributes\Behaviour\PropertyChangedAttribute.cs" />
-    <Compile Include="Attributes\SuppressAttribute.cs" />
-    <Compile Include="Attributes\ValueAttribute.cs" />
-    <Compile Include="Configurations\AppConfigurationSource.cs" />
-    <Compile Include="Configurations\XmlConfigurationSource.cs" />
-    <Compile Include="Core\Cache.cs" />
-    <Compile Include="Core\ReadWriteDictionary.cs" />
-    <Compile Include="Core\ReadWriteList.cs" />
-    <Compile Include="Core\TypeConverters\GuidTypeConverter.cs" />
-    <Compile Include="Designers\AdhocDesigner.cs" />
-    <Compile Include="Designers\SingletonDesigner.cs" />
-    <Compile Include="Framework\ComponentContext.cs" />
-    <Compile Include="Framework\ComponentDescriptor.cs" />
-    <Compile Include="Framework\ComponentRegistration.cs" />
-    <Compile Include="Framework\ConfigurationContext.cs" />
-    <Compile Include="Framework\ConfigurationDescriptor.cs" />
-    <Compile Include="Framework\ConfigurationRegistration.cs" />
-    <Compile Include="Framework\FrameworkContext.cs" />
-    <Compile Include="Helper\CollectionExtensions.cs" />
-    <Compile Include="Helper\NumberHelper.cs" />
-    <Compile Include="Helper\ReflectionExtensions.cs" />
-    <Compile Include="Helper\TypeHelper.cs" />
-    <Compile Include="ICache.cs" />
-    <Compile Include="IComponentDescriptor.cs" />
-    <Compile Include="IComponentDesigner.cs" />
-    <Compile Include="IComponentContext.cs" />
-    <Compile Include="IComponentRegistration.cs" />
-    <Compile Include="IConfigurationContext.cs" />
-    <Compile Include="IConfigurationDescriptor.cs" />
-    <Compile Include="IConfigurationRegistration.cs" />
-    <Compile Include="IConfigurationSource.cs" />
-    <Compile Include="IFrameworkContext.cs" />
-    <Compile Include="IFreezable.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Values\Constant.cs" />
-    <Compile Include="Values\Node.cs" />
-    <Compile Include="Values\Operator.cs" />
-    <Compile Include="Values\Value.cs" />
-    <Compile Include="Values\ValueParser.cs" />
-    <Compile Include="Values\Variable.cs" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="AfterBuild">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)\Tools" />
-  </Target>
 </Project>

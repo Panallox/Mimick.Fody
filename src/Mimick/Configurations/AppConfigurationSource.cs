@@ -16,7 +16,7 @@ namespace Mimick.Configurations
     {
         private readonly ReaderWriterLockSlim sync;
 
-        private System.Configuration.Configuration configuration;
+        private Configuration configuration;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AppConfigurationSource" /> class.
