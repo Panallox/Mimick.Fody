@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Mimick.Aspect;
@@ -13,6 +14,7 @@ namespace Mimick
     /// however specific exceptions can be ignored by configuring the <see cref="SuppressAttribute.Types"/> property. If a method suppresses
     /// an exception and expects to return a value, the default value of the return type is produced.
     /// </summary>
+    [CompilationOptions(Scope = AttributeScope.MultiSingleton)]
     [AttributeUsage(AttributeTargets.Method)]
     [DebuggerStepThrough]
     public sealed class SuppressAttribute : Attribute, IMethodInterceptor
@@ -54,6 +56,11 @@ namespace Mimick
 
             if (Types.Length != 0 && !Types.Any(a => a.IsAssignableFrom(thrown)))
                 throw ex;
+
+            var type = (e.Method as MethodInfo)?.ReturnType;
+
+            if (type != null && type != typeof(void))
+                e.Return = TypeHelper.Default(type);
         }
 
         /// <summary>

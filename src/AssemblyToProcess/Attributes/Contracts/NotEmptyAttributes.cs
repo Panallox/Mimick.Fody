@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Mimick;
 
-namespace AssemblyToProcess.Contracts
+namespace AssemblyToProcess.Attributes.Contracts
 {
     /// <summary>
     /// A class containing methods introducing the <see cref="NotEmptyAttribute"/>.
     /// </summary>
-    public class NotEmptyContracts
+    public class NotEmptyAttributes
     {
         /// <summary>
         /// Passes regardless of whether a <c>null</c> or empty value is entered.

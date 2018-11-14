@@ -217,7 +217,10 @@ namespace Mimick.Framework
 
             foreach (var name in names)
             {
-                if (name != null && namedEntries.TryGetValue(name, out var existing))
+                if (name == null)
+                    continue;
+
+                if (namedEntries.TryGetValue(name, out var existing))
                     throw new ArgumentException($"Conflicting named '{name}' dependency, adding '{concreteType.FullName}' against '{existing.ConcreteType.FullName}'");
 
                 namedEntries.Add(name, entry);

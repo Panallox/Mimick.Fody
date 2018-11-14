@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AssemblyToProcess.Contracts;
+using AssemblyToProcess.Attributes.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Mimick.Tests.Contracts
+namespace Mimick.Tests.Attributes.Contracts
 {
     [TestClass]
     public class NotEmptyTest
     {
-        private NotEmptyContracts target;
+        private NotEmptyAttributes target;
 
         [TestInitialize]
-        public void Initialize() => target = new NotEmptyContracts();
+        public void Initialize() => target = new NotEmptyAttributes();
 
         [TestMethod]
         public void ShouldPassWhenNotEmptyIsNotPresent()

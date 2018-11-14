@@ -84,8 +84,16 @@ public partial class ModuleWeaver
             }
             else
             {
-                il.Emit(type.IsValueType ? Codes.Init(type) : Codes.Null);
-                il.Emit(Codes.Store(result));
+                if (type.IsValueType)
+                {
+                    il.Emit(Codes.Address(result));
+                    il.Emit(Codes.Init(type));
+                }
+                else
+                {
+                    il.Emit(Codes.Null);
+                    il.Emit(Codes.Store(result));
+                }
             }
 
             il.Try();

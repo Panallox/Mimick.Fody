@@ -423,6 +423,19 @@ namespace Mimick.Fody.Weavers
         #endregion
 
         /// <summary>
+        /// An address load.
+        /// </summary>
+        /// <param name="var">The variable.</param>
+        /// <returns></returns>
+        public static Instruction Address(Variable var)
+        {
+            if (var.IsLocal)
+                return Instruction.Create(OpCodes.Ldloca, (VariableDefinition)var);
+
+            return null;
+        }
+
+        /// <summary>
         /// An argument code.
         /// </summary>
         /// <param name="index">The argument index.</param>

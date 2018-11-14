@@ -5,38 +5,38 @@ using System.Text;
 using System.Threading.Tasks;
 using Mimick;
 
-namespace AssemblyToProcess.Contracts
+namespace AssemblyToProcess.Attributes.Contracts
 {
     /// <summary>
-    /// A class containing methods introducing the <see cref="NotNullAttribute"/>.
+    /// A class containing methods introducing the <see cref="MinimumAttribute"/>.
     /// </summary>
-    public class NotNullContracts
+    public class MinimumAttributes
     {
         /// <summary>
-        /// Passes regardless of whether a <c>null</c> value is entered.
+        /// Passes regardless of the value that is entered.
         /// </summary>
         /// <param name="value">The value.</param>
-        public void PassIfNull(object value)
+        public void PassIfBelow(int value)
         {
 
         }
 
         /// <summary>
-        /// Throws an exception when a <c>null</c> value is entered.
+        /// Throws an exception when a value less than 10 is entered.
         /// </summary>
         /// <param name="value">The value.</param>
-        public void ThrowIfNull([NotNull] object value)
+        public void ThrowIfBelow([Minimum(10)] int value)
         {
 
         }
 
         /// <summary>
-        /// Throws an exception when any argument has a <c>null</c> value entered.
+        /// Throws an exception when any argument with a value of less than 10 is entered.
         /// </summary>
         /// <param name="value1">The 1st value.</param>
         /// <param name="value2">The 2nd value.</param>
-        [NotNull]
-        public void ThrowIfAnyNull(object value1, object value2)
+        [Minimum(10)]
+        public void ThrowIfAnyBelow(int value1, int value2)
         {
 
         }

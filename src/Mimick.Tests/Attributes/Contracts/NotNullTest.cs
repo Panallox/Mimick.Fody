@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AssemblyToProcess.Contracts;
+using AssemblyToProcess.Attributes.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Mimick.Tests.Contracts
+namespace Mimick.Tests.Attributes.Contracts
 {
     [TestClass]
     public class NotNullTest
     {
-        private NotNullContracts target;
+        private NotNullAttributes target;
 
         [TestInitialize]
-        public void Initialize() => target = new NotNullContracts();
+        public void Initialize() => target = new NotNullAttributes();
 
         [TestMethod]
         public void ShouldPassWhenNotNullIsNotPresent() => target.PassIfNull(null);

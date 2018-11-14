@@ -6,12 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mimick;
 
-namespace AssemblyToProcess
+namespace AssemblyToProcess.Attributes
 {
     /// <summary>
     /// A class containing methods which must be cached.
     /// </summary>
-    public class CachedMethods
+    public class CachedAttributes
     {
         private int id = 1;
 

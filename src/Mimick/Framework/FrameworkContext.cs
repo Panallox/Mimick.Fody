@@ -160,7 +160,7 @@ namespace Mimick
 
                 if (component != null)
                 {
-                    var configurator = Dependencies.Register(type);
+                    var configurator = Dependencies.Register(type, component.Name);
 
                     if (component.Scope == Scope.Adhoc)
                         configurator.Adhoc();

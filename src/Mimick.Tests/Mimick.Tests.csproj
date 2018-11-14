@@ -49,18 +49,31 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CachedTest.cs" />
-    <Compile Include="Contracts\NotEmptyTest.cs" />
-    <Compile Include="Contracts\NotNullTest.cs" />
+    <Compile Include="AssemblyInitializer.cs" />
+    <Compile Include="Attributes\Behaviours\DisposableTest.cs" />
+    <Compile Include="Attributes\Behaviours\PropertyChangedTest.cs" />
+    <Compile Include="Attributes\Behaviours\PropertyChangingTest.cs" />
+    <Compile Include="Attributes\CachedTest.cs" />
+    <Compile Include="Attributes\ConstructTest.cs" />
+    <Compile Include="Attributes\Contracts\NotEmptyTest.cs" />
+    <Compile Include="Attributes\Contracts\NotNullTest.cs" />
+    <Compile Include="Framework\ComponentTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Attributes\SuppressTest.cs" />
+    <Compile Include="Attributes\ValueTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AssemblyToProcess\AssemblyToProcess.csproj">
       <Project>{8743da02-2d95-4ec5-aabf-42391939b22f}</Project>
       <Name>AssemblyToProcess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Mimick\Mimick.csproj">
+      <Project>{a72f6288-d4da-43ab-a1ff-48b94c250d17}</Project>
+      <Name>Mimick</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

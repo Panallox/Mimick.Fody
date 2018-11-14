@@ -5,38 +5,38 @@ using System.Text;
 using System.Threading.Tasks;
 using Mimick;
 
-namespace AssemblyToProcess.Contracts
+namespace AssemblyToProcess.Attributes.Contracts
 {
     /// <summary>
-    /// A class containing methods introducing the <see cref="MaximumAttribute"/>.
+    /// A class containing methods introducing the <see cref="NotNullAttribute"/>.
     /// </summary>
-    public class MaximumContracts
+    public class NotNullAttributes
     {
         /// <summary>
-        /// Passes regardless of the value that is entered.
+        /// Passes regardless of whether a <c>null</c> value is entered.
         /// </summary>
         /// <param name="value">The value.</param>
-        public void PassIfAbove(int value)
+        public void PassIfNull(object value)
         {
 
         }
 
         /// <summary>
-        /// Throws an exception when a value greater than 10 is entered.
+        /// Throws an exception when a <c>null</c> value is entered.
         /// </summary>
         /// <param name="value">The value.</param>
-        public void ThrowIfAbove([Maximum(10)] int value)
+        public void ThrowIfNull([NotNull] object value)
         {
 
         }
 
         /// <summary>
-        /// Throws an exception when any argument with a value of greater than 10 is entered.
+        /// Throws an exception when any argument has a <c>null</c> value entered.
         /// </summary>
         /// <param name="value1">The 1st value.</param>
         /// <param name="value2">The 2nd value.</param>
-        [Maximum(10)]
-        public void ThrowIfAnyAbove(int value1, int value2)
+        [NotNull]
+        public void ThrowIfAnyNull(object value1, object value2)
         {
 
         }

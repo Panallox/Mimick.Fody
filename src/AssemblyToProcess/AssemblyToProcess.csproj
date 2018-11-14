@@ -48,12 +48,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CachedMethods.cs" />
-    <Compile Include="Contracts\MaximumContracts.cs" />
-    <Compile Include="Contracts\MinimumContracts.cs" />
-    <Compile Include="Contracts\NotEmptyContracts.cs" />
-    <Compile Include="Contracts\NotNullContracts.cs" />
+    <Compile Include="Attributes\Behaviours\DisposableAttributes.cs" />
+    <Compile Include="Attributes\Behaviours\PropertyChangedAttributes.cs" />
+    <Compile Include="Attributes\Behaviours\PropertyChangingAttributes.cs" />
+    <Compile Include="Attributes\CachedAttributes.cs" />
+    <Compile Include="Attributes\ConstructAttributes.cs" />
+    <Compile Include="Attributes\Contracts\MaximumAttributes.cs" />
+    <Compile Include="Attributes\Contracts\MinimumAttributes.cs" />
+    <Compile Include="Attributes\Contracts\NotEmptyAttributes.cs" />
+    <Compile Include="Attributes\Contracts\NotNullAttributes.cs" />
+    <Compile Include="Framework\AdhocComponent.cs" />
+    <Compile Include="Framework\ImplementedComponent.cs" />
+    <Compile Include="Framework\NamedComponent.cs" />
+    <Compile Include="Framework\SingletonComponent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Attributes\SuppressAttributes.cs" />
+    <Compile Include="Attributes\ValueAttributes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

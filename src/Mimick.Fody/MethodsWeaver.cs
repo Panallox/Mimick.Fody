@@ -62,8 +62,16 @@ public partial class ModuleWeaver
 
             result = weaver.EmitLocal(type);
 
-            il.Emit(type.IsValueType ? Codes.Init(type) : Codes.Null);
-            il.Emit(Codes.Store(result));
+            if (type.IsValueType)
+            {
+                il.Emit(Codes.Address(result));
+                il.Emit(Codes.Init(type));
+            }
+            else
+            {
+                il.Emit(Codes.Null);
+                il.Emit(Codes.Store(result));
+            }
         }
 
         var leave = WeaveMethodReturnsRoute(weaver, result, mInterceptors.Length > 0);
@@ -100,7 +108,15 @@ public partial class ModuleWeaver
         {
             il.Emit(method.IsStatic ? Codes.Null : Codes.This);
             il.Emit(Codes.Load(arguments));
-            il.Emit(Codes.Null);
+
+            if (result == null)
+                il.Emit(Codes.Null);
+            else
+            {
+                il.Emit(Codes.Load(result));
+                il.Emit(Codes.Box(result.Type));
+            }
+
             il.Emit(Codes.Load(invocation));
             il.Emit(Codes.Create(Context.Refs.MethodInterceptionArgsCtor));
             il.Emit(Codes.Store(mEventArgs));
