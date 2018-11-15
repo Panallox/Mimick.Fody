@@ -25,7 +25,7 @@ namespace Mimick.Fody.Weavers
             IL = parent.Target.Body.GetILProcessor();
             Insert = CodeInsertion.Append;
             Parent = parent;
-            Position = GetFirst();
+            Position = null;
             tryBlocks = new Queue<TryBlock>();
         }
 

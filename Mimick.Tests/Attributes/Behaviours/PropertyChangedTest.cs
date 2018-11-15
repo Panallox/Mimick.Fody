@@ -5,22 +5,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes.Behaviours;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Mimick.Tests.Attributes.Behaviours
 {
-    [TestClass]
+    [TestFixture]
     public class PropertyChangedTest
     {
-        [TestMethod]
+        [Test]
         public void ShouldImplementINotifyPropertyChanged()
         {
             var target = new PropertyChangedAttributes();
 
-            Assert.IsNotNull(target as INotifyPropertyChanged);
+            Assert.NotNull(target as INotifyPropertyChanged);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldRaiseEventWhenPropertyChanged()
         {
             var target = new PropertyChangedAttributes();
@@ -29,10 +29,10 @@ namespace Mimick.Tests.Attributes.Behaviours
             ((INotifyPropertyChanged)target).PropertyChanged += (sender, e) => raised = true;
             target.Text = "Hello world";
 
-            Assert.IsTrue(raised);
+            Assert.True(raised);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldNotRaiseEventWhenPropertyChangedAndIsIgnored()
         {
             var target = new PropertyChangedAttributes();
@@ -41,7 +41,7 @@ namespace Mimick.Tests.Attributes.Behaviours
             ((INotifyPropertyChanged)target).PropertyChanged += (sender, e) => raised = true;
             target.Id = 2000;
 
-            Assert.IsFalse(raised);
+            Assert.False(raised);
         }
     }
 }

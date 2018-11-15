@@ -6,16 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes;
 using AssemblyToProcess.Framework;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mimick.Configurations;
+using NUnit.Framework;
 
 namespace Mimick.Tests
 {
-    [TestClass]
+    [SetUpFixture]
     public class AssemblyInitializer
     {
-        [AssemblyInitialize]
-        public static void BeforeAssembly(TestContext context)
+        [OneTimeSetUp]
+        public static void BeforeAssembly()
         {
             var framework = FrameworkContext.Current;
 
@@ -27,9 +27,11 @@ namespace Mimick.Tests
                 .ConfigurationContext
                 .Register<AppConfigurationSource>();
 
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Mimick.Tests.Configuration.xml");
+
             framework
                 .ConfigurationContext
-                .Register(new XmlConfigurationSource("Configuration.xml"));
+                .Register(new XmlConfigurationSource(stream));
 
             framework
                 .Initialize();

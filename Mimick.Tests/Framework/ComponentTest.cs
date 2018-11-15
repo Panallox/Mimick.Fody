@@ -4,28 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Framework;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Mimick.Tests.Framework
 {
-    [TestClass]
+    [TestFixture]
     public class ComponentTest
     {
-        private static IComponentContext container;
+        private IComponentContext container;
 
-        [ClassInitialize]
-        public static void BeforeClass(TestContext context) => container = FrameworkContext.Current.ComponentContext;
+        [SetUp]
+        public void BeforeClass() => container = FrameworkContext.Current.ComponentContext;
 
-        [TestMethod]
+        [Test]
         public void ShouldResolveByConcreteType() => Assert.IsNotNull(container.Resolve<ImplementedComponent>());
 
-        [TestMethod]
+        [Test]
         public void ShouldResolveByInterfaceType() => Assert.IsNotNull(container.Resolve<IImplementedComponent>());
 
-        [TestMethod]
+        [Test]
         public void ShouldResolveByName() => Assert.IsNotNull(container.Resolve("AlternativeNamedComponent"));
 
-        [TestMethod]
+        [Test]
         public void ShouldInstantiateForAdhoc()
         {
             var component1 = container.Resolve<AdhocComponent>();
@@ -36,7 +36,7 @@ namespace Mimick.Tests.Framework
             Assert.AreNotEqual(component1.Guid, component2.Guid);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldRetrieveForSingleton()
         {
             var component1 = container.Resolve<SingletonComponent>();

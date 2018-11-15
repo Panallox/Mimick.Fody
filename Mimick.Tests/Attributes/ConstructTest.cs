@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Mimick.Tests.Attributes
 {
-    [TestClass]
+    [TestFixture]
     public class ConstructTest
     {
-        [TestMethod]
+        [Test]
         public void ShouldInvokeBeforeAndAfterMethodsWhenConstructed()
         {
             var target = new ConstructAttributes();
@@ -21,7 +21,7 @@ namespace Mimick.Tests.Attributes
             Assert.AreEqual(1, target.AfterConstructionCount);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldInvokeBeforeAndAfterMethodsWhenConstructedOnlyOnce()
         {
             var target = new ConstructAttributes(1);

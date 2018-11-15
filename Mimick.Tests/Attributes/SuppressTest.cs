@@ -4,33 +4,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace Mimick.Tests.Attributes
 {
-    [TestClass]
+    [TestFixture]
     public class SuppressTest
     {
-        private static SuppressAttributes target;
+        [Test]
+        public void ShouldThrowExceptionWhenNotSuppressed() => Assert.Throws<Exception>(() => new SuppressAttributes().ThrowException());
 
-        [ClassInitialize]
-        public static void BeforeClass(TestContext context) => target = new SuppressAttributes();
+        [Test]
+        public void ShouldNotThrowExceptionWhenSuppressed() => new SuppressAttributes().ThrowAndSuppressException();
 
-        [TestMethod]
-        [ExpectedException(typeof(Exception))]
-        public void ShouldThrowExceptionWhenNotSuppressed() => target.ThrowException();
+        [Test]
+        public void ShouldThrowExceptionWhenSuppressedAndNotInFilter() => Assert.Throws<InvalidOperationException>(() => new SuppressAttributes().ThrowAndFilterException());
 
-        [TestMethod]
-        public void ShouldNotThrowExceptionWhenSuppressed() => target.ThrowAndSuppressException();
+        [Test]
+        public void ShouldNotThrowExceptionWhenSuppressedAndInFilter() => new SuppressAttributes().ThrowAndFilterAndSuppressException();
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void ShouldThrowExceptionWhenSuppressedAndNotInFilter() => target.ThrowAndFilterException();
-
-        [TestMethod]
-        public void ShouldNotThrowExceptionWhenSuppressedAndInFilter() => target.ThrowAndFilterAndSuppressException();
-
-        [TestMethod]
-        public void ShouldReturnDefaultWhenExceptionIsSuppressed() => Assert.AreEqual(default(int), target.ThrowAndSuppressExceptionAndReturnDefault());
+        [Test]
+        public void ShouldReturnDefaultWhenExceptionIsSuppressed() => Assert.AreEqual(default(int), new SuppressAttributes().ThrowAndSuppressExceptionAndReturnDefault());
     }
 }

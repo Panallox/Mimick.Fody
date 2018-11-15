@@ -4,17 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes.Behaviours;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Mimick.Tests.Attributes.Behaviours
 {
-    [TestClass]
+    [TestFixture]
     public class FreezableTest
     {
-        [TestMethod]
+        [Test]
         public void ShouldImplementIFreezable() => Assert.IsNotNull(new FreezableAttribute() is IFreezable);
 
-        [TestMethod]
+        [Test]
         public void ShouldAllowSettersWhenNotFrozen()
         {
             var target = new FreezableAttributes();
@@ -23,14 +23,13 @@ namespace Mimick.Tests.Attributes.Behaviours
             target.Name = "Test";
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(FrozenException))]
+        [Test]
         public void ShouldThrowExceptionOnSettersWhenFrozen()
         {
             var target = new FreezableAttributes();
             ((IFreezable)target).Freeze();
 
-            target.Id = 1;
+            Assert.Throws(typeof(FrozenException), () => target.Id = 1);
         }
     }
 }

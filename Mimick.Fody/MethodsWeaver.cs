@@ -25,9 +25,7 @@ public partial class ModuleWeaver
         foreach (var item in candidates)
         {
             var weaver = new TypeEmitter(Context.Module, item.Type, Context);
-
-            LogInfo($"Weaving {item.Methods.Length} methods in {item.Type.FullName}");
-            
+                        
             foreach (var method in item.Methods)
             {
                 var inner = new MethodEmitter(weaver, method.Method);
@@ -145,9 +143,7 @@ public partial class ModuleWeaver
                     il.Emit(Codes.Box(prm.ParameterType));
                     il.Emit(Codes.Create(Context.Finder.ParameterInterceptionArgsCtor));
                     il.Emit(Codes.Store(pEventArgs));
-
-                    LogInfo($"(Stage 2)");
-
+                    
                     il.Emit(Codes.ThisIf(inc));
                     il.Emit(Codes.Load(inc));
                     il.Emit(Codes.Load(pEventArgs));

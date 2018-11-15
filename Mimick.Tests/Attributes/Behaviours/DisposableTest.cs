@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes.Behaviours;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Mimick.Tests.Attributes.Behaviours
 {
-    [TestClass]
+    [TestFixture]
     public class DisposableTest
     {
-        [TestMethod]
+        [Test]
         public void ShouldImplementIDisposable()
         {
             var target = new DisposableAttributes();
@@ -19,7 +19,7 @@ namespace Mimick.Tests.Attributes.Behaviours
             Assert.IsNotNull(target as IDisposable);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldInvokeAllDisposeAssociatedMethods()
         {
             var target = new DisposableAttributes();
@@ -28,7 +28,7 @@ namespace Mimick.Tests.Attributes.Behaviours
             Assert.AreEqual(2, target.DisposeCount);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldInvokeAllDisposeAssociatedMethodsOnlyOnce()
         {
             var target = new DisposableAttributes();
@@ -38,7 +38,7 @@ namespace Mimick.Tests.Attributes.Behaviours
             Assert.AreEqual(2, target.DisposeCount);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldSetIsDisposeToTrue()
         {
             var target = new DisposableAttributes();

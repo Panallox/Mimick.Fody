@@ -4,52 +4,52 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Mimick.Tests.Attributes
 {
-    [TestClass]
+    [TestFixture]
     public class ValueTest
     {
-        private static ValueAttributes target;
+        private ValueAttributes target;
 
-        [ClassInitialize]
-        public static void BeforeClass(TestContext context) => target = new ValueAttributes();
+        [OneTimeSetUp]
+        public void BeforeClass() => target = new ValueAttributes();
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidNumberWhenSimple() => Assert.AreEqual(10, target.SimpleNumber);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidStringWhenSimple() => Assert.AreEqual("Test", target.SimpleString);
         
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidNumberWhenComputed() => Assert.AreEqual(50, target.ComputedNumber);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidStringWhenComputed() => Assert.AreEqual("Test 1 Value", target.ComputedString);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidNumberWhenConfigured() => Assert.AreEqual(12345, target.ConfiguredNumber);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidStringWhenConfigured() => Assert.AreEqual("Testing", target.ConfiguredString);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidNumberWhenComplex() => Assert.AreEqual(90, target.ComplexNumber);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidStringWhenComplex() => Assert.AreEqual("Number 90", target.ComplexString);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidMethodNumberWhenComputed() => Assert.AreEqual(60, target.GetComputedNumber());
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidMethodStringWhenComputed() => Assert.AreEqual("Testing 30 Result", target.GetComputedString());
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidXmlAttributeNumber() => Assert.AreEqual(123, target.XmlAttributeNumber);
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnValidXmlElementString() => Assert.AreEqual("Hello", target.XmlElementString);
     }
 }

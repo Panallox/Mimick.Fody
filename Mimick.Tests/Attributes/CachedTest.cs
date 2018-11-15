@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssemblyToProcess.Attributes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Mimick.Tests.Attributes
 {
-    [TestClass]
+    [TestFixture]
     public class CachedTest
     {
-        [TestMethod]
+        [Test]
         public void ShouldReturnDifferentValueWhenNotCached()
         {
             var target = new CachedAttributes();
@@ -19,7 +19,7 @@ namespace Mimick.Tests.Attributes
             Assert.AreNotEqual(target.NonCached(), target.NonCached());
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnSameValueWhenCached()
         {
             var target = new CachedAttributes();
@@ -27,7 +27,7 @@ namespace Mimick.Tests.Attributes
             Assert.AreEqual(target.Cached(), target.Cached());
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnDifferentValueWhenCachedWithDifferentArguments()
         {
             var target = new CachedAttributes();
@@ -35,7 +35,7 @@ namespace Mimick.Tests.Attributes
             Assert.AreNotEqual(target.CachedArgument(1), target.CachedArgument(2));
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnSameValueWhenCachedWithSameArguments()
         {
             var target = new CachedAttributes();
