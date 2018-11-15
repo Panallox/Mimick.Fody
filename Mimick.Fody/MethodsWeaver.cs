@@ -25,6 +25,8 @@ public partial class ModuleWeaver
         foreach (var item in candidates)
         {
             var weaver = new TypeEmitter(Context.Module, item.Type, Context);
+
+            LogInfo($"Weaving {item.Methods.Length} methods in {item.Type.FullName}");
             
             foreach (var method in item.Methods)
             {
@@ -144,6 +146,8 @@ public partial class ModuleWeaver
                     il.Emit(Codes.Create(Context.Finder.ParameterInterceptionArgsCtor));
                     il.Emit(Codes.Store(pEventArgs));
 
+                    LogInfo($"(Stage 2)");
+
                     il.Emit(Codes.ThisIf(inc));
                     il.Emit(Codes.Load(inc));
                     il.Emit(Codes.Load(pEventArgs));
@@ -239,6 +243,7 @@ public partial class ModuleWeaver
     public Instruction WeaveMethodReturnsRoute(MethodEmitter weaver, Variable storage, bool hasMethodInterceptors)
     {
         var il = weaver.Body.Instructions;
+        var pos = weaver.GetIL().Position;
 
         if (weaver.Target.IsReturn())
         {
@@ -251,7 +256,12 @@ public partial class ModuleWeaver
             {
                 if (il[i].OpCode == OpCodes.Ret)
                 {
-                    il[i] = Codes.Leave(instruction);
+                    var current = il[i] == pos;
+                    var replacement = il[i] = Codes.Leave(instruction);
+
+                    if (current)
+                        weaver.GetIL().Position = replacement;
+
                     il.Insert(i, Codes.Store(storage));
                     i++;
                 }
@@ -268,7 +278,13 @@ public partial class ModuleWeaver
             for (int i = 0, count = il.Count - 1; i < count; i++)
             {
                 if (il[i].OpCode == OpCodes.Ret)
-                    il[i] = Codes.Leave(instruction);
+                {
+                    var current = il[i] == pos;
+                    var replacement = il[i] = Codes.Leave(instruction);
+
+                    if (current)
+                        weaver.GetIL().Position = replacement;
+                }
             }
 
             return instruction;

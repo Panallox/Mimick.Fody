@@ -314,13 +314,35 @@ namespace Mimick.Fody.Weavers
         /// Gets the first code within the method body.
         /// </summary>
         /// <returns></returns>
-        public Instruction GetFirst() => Body.Instructions.FirstOrDefault();
+        public Instruction GetFirst()
+        {
+            var instruction = Body.Instructions.FirstOrDefault();
+
+            if (instruction == null)
+            {
+                instruction = Codes.Return;
+                Body.Instructions.Add(instruction);
+            }
+
+            return instruction;
+        }
 
         /// <summary>
         /// Gets the last code within the method body.
         /// </summary>
         /// <returns>A <see cref="Codes"/> value; otherwise, <c>null</c> if the body is empty.</returns>
-        public Instruction GetLast() => Body.Instructions.LastOrDefault();
+        public Instruction GetLast()
+        {
+            var instruction = Body.Instructions.LastOrDefault();
+
+            if (instruction == null)
+            {
+                instruction = Codes.Return;
+                Body.Instructions.Add(instruction);
+            }
+
+            return instruction;
+        }
 
         /// <summary>
         /// Gets the current code for a <c>try</c> block.
