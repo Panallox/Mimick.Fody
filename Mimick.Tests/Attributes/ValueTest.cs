@@ -29,12 +29,6 @@ namespace Mimick.Tests.Attributes
         public void ShouldReturnValidStringWhenComputed() => Assert.AreEqual("Test 1 Value", target.ComputedString);
 
         [Test]
-        public void ShouldReturnValidNumberWhenConfigured() => Assert.AreEqual(12345, target.ConfiguredNumber);
-
-        [Test]
-        public void ShouldReturnValidStringWhenConfigured() => Assert.AreEqual("Testing", target.ConfiguredString);
-
-        [Test]
         public void ShouldReturnValidNumberWhenComplex() => Assert.AreEqual(90, target.ComplexNumber);
 
         [Test]

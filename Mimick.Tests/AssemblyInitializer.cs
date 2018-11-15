@@ -23,10 +23,6 @@ namespace Mimick.Tests
                 .ComponentContext
                 .RegisterAssembly<AdhocComponent>();
 
-            framework
-                .ConfigurationContext
-                .Register<AppConfigurationSource>();
-
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Mimick.Tests.Configuration.xml");
 
             framework

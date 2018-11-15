@@ -35,19 +35,7 @@ namespace AssemblyToProcess.Attributes
         /// </summary>
         [Value("'Test ' + 1 + ' Value'")]
         public string ComputedString { get; set; }
-
-        /// <summary>
-        /// Gets a configured number processed from the associated value attribute.
-        /// </summary>
-        [Value("{ValueAsInteger}")]
-        public int ConfiguredNumber { get; set; }
-
-        /// <summary>
-        /// Gets a configured string processed from the associated value attribute.
-        /// </summary>
-        [Value("{ValueAsString}")]
-        public string ConfiguredString { get; set; }
-
+        
         /// <summary>
         /// Gets a simple number processed from the associated value attribute.
         /// </summary>
