@@ -1,5 +1,4 @@
-﻿using Mimick.Aspect;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,14 +13,17 @@ namespace Mimick.Fody
     /// </summary>
     public class WeaveCandidates : IEnumerable<TypeReference>
     {
+        private readonly ReferenceFinder finder;
         private readonly ModuleDefinition module;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WeaveCandidates"/> class.
         /// </summary>
         /// <param name="moduleDefinition">The module definition.</param>
-        public WeaveCandidates(ModuleDefinition moduleDefinition)
+        /// <param name="referenceFinder">The reference finder.</param>
+        public WeaveCandidates(ModuleDefinition moduleDefinition, ReferenceFinder referenceFinder)
         {
+            finder = referenceFinder;
             module = moduleDefinition;
             Types = new List<TypeReference>();
             Initialize();
@@ -52,7 +54,7 @@ namespace Mimick.Fody
                 var ctors = new ConstructorInterceptorInfo { Initializers = new MethodDefinition[0] };
                 var item = new TypeInterceptorInfo { Constructors = ctors, Type = type };
 
-                ctors.Initializers = type.Methods.Where(m => !m.IsAbstract).Where(m => m.GetCustomAttributes().Any(a => a.HasInterface<IInjectBeforeInitializer>() || a.HasInterface<IInjectAfterInitializer>())).ToArray();
+                ctors.Initializers = type.Methods.Where(m => !m.IsAbstract).Where(m => m.GetCustomAttributes().Any(a => a.HasInterface(finder.IInjectBeforeInitializer) || a.HasInterface(finder.IInjectAfterInitializer))).ToArray();
 
                 if (ctors.Initializers.Length > 0)
                     list.Add(item);
@@ -76,7 +78,7 @@ namespace Mimick.Fody
                 
                 foreach (var field in type.Fields)
                 {
-                    var attributes = field.GetCustomAttributes().Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+                    var attributes = field.GetCustomAttributes().Where(a => a.HasInterface(finder.IPropertyGetInterceptor) || a.HasInterface(finder.IPropertySetInterceptor));
 
                     if (attributes.Any())
                         fields.Add(new FieldInterceptorInfo { Field = field, Interceptors = attributes.ToArray() });
@@ -102,12 +104,11 @@ namespace Mimick.Fody
 
             foreach (var type in Types.Select(a => a.Resolve()).Where(a => !a.IsEnum && !a.IsInterface))
             {
-
-                var implements = type.GetCustomAttributes().Where(a => a.GetAttribute<CompilationImplementsAttribute>() != null).ToList();
+                var implements = type.GetCustomAttributes().Where(a => a.GetAttribute(finder.CompilationImplementsAttribute) != null).ToList();
                 
                 foreach (var member in type.GetMembers())
                 {
-                    var inner = member.Resolve().GetCustomAttributes().Where(c => c.GetAttribute<CompilationImplementsAttribute>() != null);
+                    var inner = member.Resolve().GetCustomAttributes().Where(c => c.GetAttribute(finder.CompilationImplementsAttribute) != null);
                     implements.AddRange(inner);
                 }
 
@@ -131,13 +132,13 @@ namespace Mimick.Fody
                 var item = new TypeInterceptorInfo { Type = type };
                 var methods = new List<MethodInterceptorInfo>();
 
-                var top = type.GetCustomAttributes().Where(a => a.HasInterface<IMethodInterceptor>());
+                var top = type.GetCustomAttributes().Where(a => a.HasInterface(finder.IMethodInterceptor));
 
                 foreach (var method in type.Methods.Where(m => !m.IsAbstract))
                 {
-                    var these = method.GetCustomAttributes().Where(a => a.HasInterface<IMethodInterceptor>()).Concat(top);
-                    var parameters = method.Parameters.Where(p => p.GetCustomAttributes().Any(a => a.HasInterface<IParameterInterceptor>())).Select(p => new ParameterInterceptorInfo { Index = p.Index, Attributes = p.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>()).ToArray() });
-                    var allParameters = new ParameterInterceptorInfo { Index = -1, Attributes = method.GetCustomAttributes().Where(a => a.HasInterface<IParameterInterceptor>()).ToArray() };
+                    var these = method.GetCustomAttributes().Where(a => a.HasInterface(finder.IMethodInterceptor)).Concat(top);
+                    var parameters = method.Parameters.Where(p => p.GetCustomAttributes().Any(a => a.HasInterface(finder.IParameterInterceptor))).Select(p => new ParameterInterceptorInfo { Index = p.Index, Attributes = p.GetCustomAttributes().Where(a => a.HasInterface(finder.IParameterInterceptor)).ToArray() });
+                    var allParameters = new ParameterInterceptorInfo { Index = -1, Attributes = method.GetCustomAttributes().Where(a => a.HasInterface(finder.IParameterInterceptor)).ToArray() };
 
                     if (these.Any() || parameters.Any() || allParameters.Attributes.Length > 0)
                     {
@@ -178,11 +179,11 @@ namespace Mimick.Fody
                 var item = new TypeInterceptorInfo { Type = type };
                 var properties = new List<PropertyInterceptorInfo>();
 
-                var top = type.GetCustomAttributes().Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>());
+                var top = type.GetCustomAttributes().Where(a => a.HasInterface(finder.IPropertyGetInterceptor) || a.HasInterface(finder.IPropertySetInterceptor));
 
                 foreach (var property in type.Properties)
                 {
-                    var attributes = property.GetCustomAttributes().Where(a => a.HasInterface<IPropertyGetInterceptor>() || a.HasInterface<IPropertySetInterceptor>()).Concat(top);
+                    var attributes = property.GetCustomAttributes().Where(a => a.HasInterface(finder.IPropertyGetInterceptor) || a.HasInterface(finder.IPropertySetInterceptor)).Concat(top);
 
                     if (attributes.Any())
                         properties.Add(new PropertyInterceptorInfo { Interceptors = attributes.ToArray(), Property = property });

@@ -1,5 +1,4 @@
-﻿using Mimick.Aspect;
-using Mimick.Fody;
+﻿using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
 using System;
@@ -100,13 +99,13 @@ public partial class ModuleWeaver
 
             var leave = WeaveMethodReturnsRoute(getter, result, true);
             var cancel = il.EmitLabel();
-            var args = il.EmitLocal(Context.Refs.PropertyInterceptionArgs);
+            var args = il.EmitLocal(Context.Finder.PropertyInterceptionArgs);
 
             il.Emit(getter.Target.IsStatic ? Codes.Null : Codes.This);
             il.Emit(Codes.Load(info));
             il.Emit(Codes.Load(result));
             il.Emit(Codes.Box(type));
-            il.Emit(Codes.Create(Context.Refs.PropertyInterceptionArgsCtor));
+            il.Emit(Codes.Create(Context.Finder.PropertyInterceptionArgsCtor));
             il.Emit(Codes.Store(args));
 
             for (int i = 0; i < count; i++)
@@ -119,7 +118,7 @@ public partial class ModuleWeaver
                 il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
-                il.Emit(Codes.Invoke(Context.Refs.PropertyGetInterceptorOnGet));
+                il.Emit(Codes.Invoke(Context.Finder.PropertyGetInterceptorOnGet));
             }
 
             il.Position = leave;
@@ -135,7 +134,7 @@ public partial class ModuleWeaver
                 il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
-                il.Emit(Codes.Invoke(Context.Refs.PropertyGetInterceptorOnExit));
+                il.Emit(Codes.Invoke(Context.Finder.PropertyGetInterceptorOnExit));
             }
 
             il.Mark(cancel);
@@ -148,14 +147,14 @@ public partial class ModuleWeaver
                 var unchanged = il.EmitLabel();
 
                 il.Emit(Codes.Load(args));
-                il.Emit(Codes.Invoke(Context.Refs.PropertyInterceptionArgsIsDirtyGet));
+                il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsIsDirtyGet));
                 il.Emit(Codes.IfFalse(unchanged));
                 
                 if (!setter.Target.IsStatic)
                     il.Emit(Codes.This);
 
                 il.Emit(Codes.Load(args));
-                il.Emit(Codes.Invoke(Context.Refs.PropertyInterceptionArgsValueGet));
+                il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
                 il.Emit(Codes.Unbox(type));
 
                 if (backing != null)
@@ -168,7 +167,7 @@ public partial class ModuleWeaver
             }
 
             il.Emit(Codes.Load(args));
-            il.Emit(Codes.Invoke(Context.Refs.PropertyInterceptionArgsValueGet));
+            il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
             il.Emit(Codes.Unbox(type));
         }
 
@@ -179,7 +178,7 @@ public partial class ModuleWeaver
             il.Position = il.GetFirst();
             il.Insert = CodeInsertion.Before;
 
-            var args = il.EmitLocal(Context.Refs.PropertyInterceptionArgs);
+            var args = il.EmitLocal(Context.Finder.PropertyInterceptionArgs);
             var cancel = il.EmitLabel();
             var argument = new Variable(setter.Target.Parameters.First());
 
@@ -189,7 +188,7 @@ public partial class ModuleWeaver
             il.Emit(Codes.Load(info));
             il.Emit(Codes.Load(argument));
             il.Emit(Codes.Box(type));
-            il.Emit(Codes.Create(Context.Refs.PropertyInterceptionArgsCtor));
+            il.Emit(Codes.Create(Context.Finder.PropertyInterceptionArgsCtor));
             il.Emit(Codes.Store(args));
 
             for (int i = 0; i < count; i++)
@@ -202,15 +201,15 @@ public partial class ModuleWeaver
                 il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
-                il.Emit(Codes.Invoke(Context.Refs.PropertySetInterceptorOnSet));
+                il.Emit(Codes.Invoke(Context.Finder.PropertySetInterceptorOnSet));
             }
 
             il.Emit(Codes.Load(args));
-            il.Emit(Codes.Invoke(Context.Refs.PropertyInterceptionArgsIsDirtyGet));
+            il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsIsDirtyGet));
             il.Emit(Codes.IfFalse(cancel));
 
             il.Emit(Codes.Load(args));
-            il.Emit(Codes.Invoke(Context.Refs.PropertyInterceptionArgsValueGet));
+            il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
             il.Emit(Codes.Unbox(argument.Type));
             il.Emit(Codes.Store(argument));
             il.Emit(Codes.Nop);
@@ -232,7 +231,7 @@ public partial class ModuleWeaver
                 il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(args));
-                il.Emit(Codes.Invoke(Context.Refs.PropertySetInterceptorOnExit));
+                il.Emit(Codes.Invoke(Context.Finder.PropertySetInterceptorOnExit));
             }
 
             il.EndTry();

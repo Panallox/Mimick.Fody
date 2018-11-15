@@ -38,7 +38,7 @@ namespace Mimick.Fody.Weavers
         {
             get;
         }
-
+        
         /// <summary>
         /// Gets the module definition.
         /// </summary>

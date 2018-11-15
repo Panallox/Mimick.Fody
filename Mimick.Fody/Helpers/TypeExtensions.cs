@@ -26,23 +26,37 @@ static class TypeExtensions
         return def.Fields.Cast<MemberReference>().Concat(def.Methods).Concat(def.Properties);
     }
 
-    public static List<MemberReference> GetMembersWithInterface<T>(this TypeReference type)
-        => GetMembers(type).Where(m => m.Resolve().CustomAttributes.Any(c => c.HasInterface<T>())).ToList();
+    public static List<MemberReference> GetMembersWithInterface(this TypeReference type, TypeReference interfaceType)
+        => GetMembers(type).Where(m => m.Resolve().CustomAttributes.Any(c => c.HasInterface(interfaceType))).ToList();
 
     public static List<MemberReference> GetMembersWithAttribute<T>(this TypeReference type)
         => GetMembers(type).Where(m => m.Resolve().CustomAttributes.Any(c => c.AttributeType.FullName == typeof(T).FullName)).ToList();
-    
-    public static MethodReference GetMethod(this TypeReference type, string name, TypeReference returnType, TypeReference[] parameterTypes, GenericParameter[] genericTypes)
+
+    public static MethodReference GetConstructor(this TypeReference type, TypeReference[] parameters = null)
     {
-        foreach (var method in type.Resolve().Methods.Where(m => m.Name == name && m.ReturnType.FullName == returnType.FullName))
+        var def = type as TypeDefinition ?? type.Resolve();
+        var query = def.Methods.Where(m => m.Name == ".ctor");
+
+        if (parameters != null)
+            query = query.Where(m => m.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(parameters.Select(p => p.FullName)));
+
+        return query.FirstOrDefault()?.Import();
+    }
+    
+    public static MethodReference GetMethod(this TypeReference type, string name, TypeReference returns = null, TypeReference[] parameters = null, GenericParameter[] generics = null)
+    {
+        foreach (var method in type.Resolve().Methods.Where(m => m.Name == name))
         {
-            if (!method.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(parameterTypes.Select(p => p.FullName)))
+            if (returns != null && !method.ReturnType.FullName.Equals(returns.FullName))
                 continue;
 
-            if (!method.GenericParameters.Select(p => p.Name).SequenceEqual(genericTypes.Select(p => p.Name)))
+            if (parameters != null && !method.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(parameters.Select(p => p.FullName)))
                 continue;
 
-            return method;
+            if (generics != null && !method.GenericParameters.Select(p => p.Name).SequenceEqual(generics.Select(p => p.Name)))
+                continue;
+
+            return method.Import();
         }
 
         return null;
@@ -54,8 +68,8 @@ static class TypeExtensions
         return def.Methods.Concat(def.NestedTypes.SelectMany(a => GetMethodsInNested(a)));
     }
 
-    public static PropertyReference GetProperty(this TypeReference type, string name, TypeReference returnType)
-        => type.Resolve().Properties.FirstOrDefault(p => p.Name == name && p.PropertyType.FullName == returnType.FullName);
+    public static PropertyReference GetProperty(this TypeReference type, string name, TypeReference returnType = null)
+        => type.Resolve().Properties.FirstOrDefault(p => p.Name == name && (returnType == null || p.PropertyType.FullName == returnType.FullName));
 
     public static bool HasAsyncStateMachine(this TypeReference type)
     {

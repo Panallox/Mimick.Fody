@@ -1,5 +1,4 @@
-﻿using Mimick.Aspect;
-using Mimick.Fody;
+﻿using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -102,7 +101,7 @@ public partial class ModuleWeaver
 
         var arguments = hasMethod ? CreateArgumentArray(weaver) : null;
         var invocation = CreateMethodInfo(weaver);
-        var mEventArgs = hasMethod ? weaver.EmitLocal(Context.Refs.MethodInterceptionArgs, name: "methodEventArgs") : null;
+        var mEventArgs = hasMethod ? weaver.EmitLocal(Context.Finder.MethodInterceptionArgs, name: "methodEventArgs") : null;
         
         if (hasMethod)
         {
@@ -118,14 +117,14 @@ public partial class ModuleWeaver
             }
 
             il.Emit(Codes.Load(invocation));
-            il.Emit(Codes.Create(Context.Refs.MethodInterceptionArgsCtor));
+            il.Emit(Codes.Create(Context.Finder.MethodInterceptionArgsCtor));
             il.Emit(Codes.Store(mEventArgs));
             il.Try();
         }
 
         if (hasParams)
         {
-            var pEventArgs = weaver.EmitLocal(Context.Refs.ParameterInterceptionArgs);
+            var pEventArgs = weaver.EmitLocal(Context.Finder.ParameterInterceptionArgs);
 
             for (int i = 0, count = pInterceptors.Length; i < count; i++)
             {
@@ -142,16 +141,16 @@ public partial class ModuleWeaver
                     il.Emit(Codes.Load(pInfo));
                     il.Emit(Codes.Arg(pVariable));
                     il.Emit(Codes.Box(prm.ParameterType));
-                    il.Emit(Codes.Create(Context.Refs.ParameterInterceptionArgsCtor));
+                    il.Emit(Codes.Create(Context.Finder.ParameterInterceptionArgsCtor));
                     il.Emit(Codes.Store(pEventArgs));
 
                     il.Emit(Codes.ThisIf(inc));
                     il.Emit(Codes.Load(inc));
                     il.Emit(Codes.Load(pEventArgs));
-                    il.Emit(Codes.Invoke(Context.Refs.ParameterInterceptorOnEnter));
+                    il.Emit(Codes.Invoke(Context.Finder.ParameterInterceptorOnEnter));
 
                     il.Emit(Codes.Load(pEventArgs));
-                    il.Emit(Codes.Invoke(Context.Refs.ParameterInterceptionArgsValueGet));
+                    il.Emit(Codes.Invoke(Context.Finder.ParameterInterceptionArgsValueGet));
                     il.Emit(Codes.Unbox(prm.ParameterType));
                     il.Emit(Codes.Store(pVariable));
                 }
@@ -167,14 +166,14 @@ public partial class ModuleWeaver
                 il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptorOnEnter));
+                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnEnter));
 
                 il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptionArgsCancelGet));
+                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
                 il.Emit(Codes.IfTrue(cancel));
             }
 
-            var exception = il.EmitLocal(Context.Refs.Exception);
+            var exception = il.EmitLocal(Context.Finder.Exception);
 
             il.Position = leave;
             il.Catch(exception);
@@ -187,7 +186,7 @@ public partial class ModuleWeaver
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(mEventArgs));
                 il.Emit(Codes.Load(exception));
-                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptorOnException));
+                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnException));
             }
 
             il.Emit(Codes.Nop);
@@ -200,7 +199,7 @@ public partial class ModuleWeaver
                 il.Emit(Codes.Load(mEventArgs));
                 il.Emit(Codes.Load(result));
                 il.Emit(Codes.Box(weaver.Target.ReturnType));
-                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptionArgsReturnSet));
+                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnSet));
             }
 
             for (int i = 0, count = mInterceptors.Length; i < count; i++)
@@ -210,10 +209,10 @@ public partial class ModuleWeaver
                 il.Emit(Codes.ThisIf(inc));
                 il.Emit(Codes.Load(inc));
                 il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptorOnExit));
+                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnExit));
 
                 il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptionArgsCancelGet));
+                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
                 il.Emit(Codes.IfTrue(cancel));
             }
 
@@ -224,7 +223,7 @@ public partial class ModuleWeaver
             {
                 il.Insert = CodeInsertion.After;
                 il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Refs.MethodInterceptionArgsReturnGet));
+                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnGet));
                 il.Emit(Codes.Unbox(weaver.Target.ReturnType));
             }
         }

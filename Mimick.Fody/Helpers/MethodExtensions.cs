@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 /// </summary>
 static class MethodExtensions
 {
-    public static CustomAttribute GetAttribute<T>(this MethodReference method) =>
-        (method as MethodDefinition ?? method.Resolve()).CustomAttributes.FirstOrDefault(a => a.HasInterface<T>());
+    public static CustomAttribute GetAttribute(this MethodReference method, TypeReference type) =>
+        (method as MethodDefinition ?? method.Resolve()).CustomAttributes.FirstOrDefault(a => a.HasInterface(type));
 
     public static string GetHashString(this MethodReference method)
     {

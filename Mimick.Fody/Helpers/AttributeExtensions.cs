@@ -28,15 +28,17 @@ static class AttributeExtensions
         yield break;
     }
 
-    public static CustomAttribute GetAttribute<T>(this CustomAttribute a) where T : Attribute
+    public static CustomAttribute GetAttribute(this CustomAttribute a, TypeReference type)
     {
-        var match = typeof(T).FullName;
+        if (type == null)
+            throw new ArgumentNullException("type");
+
         var current = a.AttributeType;
 
         while (current != null)
         {
             var def = current.Resolve();
-            var attribute = def.CustomAttributes.FirstOrDefault(x => x.AttributeType.FullName == match);
+            var attribute = def.CustomAttributes.FirstOrDefault(x => x.AttributeType.FullName == type.FullName);
 
             if (attribute != null)
                 return attribute;
@@ -53,16 +55,15 @@ static class AttributeExtensions
         return value == null ? notFound : (T)value;
     }
 
-    public static bool HasInterface<T>(this CustomAttribute a)
+    public static bool HasInterface(this CustomAttribute a, TypeReference type)
     {
-        var match = typeof(T).FullName;
         var current = a.AttributeType;
 
         while (current != null)
         {
             var def = current.Resolve();
 
-            if (def.Interfaces.Any(b => b.InterfaceType.FullName == match))
+            if (def.Interfaces.Any(b => b.InterfaceType.FullName == type.FullName))
                 return true;
 
             current = def.BaseType;
@@ -71,7 +72,7 @@ static class AttributeExtensions
         return false;
     }
 
-    public static bool HasAttribute<T>(this MethodDefinition m) => m.CustomAttributes.Any(a => a.HasInterface<T>());
+    public static bool HasAttribute(this MethodDefinition m, TypeReference type) => m.CustomAttributes.Any(a => a.HasInterface(type));
 
-    public static bool HasAttribute<T>(this ParameterDefinition p) => p.CustomAttributes.Any(a => a.HasInterface<T>());
+    public static bool HasAttribute(this ParameterDefinition p, TypeReference type) => p.CustomAttributes.Any(a => a.HasInterface(type));
 }

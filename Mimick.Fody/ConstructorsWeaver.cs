@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Mimick.Aspect;
 using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
@@ -43,8 +42,8 @@ public partial class ModuleWeaver
             if (parameters.Any(p => !p.IsOptional))
                 throw new NotSupportedException($"Cannot use constructor injection against a method with non-optional parameters");
 
-            var after = init.GetAttribute<IInjectAfterInitializer>();
-            var before = init.GetAttribute<IInjectBeforeInitializer>();
+            var after = init.GetAttribute(Context.Finder.IInjectAfterInitializer);
+            var before = init.GetAttribute(Context.Finder.IInjectBeforeInitializer);
 
             if (init.HasGenericParameters)
                 throw new NotSupportedException($"Cannot use constructor injection against a generic method");

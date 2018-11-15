@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+	<PackageReference Include="FodyHelpers" Version="3.2.17" />
+  </ItemGroup>
+  <Target Name="CopyFiles" AfterTargets="build">
+	<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)\Tools" />
+  </Target>
+</Project>

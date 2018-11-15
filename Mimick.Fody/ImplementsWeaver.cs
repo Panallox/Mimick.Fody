@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Mimick.Aspect;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
 
@@ -36,7 +35,7 @@ public partial class ModuleWeaver
     public void WeaveImplementation(TypeEmitter emitter, CustomAttribute attribute)
     {
         var implementType = attribute.AttributeType.Resolve();
-        var interfaceType = attribute.GetAttribute<CompilationImplementsAttribute>()?.GetProperty<TypeReference>("Interface")?.Resolve();
+        var interfaceType = attribute.GetAttribute(Context.Finder.CompilationImplementsAttribute)?.GetProperty<TypeReference>("Interface")?.Resolve();
                 
         if (interfaceType == null)
             return;

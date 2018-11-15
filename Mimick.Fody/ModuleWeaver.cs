@@ -45,8 +45,8 @@ public partial class ModuleWeaver : BaseModuleWeaver
         Log = LogInfo;
 
         Context = new WeaveContext(ModuleDefinition);
-        Context.Candidates = new WeaveCandidates(ModuleDefinition);
-        Context.Refs = new WeaveReferences(ModuleDefinition);
+        Context.Finder = new ReferenceFinder(ModuleDefinition);
+        Context.Candidates = new WeaveCandidates(ModuleDefinition, Context.Finder);
         GlobalContext = Context;
 
         WeaveImplementations();

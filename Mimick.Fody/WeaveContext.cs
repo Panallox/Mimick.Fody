@@ -34,9 +34,9 @@ namespace Mimick.Fody
         public ModuleDefinition Module { get; }
 
         /// <summary>
-        /// Gets or sets the imported type and method references.
+        /// Gets or sets the reference finder used to resolve types.
         /// </summary>
-        public WeaveReferences Refs { get; set; }
+        public ReferenceFinder Finder { get; set; }
 
         #endregion
 
@@ -46,7 +46,7 @@ namespace Mimick.Fody
         /// <param name="member">The member.</param>
         public void AddCompilerGenerated(ICustomAttributeProvider member)
         {
-            var attribute = new CustomAttribute(Refs.CompilerGeneratedAttributeCtor);
+            var attribute = new CustomAttribute(Finder.CompilerGeneratedAttributeCtor);
 
             if (!member.CustomAttributes.Any(c => c.AttributeType.FullName == attribute.AttributeType.FullName))
                 member.CustomAttributes.Add(attribute);
@@ -58,7 +58,7 @@ namespace Mimick.Fody
         /// <param name="member">The member.</param>
         public void AddNonSerialized(ICustomAttributeProvider member)
         {
-            var attribute = new CustomAttribute(Refs.NonSerializedAttributeCtor);
+            var attribute = new CustomAttribute(Finder.NonSerializedAttributeCtor);
 
             if (!member.CustomAttributes.Any(c => c.AttributeType.FullName == attribute.AttributeType.FullName))
                 member.CustomAttributes.Add(attribute);

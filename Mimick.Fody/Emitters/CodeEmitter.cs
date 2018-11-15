@@ -103,19 +103,7 @@ namespace Mimick.Fody.Weavers
         /// <param name="type">The variable type.</param>
         /// <param name="name">The variable name.</param>
         public Variable EmitLocal(TypeReference type, string name = null) => Parent.EmitLocal(type, name);
-
-        /// <summary>
-        /// Emit a debug command within the method body.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        /// <returns></returns>
-        public CodeEmitter Debug(string message)
-        {
-            Emit(Instruction.Create(OpCodes.Ldstr, message));
-            Emit(Instruction.Create(OpCodes.Call, Parent.Parent.Context.Refs.DebugWriteLine));
-            return this;
-        }
-
+        
         /// <summary>
         /// Emit code within the method body.
         /// </summary>
@@ -209,7 +197,7 @@ namespace Mimick.Fody.Weavers
                 {
                     TryStart = block.TryStart,
                     TryEnd = block.CatchStart,
-                    CatchType = Parent.Target.Module.Type<Exception>(),
+                    CatchType = Parent.Parent.Context.Finder.Exception,
                     HandlerStart = block.CatchStart,
                     HandlerEnd = block.CatchEnd.Next ?? block.CatchEnd,
                 };
@@ -746,7 +734,7 @@ namespace Mimick.Fody.Weavers
         public static IEnumerable<Instruction> TypeOf(TypeReference type)
         {
             yield return LoadToken(type);
-            yield return InvokeStatic(ModuleWeaver.GlobalContext.Refs.TypeGetTypeFromHandle);
+            yield return InvokeStatic(ModuleWeaver.GlobalContext.Finder.TypeGetTypeFromHandle);
         }
 
         /// <summary>

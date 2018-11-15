@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Mimick.Aspect;
+using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
 
@@ -15,6 +15,12 @@ using Mono.Cecil;
 /// </summary>
 public partial class ModuleWeaver
 {
+    public const int AttributeScopeAdhoc = 1;
+    public const int AttributeScopeInstanced = 2;
+    public const int AttributeScopeMultiInstanced = 3;
+    public const int AttributeScopeSingleton = 4;
+    public const int AttributeScopeMultiSingleton = 5;
+
     /// <summary>
     /// A unique identifier for attribute variables containing properties or constructor arguments.
     /// </summary>
@@ -30,7 +36,7 @@ public partial class ModuleWeaver
         var parameters = method.Target.Parameters;
         var count = parameters.Count;
 
-        var array = method.EmitLocal(Context.Refs.ObjectArray);
+        var array = method.EmitLocal(Context.Finder.ObjectArray);
         var il = method.GetIL();
 
         il.Emit(Codes.Nop);
@@ -60,35 +66,35 @@ public partial class ModuleWeaver
     /// <returns></returns>
     public Variable CreateAttribute(MethodEmitter method, CustomAttribute attribute)
     {
-        var options = attribute.GetAttribute<CompilationOptionsAttribute>();
-        var scope = options.GetProperty("Scope", notFound: AttributeScope.Singleton);
+        var options = attribute.GetAttribute(Context.Finder.CompilationOptionsAttribute);
+        var scope = options.GetProperty("Scope", notFound: AttributeScopeSingleton);
 
-        if (scope == AttributeScope.Instanced && attribute.HasConstructorArguments)
-            scope = AttributeScope.MultiInstanced;
+        if (scope == AttributeScopeInstanced && attribute.HasConstructorArguments)
+            scope = AttributeScopeMultiInstanced;
         
         switch (scope)
         {
-            case AttributeScope.Instanced:
+            case AttributeScopeInstanced:
                 if (method.Target.IsStatic)
-                    scope = AttributeScope.Singleton;
+                    scope = AttributeScopeSingleton;
                 break;
-            case AttributeScope.MultiInstanced:
+            case AttributeScopeMultiInstanced:
                 if (method.Target.IsStatic)
-                    scope = AttributeScope.MultiSingleton;
+                    scope = AttributeScopeMultiSingleton;
                 break;
         }
         
         switch (scope)
         {
-            case AttributeScope.Adhoc:
+            case AttributeScopeAdhoc:
                 return CreateAttributeAdhoc(method, attribute);
-            case AttributeScope.Instanced:
+            case AttributeScopeInstanced:
                 return CreateAttributeInstanced(method.Parent, attribute);
-            case AttributeScope.MultiInstanced:
+            case AttributeScopeMultiInstanced:
                 return CreateAttributeMultiInstanced(method.Parent, attribute);
-            case AttributeScope.Singleton:
+            case AttributeScopeSingleton:
                 return CreateAttributeSingleton(method.Parent, attribute);
-            case AttributeScope.MultiSingleton:
+            case AttributeScopeMultiSingleton:
                 return CreateAttributeMultiSingleton(method.Parent, attribute);
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope {scope}");
@@ -103,19 +109,19 @@ public partial class ModuleWeaver
     /// <returns></returns>
     public Variable CreateAttribute(TypeEmitter emitter, CustomAttribute attribute)
     {
-        var options = attribute.GetAttribute<CompilationOptionsAttribute>();
-        var scope = options.GetProperty("Scope", notFound: AttributeScope.Singleton);
+        var options = attribute.GetAttribute(Context.Finder.CompilationOptionsAttribute);
+        var scope = options.GetProperty("Scope", notFound: AttributeScopeSingleton);
 
         switch (scope)
         {
-            case AttributeScope.Adhoc:
-            case AttributeScope.Instanced:
+            case AttributeScopeAdhoc:
+            case AttributeScopeInstanced:
                 return CreateAttributeInstanced(emitter, attribute);
-            case AttributeScope.MultiInstanced:
+            case AttributeScopeMultiInstanced:
                 return CreateAttributeInstanced(emitter, attribute);
-            case AttributeScope.Singleton:
+            case AttributeScopeSingleton:
                 return CreateAttributeSingleton(emitter, attribute);
-            case AttributeScope.MultiSingleton:
+            case AttributeScopeMultiSingleton:
                 return CreateAttributeMultiSingleton(emitter, attribute);
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope '{scope}'");
@@ -135,36 +141,36 @@ public partial class ModuleWeaver
         var method = get ?? set;
         var sta = method.Target.IsStatic;
 
-        var options = attribute.GetAttribute<CompilationOptionsAttribute>();
-        var scope = options.GetProperty("Scope", notFound: AttributeScope.Singleton);
+        var options = attribute.GetAttribute(Context.Finder.CompilationOptionsAttribute);
+        var scope = options.GetProperty("Scope", notFound: AttributeScopeSingleton);
 
         if (sta)
         {
-            if (scope == AttributeScope.Instanced)
-                scope = AttributeScope.Singleton;
-            else if (scope == AttributeScope.MultiInstanced)
-                scope = AttributeScope.MultiSingleton;
+            if (scope == AttributeScopeInstanced)
+                scope = AttributeScopeSingleton;
+            else if (scope == AttributeScopeMultiInstanced)
+                scope = AttributeScopeMultiSingleton;
         }
 
-        var hasGet = attribute.HasInterface<IPropertyGetInterceptor>();
-        var hasSet = attribute.HasInterface<IPropertySetInterceptor>();
+        var hasGet = attribute.HasInterface(Context.Finder.IPropertyGetInterceptor);
+        var hasSet = attribute.HasInterface(Context.Finder.IPropertySetInterceptor);
 
         switch (scope)
         {
-            case AttributeScope.Adhoc:
+            case AttributeScopeAdhoc:
                 var adhocGet = hasGet && get != null ? CreateAttributeAdhoc(get, attribute) : null;
                 var adhocSet = hasSet && set != null ? CreateAttributeAdhoc(set, attribute) : null;
                 return new[] { adhocGet, adhocSet };
-            case AttributeScope.Instanced:
+            case AttributeScopeInstanced:
                 var instanced = CreateAttributeInstanced(property.Parent, attribute);
                 return new[] { hasGet ? instanced : null, hasSet ? instanced : null };
-            case AttributeScope.MultiInstanced:
+            case AttributeScopeMultiInstanced:
                 var multi = CreateAttributeMultiInstanced(property.Parent, attribute);
                 return new[] { hasGet ? multi : null, hasSet ? multi : null };
-            case AttributeScope.Singleton:
+            case AttributeScopeSingleton:
                 var singleton = CreateAttributeSingleton(property.Parent, attribute);
                 return new[] { hasGet ? singleton : null, hasSet ? singleton : null };
-            case AttributeScope.MultiSingleton:
+            case AttributeScopeMultiSingleton:
                 var multiSingleton = CreateAttributeMultiSingleton(property.Parent, attribute);
                 return new[] { hasGet ? multiSingleton : null, hasSet ? multiSingleton : null };
             default:
@@ -190,11 +196,11 @@ public partial class ModuleWeaver
         il.Emit(Codes.Create(attribute.Constructor));
         il.Emit(Codes.Store(variable));
 
-        if (attribute.HasInterface<IInstanceAware>() && !method.Target.IsStatic)
+        if (attribute.HasInterface(Context.Finder.IInstanceAware) && !method.Target.IsStatic)
         {
             il.Emit(Codes.Load(variable));
             il.Emit(Codes.This);
-            il.Emit(Codes.Invoke(Context.Refs.InstanceAwareInstanceSet));
+            il.Emit(Codes.Invoke(Context.Finder.InstanceAwareInstanceSet));
         }
 
         foreach (var prop in attribute.Properties)
@@ -237,12 +243,12 @@ public partial class ModuleWeaver
             il.Emit(Codes.Create(attribute.Constructor));
             il.Emit(Codes.Store(field));
 
-            if (attribute.HasInterface<IInstanceAware>())
+            if (attribute.HasInterface(Context.Finder.IInstanceAware))
             {
                 il.Emit(Codes.ThisIf(field));
                 il.Emit(Codes.Load(field));
                 il.Emit(Codes.This);
-                il.Emit(Codes.Invoke(Context.Refs.InstanceAwareInstanceSet));
+                il.Emit(Codes.Invoke(Context.Finder.InstanceAwareInstanceSet));
             }
 
             foreach (var prop in attribute.Properties)
@@ -287,12 +293,12 @@ public partial class ModuleWeaver
             il.Emit(Codes.Create(attribute.Constructor));
             il.Emit(Codes.Store(field));
 
-            if (attribute.HasInterface<IInstanceAware>())
+            if (attribute.HasInterface(Context.Finder.IInstanceAware))
             {
                 il.Emit(Codes.ThisIf(field));
                 il.Emit(Codes.Load(field));
                 il.Emit(Codes.This);
-                il.Emit(Codes.Invoke(Context.Refs.InstanceAwareInstanceSet));
+                il.Emit(Codes.Invoke(Context.Finder.InstanceAwareInstanceSet));
             }
 
             foreach (var prop in attribute.Properties)
@@ -486,14 +492,14 @@ public partial class ModuleWeaver
 
         var id = method.Target.GetHashString();
         var name = $"<{method.Target.Name}${id}>k__MethodInfo";
-        var field = parent.EmitField(name, Context.Refs.MethodBase, toStatic: true);
+        var field = parent.EmitField(name, Context.Finder.MethodBase, toStatic: true);
 
         var il = parent.GetStaticConstructor().GetIL();
 
         il.Emit(Codes.Nop);
         il.Emit(Codes.LoadToken(type.HasGenericParameters ? method.Target : method.Target.GetGeneric()));
         il.Emit(Codes.LoadToken(type.GetGeneric()));
-        il.Emit(Codes.InvokeStatic(Context.Refs.MethodBaseGetMethodFromHandleAndType));
+        il.Emit(Codes.InvokeStatic(Context.Finder.MethodBaseGetMethodFromHandleAndType));
         il.Emit(Codes.Store(field));
 
         return field;
@@ -513,19 +519,19 @@ public partial class ModuleWeaver
         var id = method.Target.GetHashString();
         var name = $"<{method.Target.Name}${id}${param.Index}>k__ParameterInfo";
 
-        var existing = parent.GetField(name, Context.Refs.PropertyInfo, toStatic: true);
+        var existing = parent.GetField(name, Context.Finder.PropertyInfo, toStatic: true);
 
         if (existing != null)
             return existing;
 
-        var field = parent.EmitField(name, Context.Refs.PropertyInfo, toStatic: true);
+        var field = parent.EmitField(name, Context.Finder.PropertyInfo, toStatic: true);
 
         var il = parent.GetStaticConstructor().GetIL();
         il.Emit(Codes.Nop);
         il.Emit(Codes.LoadToken(type.HasGenericParameters ? method.Target : method.Target.GetGeneric()));
         il.Emit(Codes.LoadToken(type.GetGeneric()));
-        il.Emit(Codes.InvokeStatic(Context.Refs.MethodBaseGetMethodFromHandleAndType));
-        il.Emit(Codes.Invoke(Context.Refs.MethodBaseGetParameters));
+        il.Emit(Codes.InvokeStatic(Context.Finder.MethodBaseGetMethodFromHandleAndType));
+        il.Emit(Codes.Invoke(Context.Finder.MethodBaseGetParameters));
         il.Emit(Codes.Int(param.Index));
         il.Emit(Codes.LoadArray);
         il.Emit(Codes.Store(field));
@@ -545,17 +551,17 @@ public partial class ModuleWeaver
         var sta = (property.Target.GetMethod ?? property.Target.SetMethod).IsStatic;
 
         var name = $"<{property.Target.Name}>k__PropertyInfo";
-        var field = parent.EmitField(name, Context.Refs.PropertyInfo, toStatic: true);
+        var field = parent.EmitField(name, Context.Finder.PropertyInfo, toStatic: true);
         var flags = BindingFlags.NonPublic | BindingFlags.Public | (sta ? BindingFlags.Static : BindingFlags.Instance);
 
         var il = parent.GetStaticConstructor().GetIL();
 
         il.Emit(Codes.Nop);
         il.Emit(Codes.LoadToken(type.GetGeneric()));
-        il.Emit(Codes.InvokeStatic(Context.Refs.TypeGetTypeFromHandle));
+        il.Emit(Codes.InvokeStatic(Context.Finder.TypeGetTypeFromHandle));
         il.Emit(Codes.String(property.Target.Name));
         il.Emit(Codes.Int((int)flags));
-        il.Emit(Codes.Invoke(Context.Refs.TypeGetProperty));
+        il.Emit(Codes.Invoke(Context.Finder.TypeGetProperty));
         il.Emit(Codes.Store(field));
 
         return field;
