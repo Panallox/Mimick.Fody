@@ -19,7 +19,7 @@ namespace Mimick
         private readonly ReaderWriterLockSlim locking;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReadWriteDictionary" /> class.
+        /// Initializes a new instance of the <see cref="ReadWriteDictionary{TKey, TValue}" /> class.
         /// </summary>
         public ReadWriteDictionary()
         {
@@ -30,10 +30,10 @@ namespace Mimick
         #region Properties
 
         /// <summary>
-        /// Gets or sets the <see cref="TValue"/> with the specified key.
+        /// Gets or sets the <typeparamref name="TValue"/> with the specified key.
         /// </summary>
         /// <value>
-        /// The <see cref="TValue"/>.
+        /// The <typeparamref name="TValue"/>.
         /// </value>
         /// <param name="key">The key.</param>
         /// <returns></returns>

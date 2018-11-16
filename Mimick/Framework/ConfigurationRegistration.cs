@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mimick.Framework
@@ -21,7 +22,7 @@ namespace Mimick.Framework
 
         /// <summary>
         /// Sets the duration of time after which the configuration source must be reloaded into memory using the
-        /// <see cref="IConfigurationSource.Refresh" /> method. The expiration is set to <see cref="Timeout.InfiniteTimeSpan" /> by default.
+        /// <see cref="IConfigurationSource.Refresh" /> method. The expiration is set to <see cref="Timeout.Infinite" /> by default.
         /// </summary>
         /// <param name="duration">The duration of time.</param>
         /// <returns></returns>

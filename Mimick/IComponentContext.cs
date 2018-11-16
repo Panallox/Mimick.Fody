@@ -39,7 +39,7 @@ namespace Mimick
         /// <summary>
         /// Register a provided type within the component provider using the default singleton lifetime.
         /// </summary>
-        /// <typeparam name="T">The type.</typeparam>
+        /// <typeparam name="TConcrete">The type.</typeparam>
         /// <param name="names">An optional collection of identifiers which the components will be stored under.</param>
         /// <returns>A configurator which can be used to further configure the component state.</returns>
         IComponentRegistration Register<TConcrete>(params string[] names) where TConcrete : class;

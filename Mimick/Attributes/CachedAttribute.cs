@@ -43,7 +43,7 @@ namespace Mimick
         /// Initializes a new instance of the <see cref="CachedAttribute"/> class.
         /// </summary>
         /// <param name="maxCount">The maximum count.</param>
-        /// <param name="maxTime">The maximum time in milliseconds.</param>
+        /// <param name="maxTimeMilliseconds">The maximum time in milliseconds.</param>
         public CachedAttribute(int maxCount, int maxTimeMilliseconds)
         {
             cache = new Cache<string, object>()

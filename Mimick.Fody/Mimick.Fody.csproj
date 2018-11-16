@@ -1,18 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Chris Copeland</Authors>
-    <Company>Chris Copeland</Company>
-    <Product>Mimick.Fody</Product>
-    <Copyright>https://github.com/Epoque1/Mimick.Fody/</Copyright>
-    <PackageLicenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/Epoque1/Mimick.Fody</PackageProjectUrl>
-    <PackageIconUrl>https://github.com/Epoque1/Mimick.Fody/raw/master/nuget_icon.png</PackageIconUrl>
   </PropertyGroup>
   <ItemGroup>
 	<PackageReference Include="FodyHelpers" Version="3.2.17" developmentDependency="true" />
-	<ProjectReference Include="..\Mimick\Mimick.csproj" />
   </ItemGroup>
   <Target Name="CopyFiles" AfterTargets="build">
 	<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)\Tools" />

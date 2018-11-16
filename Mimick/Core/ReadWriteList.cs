@@ -49,10 +49,10 @@ namespace Mimick
         #region Properties
 
         /// <summary>
-        /// Gets or sets the <see cref="T"/> at the specified index.
+        /// Gets or sets the <typeparamref name="T"/> at the specified index.
         /// </summary>
         /// <value>
-        /// The <see cref="T"/>.
+        /// The <typeparamref name="T"/>.
         /// </value>
         /// <param name="index">The index.</param>
         /// <returns></returns>

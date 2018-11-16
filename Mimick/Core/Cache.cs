@@ -24,7 +24,7 @@ namespace Mimick
         private TimeSpan maximumTime;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Cache" /> class.
+        /// Initializes a new instance of the <see cref="Cache{TKey, TValue}" /> class.
         /// </summary>
         public Cache()
         {
@@ -41,10 +41,10 @@ namespace Mimick
         #region Properties
 
         /// <summary>
-        /// Gets or sets the <see cref="TValue"/> with the specified key.
+        /// Gets or sets the <typeparamref name="TValue"/> with the specified key.
         /// </summary>
         /// <value>
-        /// The <see cref="TValue"/>.
+        /// The <typeparamref name="TValue"/>.
         /// </value>
         /// <param name="key">The key.</param>
         /// <returns></returns>

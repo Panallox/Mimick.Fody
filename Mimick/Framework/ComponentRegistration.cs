@@ -17,7 +17,7 @@ namespace Mimick.Framework
         /// <summary>
         /// Initializes a new instance of the <see cref="ComponentRegistration"/> class.
         /// </summary>
-        /// <param name="component">The component descriptor.</param>
+        /// <param name="components">The component descriptors.</param>
         public ComponentRegistration(ComponentDescriptor[] components) => descriptors = components;
 
         /// <summary>

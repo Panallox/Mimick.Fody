@@ -16,6 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssemblyToProcess", "Assemb
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mimick", "Mimick\Mimick.csproj", "{A72F6288-D4DA-43AB-A1FF-48B94C250D17}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9ACC6BDF-0954-4460-8258-2B43610148AB} = {9ACC6BDF-0954-4460-8258-2B43610148AB}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9B6234CC-32B0-4721-8C44-A905639B3B1D}"
 	ProjectSection(SolutionItems) = preProject
