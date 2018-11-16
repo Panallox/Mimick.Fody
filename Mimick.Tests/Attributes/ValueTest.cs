@@ -45,5 +45,11 @@ namespace Mimick.Tests.Attributes
 
         [Test]
         public void ShouldReturnValidXmlElementString() => Assert.AreEqual("Hello", target.XmlElementString);
+
+        [Test]
+        public void ShouldReturnValidYamlNumber() => Assert.AreEqual(1234, target.YamlNumber);
+
+        [Test]
+        public void ShouldReturnValidYamlString() => Assert.AreEqual("Testing", target.YamlString);
     }
 }

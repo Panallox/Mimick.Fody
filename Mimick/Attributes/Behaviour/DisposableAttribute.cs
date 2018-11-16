@@ -18,7 +18,7 @@ namespace Mimick
     [CompilationImplements(Interface = typeof(IDisposableAndTracked))]
     [CompilationOptions(Scope = AttributeScope.Instanced)]
     [AttributeUsage(AttributeTargets.Method)]
-    public sealed class DisposableAttribute : Attribute, IDisposableAndTracked, IInstanceAware
+    public class DisposableAttribute : Attribute, IDisposableAndTracked, IInstanceAware
     {
         #region Properties
 
@@ -40,6 +40,7 @@ namespace Mimick
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(Instance);
         }
 
         /// <summary>
@@ -74,7 +75,8 @@ namespace Mimick
         /// <summary>
         /// Releases unmanaged and - optionally - managed resources.
         /// </summary>
-        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        /// <param name="disposing">
+        ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         void Dispose(bool disposing);
     }
 }

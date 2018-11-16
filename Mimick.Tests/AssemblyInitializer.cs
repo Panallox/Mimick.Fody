@@ -29,6 +29,12 @@ namespace Mimick.Tests
                 .ConfigurationContext
                 .Register(new XmlConfigurationSource(stream));
 
+            stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Mimick.Tests.Configuration.yaml");
+
+            framework
+                .ConfigurationContext
+                .Register(new YamlConfigurationSource(stream));
+
             framework
                 .Initialize();
         }

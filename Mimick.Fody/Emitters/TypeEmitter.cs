@@ -127,7 +127,7 @@ namespace Mimick.Fody.Weavers
         /// <param name="parameterTypes"></param>
         /// <param name="genericTypes"></param>
         /// <returns></returns>
-        public MethodEmitter EmitMethod(string name, TypeReference returnType, TypeReference[] parameterTypes = null, GenericParameter[] genericTypes = null, bool toStatic = false, bool toPrivate = false)
+        public MethodEmitter EmitMethod(string name, TypeReference returnType, TypeReference[] parameterTypes = null, GenericParameter[] genericTypes = null, bool toStatic = false, bool toPrivate = false, MethodAttributes? toVisibility = null)
         {
             var existing = Target.Methods.Where(m => m.Name == name && m.ReturnType.FullName == returnType.FullName && m.IsStatic == toStatic);
 
@@ -140,7 +140,12 @@ namespace Mimick.Fody.Weavers
             if (existing.Any())
                 return new MethodEmitter(this, existing.First());
 
-            var attributes = MethodAttributes.Final | MethodAttributes.Virtual | (toPrivate ? MethodAttributes.Private : MethodAttributes.Public);
+            var attributes = MethodAttributes.Final | MethodAttributes.Virtual;
+
+            if (toVisibility != null)
+                attributes |= toVisibility.Value;
+            else
+                attributes |= toPrivate ? MethodAttributes.Private : MethodAttributes.Public;
 
             if (toStatic)
                 attributes |= MethodAttributes.Static;

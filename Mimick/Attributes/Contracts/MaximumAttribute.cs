@@ -12,6 +12,10 @@ namespace Mimick
     /// Indicates that the associated parameter or property must have a value less than or equal to the provided amount. When applied to a
     /// method, all parameters are validated.
     /// </summary>
+    /// <remarks>
+    /// The attribute can only be applied to numeric values.
+    /// </remarks>
+    [CompilationOptions(Scope = AttributeScope.MultiSingleton)]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property)]
     [DebuggerStepThrough]
     public sealed class MaximumAttribute : ValidationAttribute

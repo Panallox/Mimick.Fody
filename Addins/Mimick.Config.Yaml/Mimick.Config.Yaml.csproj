@@ -1,12 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+	<DisableFody>true</DisableFody>
     <SignAssembly>true</SignAssembly>
 	<AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <Authors>Chris Copeland</Authors>
-    <Product>Mimick.Fody</Product>
-	<PackageTags>Mimick, Framework, Fody, Weaving</PackageTags>
-	<Description>Mimick is a Fody add-in which provides a framework for applications including dependency injection, contract validation, method caching, custom aspect decorators, and more.</Description>
+    <Product>Mimick.Config.Yaml</Product>
+	<PackageTags>Mimick, Framework, Yaml</PackageTags>
+	<Description>Mimick Yaml adds support for configuration sources which read from a YAML document.</Description>
     <Copyright>Chris Copeland</Copyright>
     <PackageLicenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Epoque1/Mimick.Fody</PackageProjectUrl>
@@ -14,11 +15,10 @@
 	<NoWarn>CS1591</NoWarn>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-  <Target Name="CopyFiles" AfterTargets="build">
-	<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)\Tools" />
-  </Target>
   <ItemGroup>
-    <PackageReference Include="Fody" Version="3.2.17" PrivateAssets="None" />
-    <PackageReference Include="FodyPackaging" Version="3.2.17" PrivateAssets="All" />
+    <PackageReference Include="YamlDotNet.Signed" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Mimick\Mimick.csproj" developmentDependency="true" />
   </ItemGroup>
 </Project>

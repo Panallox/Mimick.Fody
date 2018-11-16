@@ -129,7 +129,7 @@ public partial class ModuleWeaver
             parameterTypes: method.HasParameters ? method.Parameters.Select(p => p.ParameterType.Import()).ToArray() : new TypeReference[0],
             genericTypes: method.HasGenericParameters ? method.GenericParameters.ToArray() : new GenericParameter[0],
             toStatic: resolved.IsStatic,
-            toPrivate: resolved.IsPrivate
+            toVisibility: resolved.GetVisiblity()
         );
 
         var implemented = field.Type.GetMethod(method.Name, method.ReturnType, method.Parameters.Select(p => p.ParameterType).ToArray(), method.GenericParameters.ToArray());

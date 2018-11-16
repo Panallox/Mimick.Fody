@@ -1,67 +1,63 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
+using YamlDotNet.RepresentationModel;
 
-namespace Mimick.Configurations
+namespace Mimick
 {
     /// <summary>
-    /// A configuration source class which loads values from an XML document.
+    /// A configuration source class which loads values from a YAML document.
     /// </summary>
-    public sealed class XmlConfigurationSource : IConfigurationSource
+    public sealed class YamlConfigurationSource : IConfigurationSource
     {
         private readonly ReaderWriterLockSlim sync;
 
-        private XmlDocument document;
+        private YamlDocument document;
         private FileInfo path;
-        private XmlSource source;
+        private YamlSource source;
         private Stream stream;
         private long streamPosition;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="XmlConfigurationSource"/> class.
+        /// Initializes a new instance of the <see cref="YamlConfigurationSource"/> class.
         /// </summary>
         /// <param name="doc">The document.</param>
-        public XmlConfigurationSource(XmlDocument doc)
+        public YamlConfigurationSource(YamlDocument doc)
         {
             document = doc ?? throw new ArgumentNullException("doc");
-            source = XmlSource.Document;
+            source = YamlSource.Document;
             sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="XmlConfigurationSource"/> class.
+        /// Initializes a new instance of the <see cref="YamlConfigurationSource"/> class.
         /// </summary>
         /// <param name="filename">The full path to the document.</param>
-        public XmlConfigurationSource(string filename)
+        public YamlConfigurationSource(string filename)
         {
             if (filename == null)
                 throw new ArgumentNullException("filename");
 
             path = new FileInfo(filename);
-            source = XmlSource.File;
+            source = YamlSource.File;
             sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-
-            if (!path.Exists)
-                throw new FileNotFoundException($"Cannot resolve an XML configuration source at path '{filename}'");
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="XmlConfigurationSource"/> class.
+        /// Initializes a new instance of the <see cref="YamlConfigurationSource"/> class.
         /// </summary>
         /// <param name="src">The source.</param>
-        public XmlConfigurationSource(Stream src)
+        /// <exception cref="System.ArgumentNullException">src</exception>
+        /// <exception cref="System.IO.IOException">Cannot read content from the provided stream</exception>
+        public YamlConfigurationSource(Stream src)
         {
             if (src == null)
                 throw new ArgumentNullException("src");
             if (!src.CanRead)
                 throw new IOException("Cannot read content from the provided stream");
 
-            source = XmlSource.Stream;
+            source = YamlSource.Stream;
             stream = src;
             streamPosition = src.Position;
             sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -78,20 +74,30 @@ namespace Mimick.Configurations
             {
                 switch (source)
                 {
-                    case XmlSource.File:
-                        document = new XmlDocument();
-                        document.Load(path.FullName);
+                    case YamlSource.File:
+                        using (var reader = new StreamReader(path.FullName))
+                        using (var content = new StringReader(reader.ReadToEnd()))
+                        {
+                            var yaml = new YamlStream();
+                            yaml.Load(content);
+                            document = yaml.Documents[0];
+                        }
                         break;
 
-                    case XmlSource.Stream:
-                        document = new XmlDocument();
-                        document.Load(stream);
+                    case YamlSource.Stream:
+                        using (var reader = new StreamReader(stream))
+                        using (var content = new StringReader(reader.ReadToEnd()))
+                        {
+                            var yaml = new YamlStream();
+                            yaml.Load(content);
+                            document = yaml.Documents[0];
+                        }
                         break;
                 }
             }
             catch (Exception ex)
             {
-                throw new ConfigurationException($"Cannot load a {source.ToString().ToLower()} XML document", ex);
+                throw new ConfigurationException($"Cannot load a {source.ToString().ToLower()} YAML document", ex);
             }
             finally
             {
@@ -106,11 +112,11 @@ namespace Mimick.Configurations
         {
             switch (source)
             {
-                case XmlSource.File:
+                case YamlSource.File:
                     Load();
                     break;
 
-                case XmlSource.Stream:
+                case YamlSource.Stream:
                     if (stream.CanSeek)
                     {
                         stream.Seek(streamPosition, SeekOrigin.Begin);
@@ -133,22 +139,24 @@ namespace Mimick.Configurations
 
             try
             {
-                var node = document.SelectSingleNode(name);
+                var parts = name.Split('.');
+                var current = document.RootNode;
 
-                if (node == null)
-                    return null;
-
-                switch (node.NodeType)
+                foreach (var part in parts)
                 {
-                    case XmlNodeType.Attribute:
-                        return node.Value;
-                    case XmlNodeType.Element:
-                        return node.InnerText;
-                    case XmlNodeType.Text:
-                        return node.Value;
-                    default:
+                    var key = new YamlScalarNode(part);
+                    var node = current[key];
+
+                    if (node == null)
                         return null;
+
+                    current = node;
                 }
+
+                if (current.NodeType == YamlNodeType.Scalar)
+                    return ((YamlScalarNode)current).Value;
+
+                throw new ConfigurationException($"Cannot process the value of a YAML configuration", name);
             }
             finally
             {
@@ -167,15 +175,15 @@ namespace Mimick.Configurations
         public bool TryResolve(string name, out string value) => (value = Resolve(name)) != null;
 
         /// <summary>
-        /// Indicates the source of an XML configuration source.
+        /// Indicates the source of a YAML configuration source.
         /// </summary>
-        private enum XmlSource
+        private enum YamlSource
         {
             /// <summary>
-            /// The configuration source was provided a concrete XML document.
+            /// The configuration source was provided a concrete YAML document.
             /// </summary>
             Document,
-            
+
             /// <summary>
             /// The configuration source was provided a file path.
             /// </summary>

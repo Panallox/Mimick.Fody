@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,6 +27,25 @@ namespace Mimick
                 return;
 
             list.Add(item);
+        }
+
+        /// <summary>
+        /// Counts the number of elements in a non-generic enumerable collection.
+        /// </summary>
+        /// <param name="enumerable">The enumerable collection.</param>
+        /// <returns>The number of elements in the collection.</returns>
+        public static int Count(this IEnumerable enumerable)
+        {
+            if (enumerable == null)
+                return 0;
+
+            var count = 0;
+            var enumerator = enumerable.GetEnumerator();
+
+            while (enumerator.MoveNext())
+                count++;
+
+            return count;
         }
     }
 }

@@ -35,6 +35,9 @@ static class MethodExtensions
         return string.Format("{0:X}", Math.Abs(hash));
     }
 
+    public static MethodAttributes GetVisiblity(this MethodReference method)
+        => (method as MethodDefinition ?? method.Resolve()).Attributes & (MethodAttributes.Private | MethodAttributes.FamANDAssem | MethodAttributes.Assembly | MethodAttributes.Family | MethodAttributes.Public);
+
     public static bool HasBody(this MethodReference method)
     {
         if (method == null)

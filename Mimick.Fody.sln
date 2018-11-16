@@ -25,6 +25,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mimick.Config.Yaml", "Addins\Mimick.Config.Yaml\Mimick.Config.Yaml.csproj", "{866E64C4-D25A-4824-AC28-A7639568A5F4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Addins", "Addins", "{1F6A9825-B891-4EDC-B40E-7059CF66EC0E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3A1C3DE3-77E8-4A57-8F30-01CDB3F5C1A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,9 +53,18 @@ Global
 		{A72F6288-D4DA-43AB-A1FF-48B94C250D17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A72F6288-D4DA-43AB-A1FF-48B94C250D17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A72F6288-D4DA-43AB-A1FF-48B94C250D17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{866E64C4-D25A-4824-AC28-A7639568A5F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{866E64C4-D25A-4824-AC28-A7639568A5F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{866E64C4-D25A-4824-AC28-A7639568A5F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{866E64C4-D25A-4824-AC28-A7639568A5F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F582BA45-8789-4715-BF3A-F206E2377BB0} = {3A1C3DE3-77E8-4A57-8F30-01CDB3F5C1A1}
+		{8743DA02-2D95-4EC5-AABF-42391939B22F} = {3A1C3DE3-77E8-4A57-8F30-01CDB3F5C1A1}
+		{866E64C4-D25A-4824-AC28-A7639568A5F4} = {1F6A9825-B891-4EDC-B40E-7059CF66EC0E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29EB81CF-5A98-4C04-879F-B8356797A3EF}

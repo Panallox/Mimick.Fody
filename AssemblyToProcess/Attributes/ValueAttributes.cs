@@ -61,6 +61,18 @@ namespace AssemblyToProcess.Attributes
         public string XmlElementString { get; set; }
 
         /// <summary>
+        /// Gets a number processed from the associated value attribute sourced from a YAML document.
+        /// </summary>
+        [Value("{Configurations.Number}")]
+        public int YamlNumber { get; set; }
+
+        /// <summary>
+        /// Gets a string processed from the associated value attribute sourced from a YAML document.
+        /// </summary>
+        [Value("{Configurations.Text}")]
+        public string YamlString { get; set; }
+
+        /// <summary>
         /// Gets a value using a computed value from the parameter value attribute.
         /// </summary>
         /// <param name="number">The number.</param>

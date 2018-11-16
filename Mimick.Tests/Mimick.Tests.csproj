@@ -11,13 +11,16 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Configuration.xml" />
+    <None Remove="Configuration.yaml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Configuration.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Configuration.yaml" />
   </ItemGroup>
   <ItemGroup>
+	<ProjectReference Include="..\Addins\Mimick.Config.Yaml\Mimick.Config.Yaml.csproj" />
 	<ProjectReference Include="..\AssemblyToProcess\AssemblyToProcess.csproj" />
   </ItemGroup>
   <ItemGroup>
