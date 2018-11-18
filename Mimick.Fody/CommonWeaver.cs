@@ -63,6 +63,7 @@ public partial class ModuleWeaver
     /// </summary>
     /// <param name="method">The method.</param>
     /// <param name="attribute">The attribute.</param>
+    /// <param name="member">The optional parameter member.</param>
     /// <returns></returns>
     public Variable CreateAttribute(MethodEmitter method, CustomAttribute attribute)
     {
@@ -87,15 +88,15 @@ public partial class ModuleWeaver
         switch (scope)
         {
             case AttributeScopeAdhoc:
-                return CreateAttributeAdhoc(method, attribute);
+                return CreateAttributeAdhoc(method, attribute, method.Target);
             case AttributeScopeInstanced:
-                return CreateAttributeInstanced(method.Parent, attribute);
+                return CreateAttributeInstanced(method.Parent, attribute, method.Target);
             case AttributeScopeMultiInstanced:
-                return CreateAttributeMultiInstanced(method.Parent, attribute);
+                return CreateAttributeMultiInstanced(method.Parent, attribute, method.Target);
             case AttributeScopeSingleton:
-                return CreateAttributeSingleton(method.Parent, attribute);
+                return CreateAttributeSingleton(method.Parent, attribute, method.Target);
             case AttributeScopeMultiSingleton:
-                return CreateAttributeMultiSingleton(method.Parent, attribute);
+                return CreateAttributeMultiSingleton(method.Parent, attribute, method.Target);
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope {scope}");
         }
@@ -116,13 +117,13 @@ public partial class ModuleWeaver
         {
             case AttributeScopeAdhoc:
             case AttributeScopeInstanced:
-                return CreateAttributeInstanced(emitter, attribute);
+                return CreateAttributeInstanced(emitter, attribute, emitter.Target);
             case AttributeScopeMultiInstanced:
-                return CreateAttributeInstanced(emitter, attribute);
+                return CreateAttributeInstanced(emitter, attribute, emitter.Target);
             case AttributeScopeSingleton:
-                return CreateAttributeSingleton(emitter, attribute);
+                return CreateAttributeSingleton(emitter, attribute, emitter.Target);
             case AttributeScopeMultiSingleton:
-                return CreateAttributeMultiSingleton(emitter, attribute);
+                return CreateAttributeMultiSingleton(emitter, attribute, emitter.Target);
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope '{scope}'");
         }
@@ -135,8 +136,9 @@ public partial class ModuleWeaver
     /// <param name="get">The getter method.</param>
     /// <param name="set">The setter method.</param>
     /// <param name="attribute">The attribute.</param>
+    /// <param name="field">The optional field reference which was routed.</param>
     /// <returns></returns>
-    public Variable[] CreateAttribute(PropertyEmitter property, MethodEmitter get, MethodEmitter set, CustomAttribute attribute)
+    public Variable[] CreateAttribute(PropertyEmitter property, MethodEmitter get, MethodEmitter set, CustomAttribute attribute, MemberReference field)
     {
         var method = get ?? set;
         var sta = method.Target.IsStatic;
@@ -158,20 +160,20 @@ public partial class ModuleWeaver
         switch (scope)
         {
             case AttributeScopeAdhoc:
-                var adhocGet = hasGet && get != null ? CreateAttributeAdhoc(get, attribute) : null;
-                var adhocSet = hasSet && set != null ? CreateAttributeAdhoc(set, attribute) : null;
+                var adhocGet = hasGet && get != null ? CreateAttributeAdhoc(get, attribute, property.Target) : null;
+                var adhocSet = hasSet && set != null ? CreateAttributeAdhoc(set, attribute, property.Target) : null;
                 return new[] { adhocGet, adhocSet };
             case AttributeScopeInstanced:
-                var instanced = CreateAttributeInstanced(property.Parent, attribute);
+                var instanced = CreateAttributeInstanced(property.Parent, attribute, field ?? property.Target);
                 return new[] { hasGet ? instanced : null, hasSet ? instanced : null };
             case AttributeScopeMultiInstanced:
-                var multi = CreateAttributeMultiInstanced(property.Parent, attribute);
+                var multi = CreateAttributeMultiInstanced(property.Parent, attribute, field ?? property.Target);
                 return new[] { hasGet ? multi : null, hasSet ? multi : null };
             case AttributeScopeSingleton:
-                var singleton = CreateAttributeSingleton(property.Parent, attribute);
+                var singleton = CreateAttributeSingleton(property.Parent, attribute, field ?? property.Target);
                 return new[] { hasGet ? singleton : null, hasSet ? singleton : null };
             case AttributeScopeMultiSingleton:
-                var multiSingleton = CreateAttributeMultiSingleton(property.Parent, attribute);
+                var multiSingleton = CreateAttributeMultiSingleton(property.Parent, attribute, field ?? property.Target);
                 return new[] { hasGet ? multiSingleton : null, hasSet ? multiSingleton : null };
             default:
                 throw new NotSupportedException($"Cannot create attribute '{attribute.AttributeType.FullName}' with scope '{scope}'");
@@ -183,8 +185,9 @@ public partial class ModuleWeaver
     /// </summary>
     /// <param name="method">The method weaver.</param>
     /// <param name="attribute">The attribute.</param>
+    /// <param name="member">The member.</param>
     /// <returns></returns>
-    public Variable CreateAttributeAdhoc(MethodEmitter method, CustomAttribute attribute)
+    public Variable CreateAttributeAdhoc(MethodEmitter method, CustomAttribute attribute, MemberReference member)
     {
         var type = attribute.AttributeType;
         var variable = method.EmitLocal(type);
@@ -206,6 +209,8 @@ public partial class ModuleWeaver
         foreach (var prop in attribute.Properties)
             CreateAttributeProperty(method, attribute, variable, prop);
 
+        CreateAttributeRequirements(il, attribute, member, variable, false);
+
         return variable;
     }
 
@@ -214,8 +219,9 @@ public partial class ModuleWeaver
     /// </summary>
     /// <param name="emitter">The type weaver.</param>
     /// <param name="attribute">The attribute.</param>
+    /// <param name="member">The member.</param>
     /// <returns></returns>
-    public Variable CreateAttributeInstanced(TypeEmitter emitter, CustomAttribute attribute)
+    public Variable CreateAttributeInstanced(TypeEmitter emitter, CustomAttribute attribute, MemberReference member)
     {
         var type = attribute.AttributeType;
         var name = $"<{type.Name}>k__Attribute";
@@ -253,6 +259,8 @@ public partial class ModuleWeaver
 
             foreach (var prop in attribute.Properties)
                 CreateAttributeProperty(ctor, attribute, field, prop);
+
+            CreateAttributeRequirements(il, attribute, member, field, false);
         }
 
         return field;
@@ -263,8 +271,9 @@ public partial class ModuleWeaver
     /// </summary>
     /// <param name="emitter">The type weaver.</param>
     /// <param name="attribute">The attribute.</param>
+    /// <param name="member">The member.</param>
     /// <returns></returns>
-    public Variable CreateAttributeMultiInstanced(TypeEmitter emitter, CustomAttribute attribute)
+    public Variable CreateAttributeMultiInstanced(TypeEmitter emitter, CustomAttribute attribute, MemberReference member)
     {
         var index = Interlocked.Increment(ref id);
         var type = attribute.AttributeType;
@@ -303,6 +312,8 @@ public partial class ModuleWeaver
 
             foreach (var prop in attribute.Properties)
                 CreateAttributeProperty(ctor, attribute, field, prop);
+
+            CreateAttributeRequirements(il, attribute, member, field, false);
         }
 
         return field;
@@ -313,8 +324,9 @@ public partial class ModuleWeaver
     /// </summary>
     /// <param name="emitter">The type weaver.</param>
     /// <param name="attribute">The attribute.</param>
+    /// <param name="member">The member.</param>
     /// <returns></returns>
-    public Variable CreateAttributeMultiSingleton(TypeEmitter emitter, CustomAttribute attribute)
+    public Variable CreateAttributeMultiSingleton(TypeEmitter emitter, CustomAttribute attribute, MemberReference member)
     {
         var index = Interlocked.Increment(ref id);
         var type = attribute.AttributeType;
@@ -335,6 +347,8 @@ public partial class ModuleWeaver
         foreach (var prop in attribute.Properties)
             CreateAttributeProperty(emit, attribute, field, prop);
 
+        CreateAttributeRequirements(il, attribute, member, field, true);
+
         return field;
     }
 
@@ -343,8 +357,9 @@ public partial class ModuleWeaver
     /// </summary>
     /// <param name="emitter">The type weaver.</param>
     /// <param name="attribute">The attribute.</param>
+    /// <param name="member">The member.</param>
     /// <returns></returns>
-    public Variable CreateAttributeSingleton(TypeEmitter emitter, CustomAttribute attribute)
+    public Variable CreateAttributeSingleton(TypeEmitter emitter, CustomAttribute attribute, MemberReference member)
     {
         var type = attribute.AttributeType;
         var name = $"<{type.Name}>k__Attribute";
@@ -363,6 +378,8 @@ public partial class ModuleWeaver
 
         foreach (var prop in attribute.Properties)
             CreateAttributeProperty(emit, attribute, field, prop);
+
+        CreateAttributeRequirements(il, attribute, member, field, true);
 
         return field;
     }
@@ -492,6 +509,11 @@ public partial class ModuleWeaver
 
         var id = method.Target.GetHashString();
         var name = $"<{method.Target.Name}${id}>k__MethodInfo";
+        var existing = parent.GetField(name, Context.Finder.MethodBase, toStatic: true);
+
+        if (existing != null)
+            return existing;
+
         var field = parent.EmitField(name, Context.Finder.MethodBase, toStatic: true);
 
         var il = parent.GetStaticConstructor().GetIL();
@@ -565,5 +587,38 @@ public partial class ModuleWeaver
         il.Emit(Codes.Store(field));
 
         return field;
+    }
+
+    /// <summary>
+    /// Creates and populates any additional contract requirements of the attribute.
+    /// </summary>
+    /// <param name="il">The code emitter.</param>
+    /// <param name="attribute">The attribute.</param>
+    /// <param name="member">The member the attribute is associated with.</param>
+    /// <param name="variable">The variable containing the attribute.</param>
+    /// <param name="isStatic">Whether the attribute container is static.</param>
+    public void CreateAttributeRequirements(CodeEmitter il, CustomAttribute attribute, MemberReference member, Variable variable, bool isStatic)
+    {
+        if (attribute.HasInterface(Context.Finder.IMemberAware) && member != null)
+        {
+            il.Emit(Codes.ThisIf(variable));
+            il.Emit(Codes.Load(variable));
+
+            if (member is MethodReference method)
+            {
+                var field = CreateMethodInfo(new MethodEmitter(il.Parent.Parent, method));
+                il.Emit(Codes.ThisIf(field));
+                il.Emit(Codes.Load(field));
+            }
+
+            il.Emit(Codes.Invoke(Context.Finder.MemberAwareMemberSet));
+        }
+
+        if (attribute.HasInterface(Context.Finder.IRequireInitialization))
+        {
+            il.Emit(Codes.ThisIf(variable));
+            il.Emit(Codes.Load(variable));
+            il.Emit(Codes.Invoke(Context.Finder.RequireInitializationInitialize));
+        }
     }
 }

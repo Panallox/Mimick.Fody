@@ -40,6 +40,9 @@ public partial class ModuleWeaver
         if (interfaceType == null)
             return;
 
+        if (emitter.Target.Interfaces.Any(i => i.InterfaceType.FullName == interfaceType.FullName))
+            return;
+
         if (interfaceType.HasGenericParameters)
             throw new NotSupportedException($"Cannot implement interface {interfaceType.FullName} due to generic parameters");
 

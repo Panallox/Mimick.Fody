@@ -15,6 +15,11 @@ namespace Mimick.Fody
         #region Properties
 
         /// <summary>
+        /// Gets or sets the field which was replaced by the property, used when routing field replacements.
+        /// </summary>
+        public FieldDefinition Field { get; set; }
+        
+        /// <summary>
         /// Gets or sets the interceptors.
         /// </summary>
         public CustomAttribute[] Interceptors { get; set; }

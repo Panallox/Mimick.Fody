@@ -50,7 +50,7 @@ public partial class ModuleWeaver
 
         for (int i = 0; i < count; i++)
         {
-            var variables = CreateAttribute(weaver, getter, setter, item.Interceptors[i]);
+            var variables = CreateAttribute(weaver, getter, setter, item.Interceptors[i], item.Field);
 
             gInterceptors[i] = variables[0];
             sInterceptors[i] = variables[1];

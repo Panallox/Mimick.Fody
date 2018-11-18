@@ -27,7 +27,7 @@ public partial class ModuleWeaver
             foreach (var field in item.Fields)
             {
                 var replacement = WeaveFieldReplacements(weaver, field);
-                var interceptor = new PropertyInterceptorInfo { Interceptors = field.Interceptors, Property = replacement };
+                var interceptor = new PropertyInterceptorInfo { Field = field.Field, Interceptors = field.Interceptors, Property = replacement };
                 WeavePropertyInterceptors(weaver, interceptor);
             }
         }

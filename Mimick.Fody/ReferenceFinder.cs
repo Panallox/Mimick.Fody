@@ -35,10 +35,12 @@ namespace Mimick.Fody
         public TypeReference IInjectAfterInitializer { get; set; }
         public TypeReference IInjectBeforeInitializer { get; set; }
         public TypeReference IInstanceAware { get; set; }
+        public TypeReference IMemberAware { get; set; }
         public TypeReference IMethodInterceptor { get; set; }
         public TypeReference IParameterInterceptor { get; set; }
         public TypeReference IPropertyGetInterceptor { get; set; }
         public TypeReference IPropertySetInterceptor { get; set; }
+        public TypeReference IRequireInitialization { get; set; }
 
         // classes
         public TypeReference CompilationImplementsAttribute { get; set; }
@@ -74,12 +76,14 @@ namespace Mimick.Fody
         public MethodReference PropertyGetInterceptorOnGet { get; set; }
         public MethodReference PropertySetInterceptorOnExit { get; set; }
         public MethodReference PropertySetInterceptorOnSet { get; set; }
+        public MethodReference RequireInitializationInitialize { get; set; }
         public MethodReference TypeGetProperty { get; set; }
         public MethodReference TypeGetTypeFromHandle { get; set; }
         public MethodReference TypeMakeGenericType { get; set; }
 
         // properties
         public MethodReference InstanceAwareInstanceSet { get; set; }
+        public MethodReference MemberAwareMemberSet { get; set; }
         public MethodReference MethodInterceptionArgsCancelGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnSet { get; set; }
@@ -149,10 +153,12 @@ namespace Mimick.Fody
             IInjectAfterInitializer = ResolveType("IInjectAfterInitializer");
             IInjectBeforeInitializer = ResolveType("IInjectBeforeInitializer");
             IInstanceAware = ResolveType("IInstanceAware");
+            IMemberAware = ResolveType("IMemberAware");
             IMethodInterceptor = ResolveType("IMethodInterceptor");
             IParameterInterceptor = ResolveType("IParameterInterceptor");
             IPropertyGetInterceptor = ResolveType("IPropertyGetInterceptor");
             IPropertySetInterceptor = ResolveType("IPropertySetInterceptor");
+            IRequireInitialization = ResolveType("IRequireInitialization");
 
             // classes
             CompilationImplementsAttribute = ResolveType("CompilationImplementsAttribute");
@@ -188,6 +194,7 @@ namespace Mimick.Fody
             PropertyGetInterceptorOnGet = IPropertyGetInterceptor.GetMethod("OnGet");
             PropertySetInterceptorOnExit = IPropertySetInterceptor.GetMethod("OnExit");
             PropertySetInterceptorOnSet = IPropertySetInterceptor.GetMethod("OnSet");
+            RequireInitializationInitialize = IRequireInitialization.GetMethod("Initialize");
             TypeGetProperty = Type.GetMethod("GetProperty", parameters: new[] { ResolveType("String"), ResolveType("BindingFlags") });
             TypeGetTypeFromHandle = Type.GetMethod("GetTypeFromHandle", parameters: new[] { ResolveType("RuntimeTypeHandle") });
             TypeMakeGenericType = Type.GetMethod("MakeGenericType");
@@ -195,6 +202,7 @@ namespace Mimick.Fody
             // properties
 
             InstanceAwareInstanceSet = IInstanceAware.GetProperty("Instance").Resolve().SetMethod.Import();
+            MemberAwareMemberSet = IMemberAware.GetProperty("Member").Resolve().SetMethod.Import();
             MethodInterceptionArgsCancelGet = MethodInterceptionArgs.GetProperty("Cancel").Resolve().GetMethod.Import();
             MethodInterceptionArgsReturnGet = MethodInterceptionArgs.GetProperty("Return").Resolve().GetMethod.Import();
             MethodInterceptionArgsReturnSet = MethodInterceptionArgs.GetProperty("Return").Resolve().SetMethod.Import();
