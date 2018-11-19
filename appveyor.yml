@@ -6,7 +6,7 @@ branches:
 init:
   - cmd: git config --global core.autocrlf true
 before_build:
-  - cmd: dotnet -version
+  - cmd: dotnet --version
 build_script:
   - cmd: dotnet build --configuration Release
 test:
