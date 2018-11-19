@@ -40,5 +40,13 @@ namespace AssemblyToProcess.Attributes.Contracts
         {
 
         }
+
+        /// <summary>
+        /// Throws an exception when the method returns a value of greater than 10.
+        /// </summary>
+        /// <param name="value">The value to return.</param>
+        /// <returns>The value.</returns>
+        [return: Maximum(10)]
+        public int ThrowIfReturnAbove(int value) => value;
     }
 }

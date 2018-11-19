@@ -20,15 +20,21 @@ namespace Mimick.Tests.Attributes.Contracts
         public void ShouldPassWhenNotNullIsNotPresent() => target.PassIfNull(null);
 
         [Test]
-        public void ShouldFailWhenNotNullArgumentIsPassedNull() => Assert.Throws(typeof(ArgumentNullException), () => target.ThrowIfNull(null));
+        public void ShouldThrowWhenNotNullArgumentIsPassedNull() => Assert.Throws(typeof(ArgumentNullException), () => target.ThrowIfNull(null));
 
         [Test]
         public void ShouldPassWhenNotNullArgumentIsPassedValid() => target.ThrowIfNull(new object());
 
         [Test]
-        public void ShouldFailWhenNotNullMethodIsPassedNull() => Assert.Throws(typeof(ArgumentNullException), () => target.ThrowIfAnyNull(new object(), null));
+        public void ShouldThrowWhenNotNullMethodIsPassedNull() => Assert.Throws(typeof(ArgumentNullException), () => target.ThrowIfAnyNull(new object(), null));
 
         [Test]
         public void ShouldPassWhenNotNullMethodIsPassedValid() => target.ThrowIfAnyNull(new object(), new object());
+
+        [Test]
+        public void ShouldThrowWhenNotNullReturnIsReturningNull() => Assert.Throws(typeof(ArgumentNullException), () => target.ThrowIfReturnsNull(null));
+
+        [Test]
+        public void ShouldPassWhenNotNullReturnIsReturningValid() => target.ThrowIfReturnsNull(new object());
     }
 }

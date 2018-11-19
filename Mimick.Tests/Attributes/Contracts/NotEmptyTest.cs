@@ -25,33 +25,42 @@ namespace Mimick.Tests.Attributes.Contracts
         }
 
         [Test]
-        public void ShouldFailWhenNotEmptyStringIsPassedNull() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((string)null));
+        public void ShouldThrowWhenNotEmptyStringIsPassedNull() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((string)null));
 
         [Test]
-        public void ShouldFailWhenNotEmptyStringIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty(""));
+        public void ShouldThrowWhenNotEmptyStringIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty(""));
 
         [Test]
         public void ShouldPassWhenNotEmptyStringIsPassedValid() => target.ThrowIfEmpty("Test");
 
         [Test]
-        public void ShouldFailWhenNotEmptyCollectionIsPassedNull() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((ICollection<int>)null));
+        public void ShouldThrowWhenNotEmptyCollectionIsPassedNull() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((ICollection<int>)null));
 
         [Test]
-        public void ShouldFailWhenNotEmptyCollectionIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty(new List<int>()));
+        public void ShouldThrowWhenNotEmptyCollectionIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty(new List<int>()));
 
         [Test]
         public void ShouldPassWhenNotEmptyCollectionIsPassedValid() => target.ThrowIfEmpty(new List<int>(new[] { 1, 2, 3 }));
 
         [Test]
-        public void ShouldFailWhenNotEmptyEnumerableIsPassedNull() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((IEnumerable<int>)null));
+        public void ShouldThrowWhenNotEmptyEnumerableIsPassedNull() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((IEnumerable<int>)null));
 
         [Test]
-        public void ShouldFailWhenNotEmptyEnumerableIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((IEnumerable<int>)new int[0]));
+        public void ShouldThrowWhenNotEmptyEnumerableIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfEmpty((IEnumerable<int>)new int[0]));
 
         [Test]
         public void ShouldPassWhenNotEmptyEnumerableIsPassedValid() => target.ThrowIfEmpty((IEnumerable<int>)new[] { 1, 2, 3 });
 
         [Test]
-        public void ShouldFailWhenNotEmptyMethodIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfAnyEmpty("Test", ""));
+        public void ShouldThrowWhenNotEmptyMethodIsPassedEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfAnyEmpty("Test", ""));
+
+        [Test]
+        public void ShouldThrowWhenNotEmptyReturnIsReturningNull() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfReturnsEmpty(null));
+
+        [Test]
+        public void ShouldThrowWhenNotEmptyReturnIsReturningEmpty() => Assert.Throws(typeof(ArgumentException), () => target.ThrowIfReturnsEmpty(""));
+
+        [Test]
+        public void ShouldPassWhenNotEmptyReturnIsReturningValid() => target.ThrowIfReturnsEmpty("Test");
     }
 }

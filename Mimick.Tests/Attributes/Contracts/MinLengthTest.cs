@@ -31,31 +31,31 @@ namespace Mimick.Tests.Attributes.Contracts
         }
 
         [Test]
-        public void ShouldFailWhenMinLengthListIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow(invalid));
+        public void ShouldThrowWhenMinLengthListIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow(invalid));
 
         [Test]
         public void ShouldPassWhenMinLengthListIsPassedValid() => target.ThrowIfBelow(valid);
 
         [Test]
-        public void ShouldFailWhenMinLengthEnumerableIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow((IEnumerable<string>)invalid));
+        public void ShouldThrowWhenMinLengthEnumerableIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow((IEnumerable<string>)invalid));
 
         [Test]
         public void ShouldPassWhenMinLengthEnumerableIsPassedValid() => target.ThrowIfBelow((IEnumerable<string>)valid);
 
         [Test]
-        public void ShouldFailWhenMinLengthStringIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow("A"));
+        public void ShouldThrowWhenMinLengthStringIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow("A"));
 
         [Test]
         public void ShouldPassWhenMinLengthStringIsPassedValid() => target.ThrowIfBelow("ABCDEFG");
 
         [Test]
-        public void ShouldFailWhenMinLengthArrayIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow(invalid.ToArray()));
+        public void ShouldThrowWhenMinLengthArrayIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow(invalid.ToArray()));
 
         [Test]
         public void ShouldPassWhenMinLengthArrayIsPassedValid() => target.ThrowIfBelow(valid.ToArray());
 
         [Test]
-        public void ShouldFailWhenMinLengthMethodIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAnyBelow("A", "B"));
+        public void ShouldThrowWhenMinLengthMethodIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAnyBelow("A", "B"));
 
         [Test]
         public void ShouldPassWhenMinLengthMethodIsPassedValid() => target.ThrowIfAnyBelow("ABCDEFG", "HIJKLMN");

@@ -31,31 +31,31 @@ namespace Mimick.Tests.Attributes.Contracts
         }
 
         [Test]
-        public void ShouldFailWhenMaxLengthListIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove(invalid));
+        public void ShouldThrowWhenMaxLengthListIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove(invalid));
 
         [Test]
         public void ShouldPassWhenMaxLengthListIsPassedValid() => target.ThrowIfAbove(valid);
 
         [Test]
-        public void ShouldFailWhenMaxLengthEnumerableIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove((IEnumerable<string>)invalid));
+        public void ShouldThrowWhenMaxLengthEnumerableIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove((IEnumerable<string>)invalid));
 
         [Test]
         public void ShouldPassWhenMaxLengthEnumerableIsPassedValid() => target.ThrowIfAbove((IEnumerable<string>)valid);
 
         [Test]
-        public void ShouldFailWhenMaxLengthStringIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove("ABCDEFG"));
+        public void ShouldThrowWhenMaxLengthStringIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove("ABCDEFG"));
 
         [Test]
         public void ShouldPassWhenMaxLengthStringIsPassedValid() => target.ThrowIfAbove("A");
 
         [Test]
-        public void ShouldFailWhenMaxLengthArrayIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove(invalid.ToArray()));
+        public void ShouldThrowWhenMaxLengthArrayIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAbove(invalid.ToArray()));
 
         [Test]
         public void ShouldPassWhenMaxLengthArrayIsPassedValid() => target.ThrowIfAbove(valid.ToArray());
 
         [Test]
-        public void ShouldFailWhenMaxLengthMethodIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAnyAbove("A", "ABCDEFG"));
+        public void ShouldThrowWhenMaxLengthMethodIsPassedInvalid() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAnyAbove("A", "ABCDEFG"));
 
         [Test]
         public void ShouldPassWhenMaxLengthMethodIsPassedValid() => target.ThrowIfAnyAbove("A", "B");

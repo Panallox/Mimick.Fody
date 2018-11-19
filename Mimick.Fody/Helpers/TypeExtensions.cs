@@ -44,7 +44,7 @@ static class TypeExtensions
     }
     
     public static MethodReference GetMethod(this TypeReference type, string name, TypeReference returns = null, TypeReference[] parameters = null, GenericParameter[] generics = null)
-    {
+    {        
         foreach (var method in type.Resolve().Methods.Where(m => m.Name == name))
         {
             if (returns != null && !method.ReturnType.FullName.Equals(returns.FullName))

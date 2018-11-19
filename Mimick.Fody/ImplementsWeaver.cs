@@ -62,13 +62,13 @@ public partial class ModuleWeaver
         emitter.Target.Interfaces.Add(new InterfaceImplementation(interfaceType.Import()));
 
         foreach (var method in interfaceType.Methods.Concat(interfaceType.Interfaces.Select(i => i.InterfaceType.Resolve()).SelectMany(i => i.Methods)))
-            WeaveImplementedMethod(emitter, field, method);
+            WeaveImplementedMethod(emitter, field, method, interfaceType);
 
         foreach (var property in interfaceType.Properties)
-            WeaveImplementedProperty(emitter, field, property);
+            WeaveImplementedProperty(emitter, field, property, interfaceType);
 
         foreach (var evt in interfaceType.Events)
-            WeaveImplementedEvent(emitter, field, evt);
+            WeaveImplementedEvent(emitter, field, evt, interfaceType);
     }
 
     /// <summary>
@@ -77,12 +77,18 @@ public partial class ModuleWeaver
     /// <param name="emitter">The emitter.</param>
     /// <param name="field">The attribute field.</param>
     /// <param name="evt">The event.</param>
-    public void WeaveImplementedEvent(TypeEmitter emitter, Variable field, EventReference evt)
+    /// <param name="interfaceType">The type of the interface.</param>
+    public void WeaveImplementedEvent(TypeEmitter emitter, Variable field, EventReference evt, TypeDefinition interfaceType)
     {
         var implemented = field.Type.GetEvent(evt.Name, evt.EventType);
 
         if (implemented == null)
-            throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement event '{evt.Name}'");
+        {
+            implemented = field.Type.GetEvent($"{interfaceType.FullName}.{evt.Name}", evt.EventType);
+
+            if (implemented == null)
+                throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement event '{evt.Name}'");
+        }
 
         var emitted = emitter.EmitEvent(evt.Name, implemented.EventType);
         var definition = implemented.Resolve();
@@ -122,7 +128,8 @@ public partial class ModuleWeaver
     /// <param name="emitter">The emitter.</param>
     /// <param name="field">The attribute field.</param>
     /// <param name="method">The method.</param>
-    public void WeaveImplementedMethod(TypeEmitter emitter, Variable field, MethodReference method)
+    /// <param name="interfaceType">The type of the interface.</param>
+    public void WeaveImplementedMethod(TypeEmitter emitter, Variable field, MethodReference method, TypeDefinition interfaceType)
     {
         var resolved = method.Resolve();
 
@@ -135,10 +142,17 @@ public partial class ModuleWeaver
             toVisibility: resolved.GetVisiblity()
         );
 
-        var implemented = field.Type.GetMethod(method.Name, method.ReturnType, method.Parameters.Select(p => p.ParameterType).ToArray(), method.GenericParameters.ToArray());
+        var parameters = method.Parameters.Select(p => p.ParameterType).ToArray();
+        var generics = method.GenericParameters.ToArray();
+        var implemented = field.Type.GetMethod(method.Name, returns: method.ReturnType, parameters: parameters, generics: generics);
 
         if (implemented == null)
-            throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement method '{method.FullName}'");
+        {
+            implemented = field.Type.GetMethod($"{interfaceType.FullName}.{method.Name}", returns: method.ReturnType, parameters: parameters, generics: generics);
+
+            if (implemented == null)
+                throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement method '{method.FullName}'");
+        }
 
         var imported = implemented.Import();
 
@@ -161,13 +175,19 @@ public partial class ModuleWeaver
     /// <param name="emitter">The emitter.</param>
     /// <param name="field">The attribute field.</param>
     /// <param name="property">The property.</param>
-    public void WeaveImplementedProperty(TypeEmitter emitter, Variable field, PropertyDefinition property)
+    /// <param name="interfaceType">The type of the interface.</param>
+    public void WeaveImplementedProperty(TypeEmitter emitter, Variable field, PropertyDefinition property, TypeDefinition interfaceType)
     {
         var emitted = emitter.EmitProperty(property.Name, property.PropertyType.Import(), toBackingField: true);
         var implemented = field.Type.GetProperty(property.Name, property.PropertyType)?.Resolve();
 
         if (implemented == null)
-            throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement property '{property.Name}'");
+        {
+            implemented = field.Type.GetProperty($"{interfaceType.FullName}.{property.Name}", returnType: property.PropertyType)?.Resolve();
+
+            if (implemented == null)
+                throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement property '{property.Name}'");
+        }
 
         var source = new PropertyEmitter(emitter, implemented);
 

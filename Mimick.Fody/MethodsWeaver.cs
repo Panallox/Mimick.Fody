@@ -41,11 +41,13 @@ public partial class ModuleWeaver
     /// <param name="item">The method information.</param>
     public void WeaveMethodInterceptors(MethodEmitter weaver, MethodInterceptorInfo item)
     {
-        var pAttributes = item.Parameters.SelectMany(p => p.Attributes.Select(a => new { Index = p.Index, Attribute = a })).ToArray();
+        var pAttributes = item.Parameters.SelectMany(p => p.Attributes.Select(a => new { p.Index, Attribute = a })).ToArray();
         var mAttributes = item.MethodInterceptors;
+        var rAttributes = item.ReturnInterceptors;
 
         var pInterceptors = new Variable[pAttributes.Length];
         var mInterceptors = new Variable[item.MethodInterceptors.Length];
+        var rInterceptors = new Variable[rAttributes.Length];
 
         var method = weaver.Target;
         var il = weaver.GetIL();
@@ -81,9 +83,15 @@ public partial class ModuleWeaver
 
         for (int i = 0, count = mInterceptors.Length; i < count; i++)
             mInterceptors[i] = CreateAttribute(weaver, mAttributes[i]);
+
+        for (int i = 0, count = rInterceptors.Length; i < count; i++)
+            rInterceptors[i] = CreateAttribute(weaver, rAttributes[i]);
         
         foreach (var attribute in mAttributes)
             weaver.Target.CustomAttributes.Remove(attribute);
+
+        foreach (var attribute in rAttributes)
+            weaver.Target.MethodReturnType.CustomAttributes.Remove(attribute);
 
         foreach (var parameter in item.Parameters)
         {
@@ -98,27 +106,32 @@ public partial class ModuleWeaver
 
         var hasMethod = mInterceptors.Length > 0;
         var hasParams = pInterceptors.Length > 0;
+        var hasReturn = rInterceptors.Length > 0;
 
         var arguments = hasMethod ? CreateArgumentArray(weaver) : null;
         var invocation = CreateMethodInfo(weaver);
         var mEventArgs = hasMethod ? weaver.EmitLocal(Context.Finder.MethodInterceptionArgs, name: "methodEventArgs") : null;
         
-        if (hasMethod)
+        if (hasMethod || hasReturn)
         {
-            il.Emit(method.IsStatic ? Codes.Null : Codes.This);
-            il.Emit(Codes.Load(arguments));
-
-            if (result == null)
-                il.Emit(Codes.Null);
-            else
+            if (hasMethod)
             {
-                il.Emit(Codes.Load(result));
-                il.Emit(Codes.Box(result.Type));
+                il.Emit(method.IsStatic ? Codes.Null : Codes.This);
+                il.Emit(Codes.Load(arguments));
+
+                if (result == null)
+                    il.Emit(Codes.Null);
+                else
+                {
+                    il.Emit(Codes.Load(result));
+                    il.Emit(Codes.Box(result.Type));
+                }
+
+                il.Emit(Codes.Load(invocation));
+                il.Emit(Codes.Create(Context.Finder.MethodInterceptionArgsCtor));
+                il.Emit(Codes.Store(mEventArgs));
             }
 
-            il.Emit(Codes.Load(invocation));
-            il.Emit(Codes.Create(Context.Finder.MethodInterceptionArgsCtor));
-            il.Emit(Codes.Store(mEventArgs));
             il.Try();
         }
 
@@ -157,69 +170,107 @@ public partial class ModuleWeaver
             }
         }
 
-        if (hasMethod)
+        if (hasMethod || hasReturn)
         {
-            for (int i = 0, count = mInterceptors.Length; i < count; i++)
+            if (hasMethod)
             {
-                var inc = mInterceptors[i];
+                for (int i = 0, count = mInterceptors.Length; i < count; i++)
+                {
+                    var inc = mInterceptors[i];
 
-                il.Emit(Codes.ThisIf(inc));
-                il.Emit(Codes.Load(inc));
-                il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnEnter));
+                    il.Emit(Codes.ThisIf(inc));
+                    il.Emit(Codes.Load(inc));
+                    il.Emit(Codes.Load(mEventArgs));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnEnter));
 
-                il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                il.Emit(Codes.IfTrue(cancel));
+                    il.Emit(Codes.Load(mEventArgs));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
+                    il.Emit(Codes.IfTrue(cancel));
+                }
             }
-
-            var exception = il.EmitLocal(Context.Finder.Exception);
 
             il.Position = leave;
-            il.Catch(exception);
 
-            for (int i = 0, count = mInterceptors.Length; i < count; i++)
-            {
-                var inc = mInterceptors[i];
+            if (hasMethod)
+            { 
+                var exception = il.EmitLocal(Context.Finder.Exception);
 
-                il.Emit(Codes.ThisIf(inc));
-                il.Emit(Codes.Load(inc));
-                il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Load(exception));
-                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnException));
+                il.Catch(exception);
+
+                for (int i = 0, count = mInterceptors.Length; i < count; i++)
+                {
+                    var inc = mInterceptors[i];
+
+                    il.Emit(Codes.ThisIf(inc));
+                    il.Emit(Codes.Load(inc));
+                    il.Emit(Codes.Load(mEventArgs));
+                    il.Emit(Codes.Load(exception));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnException));
+                }
+
+                il.Emit(Codes.Nop);
+                il.Emit(Codes.Leave(leave));
             }
-
-            il.Emit(Codes.Nop);
-            il.Emit(Codes.Leave(leave));
 
             il.Finally(leave);
 
-            if (result != null)
+            if (hasMethod)
             {
-                il.Emit(Codes.Load(mEventArgs));
+                if (result != null)
+                {
+                    il.Emit(Codes.Load(mEventArgs));
+                    il.Emit(Codes.Load(result));
+                    il.Emit(Codes.Box(weaver.Target.ReturnType));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnSet));
+                }
+
+                for (int i = 0, count = mInterceptors.Length; i < count; i++)
+                {
+                    var inc = mInterceptors[i];
+
+                    il.Emit(Codes.ThisIf(inc));
+                    il.Emit(Codes.Load(inc));
+                    il.Emit(Codes.Load(mEventArgs));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnExit));
+
+                    il.Emit(Codes.Load(mEventArgs));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
+                    il.Emit(Codes.IfTrue(cancel));
+                }
+
+                il.Mark(cancel);
+            }
+
+            if (hasReturn && result != null)
+            {
+                var rEventArgs = il.EmitLocal(Context.Finder.MethodReturnInterceptionArgs);
+
+                il.Emit(method.IsStatic ? Codes.Null : Codes.This);
                 il.Emit(Codes.Load(result));
-                il.Emit(Codes.Box(weaver.Target.ReturnType));
-                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnSet));
+                il.Emit(Codes.Box(result.Type));
+                il.Emit(Codes.Load(invocation));
+                il.Emit(Codes.Create(Context.Finder.MethodReturnInterceptionArgsCtor));
+                il.Emit(Codes.Store(rEventArgs));
+
+                for (int i = 0, count = rInterceptors.Length; i < count; i++)
+                {
+                    var inc = rInterceptors[i];
+
+                    il.Emit(Codes.ThisIf(inc));
+                    il.Emit(Codes.Load(inc));
+                    il.Emit(Codes.Load(rEventArgs));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodReturnInterceptorOnReturn));
+                }
+
+                il.Emit(Codes.Load(rEventArgs));
+                il.Emit(Codes.Invoke(Context.Finder.MethodReturnInterceptionArgsValueGet));
+                il.Emit(Codes.Unbox(result.Type));
+                il.Emit(Codes.Store(result));
             }
 
-            for (int i = 0, count = mInterceptors.Length; i < count; i++)
-            {
-                var inc = mInterceptors[i];
-
-                il.Emit(Codes.ThisIf(inc));
-                il.Emit(Codes.Load(inc));
-                il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnExit));
-
-                il.Emit(Codes.Load(mEventArgs));
-                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                il.Emit(Codes.IfTrue(cancel));
-            }
-
-            il.Mark(cancel);
             il.EndTry();
 
-            if (result != null)
+            if (hasMethod && result != null)
             {
                 il.Insert = CodeInsertion.After;
                 il.Emit(Codes.Load(mEventArgs));

@@ -40,5 +40,13 @@ namespace AssemblyToProcess.Attributes.Contracts
         {
 
         }
+
+        /// <summary>
+        /// Throws an exception when the method returns a value of less than 10.
+        /// </summary>
+        /// <param name="value">The value to return.</param>
+        /// <returns>The value.</returns>
+        [return: Minimum(10)]
+        public int ThrowIfReturnsBelow(int value) => value;
     }
 }

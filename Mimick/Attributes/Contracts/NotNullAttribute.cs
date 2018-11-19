@@ -12,9 +12,9 @@ namespace Mimick
     /// Indicates that the associated parameter or property should not be <c>null</c>. When applied to a method, all parameters will be validated.
     /// </summary>
     [CompilationOptions(Scope = AttributeScope.Singleton)]
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue)]
     [DebuggerStepThrough]
-    public sealed class NotNullAttribute : ValidationAttribute
+    public sealed class NotNullAttribute : ValidationAttribute, IMethodReturnInterceptor
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="NotNullAttribute" /> class.
@@ -22,6 +22,17 @@ namespace Mimick
         public NotNullAttribute()
         {
 
+        }
+
+        /// <summary>
+        /// Called when a method is invoked and is returning.
+        /// </summary>
+        /// <param name="e">The interception event arguments.</param>
+        /// <exception cref="ArgumentNullException">Cannot return a null value</exception>
+        public void OnReturn(MethodReturnInterceptionArgs e)
+        {
+            if (e.Value == null)
+                throw new ArgumentNullException("", "Cannot return a null value");
         }
 
         /// <summary>

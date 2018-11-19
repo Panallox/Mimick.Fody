@@ -15,6 +15,8 @@ using Mono.Cecil;
 /// </summary>
 public partial class ModuleWeaver
 {
+    public const Mono.Cecil.TypeAttributes ContainerTypeAttributes = Mono.Cecil.TypeAttributes.Class | Mono.Cecil.TypeAttributes.AutoClass | Mono.Cecil.TypeAttributes.Sealed | Mono.Cecil.TypeAttributes.Abstract | Mono.Cecil.TypeAttributes.BeforeFieldInit | Mono.Cecil.TypeAttributes.Public;
+
     public const int AttributeScopeAdhoc = 1;
     public const int AttributeScopeInstanced = 2;
     public const int AttributeScopeMultiInstanced = 3;
@@ -25,6 +27,11 @@ public partial class ModuleWeaver
     /// A unique identifier for attribute variables containing properties or constructor arguments.
     /// </summary>
     private int id = 0;
+
+    /// <summary>
+    /// An emitter for the container which will hold all singleton references.
+    /// </summary>
+    private TypeEmitter singletons;
 
     /// <summary>
     /// Create an array variable containing the arguments of the method invocation.
@@ -331,9 +338,9 @@ public partial class ModuleWeaver
         var index = Interlocked.Increment(ref id);
         var type = attribute.AttributeType;
         var name = $"<{type.Name}${index}>k__Attribute";
-        var field = emitter.EmitField(name, type, toStatic: true);
+        var field = singletons.EmitField(name, type, toStatic: true, toPublic: true);
 
-        var emit = emitter.GetStaticConstructor();
+        var emit = singletons.GetStaticConstructor();
         var il = emit.GetIL();
 
         il.Emit(Codes.Nop);
@@ -363,9 +370,15 @@ public partial class ModuleWeaver
     {
         var type = attribute.AttributeType;
         var name = $"<{type.Name}>k__Attribute";
-        var field = emitter.EmitField(name, type, toStatic: true);
 
-        var emit = emitter.GetStaticConstructor();
+        var existing = singletons.GetField(name, type, toStatic: true);
+
+        if (existing != null)
+            return existing;
+
+        var field = singletons.EmitField(name, type, toStatic: true, toPublic: true);
+
+        var emit = singletons.GetStaticConstructor();
         var il = emit.GetIL();
 
         il.Emit(Codes.Nop);
@@ -498,14 +511,33 @@ public partial class ModuleWeaver
     }
 
     /// <summary>
+    /// Create a type container which can be used to store static references for the provided type.
+    /// </summary>
+    /// <param name="parent">The target type.</param>
+    /// <returns>The target type container emitter.</returns>
+    public TypeEmitter CreateTypeContainer(TypeDefinition parent)
+    {
+        var cname = $"<{parent.FullName.Replace('.', '_')}>k__definition";
+        var container = Context.Finder.ResolveType($"Mimick.Runtime.Types.{cname}", full: true, throws: false)?.Resolve();
+
+        if (container == null)
+        {
+            container = new TypeDefinition("Mimick.Runtime.Types", cname, ContainerTypeAttributes, TypeSystem.ObjectReference.Import());
+            Context.Module.Types.Add(container);
+        }
+
+        return new TypeEmitter(Context.Module, container.Import(), Context);
+    }
+
+    /// <summary>
     /// Create a singleton field used to store method information for the provided method.
     /// </summary>
     /// <param name="method">The method weaver.</param>
     /// <returns></returns>
     public Variable CreateMethodInfo(MethodEmitter method)
     {
-        var parent = method.Parent;
-        var type = parent.Target;
+        var parent = method.Parent.Target.IsNotPublic ? method.Parent : CreateTypeContainer(method.Parent.Target);
+        var type = method.Parent.Target;
 
         var id = method.Target.GetHashString();
         var name = $"<{method.Target.Name}${id}>k__MethodInfo";
@@ -514,7 +546,7 @@ public partial class ModuleWeaver
         if (existing != null)
             return existing;
 
-        var field = parent.EmitField(name, Context.Finder.MethodBase, toStatic: true);
+        var field = parent.EmitField(name, Context.Finder.MethodBase, toStatic: true, toPublic: true);
 
         var il = parent.GetStaticConstructor().GetIL();
 
@@ -535,8 +567,8 @@ public partial class ModuleWeaver
     /// <returns></returns>
     public Variable CreateParameterInfo(MethodEmitter method, ParameterReference param)
     {
-        var parent = method.Parent;
-        var type = parent.Target;
+        var parent = method.Parent.Target.IsNotPublic ? method.Parent : CreateTypeContainer(method.Parent.Target);
+        var type = method.Parent.Target;
 
         var id = method.Target.GetHashString();
         var name = $"<{method.Target.Name}${id}${param.Index}>k__ParameterInfo";
@@ -546,7 +578,7 @@ public partial class ModuleWeaver
         if (existing != null)
             return existing;
 
-        var field = parent.EmitField(name, Context.Finder.PropertyInfo, toStatic: true);
+        var field = parent.EmitField(name, Context.Finder.PropertyInfo, toStatic: true, toPublic: true);
 
         var il = parent.GetStaticConstructor().GetIL();
         il.Emit(Codes.Nop);
@@ -568,12 +600,17 @@ public partial class ModuleWeaver
     /// <returns></returns>
     public Variable CreatePropertyInfo(PropertyEmitter property)
     {
-        var parent = property.Parent;
-        var type = parent.Target;
+        var parent = property.Parent.Target.IsNotPublic ? property.Parent : CreateTypeContainer(property.Parent.Target);
+        var type = property.Parent.Target;
         var sta = (property.Target.GetMethod ?? property.Target.SetMethod).IsStatic;
-
         var name = $"<{property.Target.Name}>k__PropertyInfo";
-        var field = parent.EmitField(name, Context.Finder.PropertyInfo, toStatic: true);
+
+        var existing = parent.GetField(name, Context.Finder.PropertyInfo, toStatic: true);
+
+        if (existing != null)
+            return existing;
+
+        var field = parent.EmitField(name, Context.Finder.PropertyInfo, toStatic: true, toPublic: true);
         var flags = BindingFlags.NonPublic | BindingFlags.Public | (sta ? BindingFlags.Static : BindingFlags.Instance);
 
         var il = parent.GetStaticConstructor().GetIL();
@@ -620,5 +657,21 @@ public partial class ModuleWeaver
             il.Emit(Codes.Load(variable));
             il.Emit(Codes.Invoke(Context.Finder.RequireInitializationInitialize));
         }
+    }
+
+    /// <summary>
+    /// Creates the static container which will hold references to singleton values in order to keep types clean.
+    /// </summary>
+    public void InitializeStaticContainer()
+    {
+        var type = Context.Finder.ResolveType("Mimick.Runtime.SingletonContainer", full: true, throws: false)?.Resolve();
+
+        if (type == null)
+        {
+            type = new TypeDefinition("Mimick.Runtime", "SingletonContainer", ContainerTypeAttributes, TypeSystem.ObjectReference.Import());
+            ModuleDefinition.Types.Add(type);
+        }
+
+        singletons = new TypeEmitter(Context.Module, Context.Module.ImportReference(type), Context);
     }
 }

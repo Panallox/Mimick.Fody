@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Mimick.Aspect;
@@ -16,9 +17,9 @@ namespace Mimick
     /// The attribute can only be applied to numeric values.
     /// </remarks>
     [CompilationOptions(Scope = AttributeScope.MultiSingleton)]
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue)]
     [DebuggerStepThrough]
-    public sealed class MaximumAttribute : ValidationAttribute
+    public sealed class MaximumAttribute : ValidationAttribute, IMethodReturnInterceptor
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MaximumAttribute"/> class.
@@ -37,6 +38,12 @@ namespace Mimick
         }
 
         #endregion
+
+        /// <summary>
+        /// Called when a method is invoked and is returning.
+        /// </summary>
+        /// <param name="e">The interception event arguments.</param>
+        public void OnReturn(MethodReturnInterceptionArgs e) => Validate("", (e.Method as MethodInfo).ReturnType, e.Value);
 
         /// <summary>
         /// Validate the value of the parameter or property.

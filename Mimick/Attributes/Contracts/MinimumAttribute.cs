@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Mimick.Aspect;
@@ -12,9 +13,9 @@ namespace Mimick
     /// Indicates that the associated parameter or property must have a value greater than or equal to the provided amount. When applied to a
     /// method, all parameters are validated.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue)]
     [DebuggerStepThrough]
-    public sealed class MinimumAttribute : ValidationAttribute
+    public sealed class MinimumAttribute : ValidationAttribute, IMethodReturnInterceptor
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MinimumAttribute"/> class.
@@ -33,6 +34,12 @@ namespace Mimick
         }
 
         #endregion
+
+        /// <summary>
+        /// Called when a method is invoked and is returning.
+        /// </summary>
+        /// <param name="e">The interception event arguments.</param>
+        public void OnReturn(MethodReturnInterceptionArgs e) => Validate("", (e.Method as MethodInfo).ReturnType, e.Value);
 
         /// <summary>
         /// Validate the value of the parameter or property.

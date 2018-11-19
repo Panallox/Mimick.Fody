@@ -49,6 +49,8 @@ public partial class ModuleWeaver : BaseModuleWeaver
         Context.Candidates = new WeaveCandidates(ModuleDefinition, Context.Finder);
         GlobalContext = Context;
 
+        InitializeStaticContainer();
+
         WeaveImplementations();
         WeaveMethodInterceptors();
         WeavePropertyInterceptors();

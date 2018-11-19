@@ -13,8 +13,8 @@ namespace Mimick
     /// </summary>
     [CompilationImplements(Interface = typeof(IRequireSynchronization))]
     [CompilationOptions(Scope = AttributeScope.Instanced)]
-    [AttributeUsage(AttributeTargets.Method)]
-    public sealed class WriterAttribute : Attribute, IMethodInterceptor, IRequireInitialization, IRequireSynchronization
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
+    public sealed class WriterAttribute : Attribute, IMethodInterceptor, IRequireInitialization, IRequireSynchronization, IPropertySetInterceptor
     {
         #region Properties
 
@@ -47,9 +47,32 @@ namespace Mimick
         public void OnException(MethodInterceptionArgs e, Exception ex) => throw ex;
 
         /// <summary>
+        /// Called when a property <c>set</c> method is invoked and has produced an unhandled exception.
+        /// </summary>
+        /// <param name="e">The interception event arguments.</param>
+        /// <param name="ex">The intercepted exception.</param>
+        public void OnException(PropertyInterceptionArgs e, Exception ex) => throw ex;
+
+        /// <summary>
         /// Called when a method has been invoked, and executes after the method body.
         /// </summary>
         /// <param name="e">The interception event arguments.</param>
         public void OnExit(MethodInterceptionArgs e) => ((IRequireSynchronization)this).SynchronizationContext.ExitWriteLock();
+
+        /// <summary>
+        /// Called when a property <c>set</c> method is intercepted and executes after the method body.
+        /// </summary>
+        /// <param name="e">The interception event arguments.</param>
+        public void OnExit(PropertyInterceptionArgs e) => ((IRequireSynchronization)this).SynchronizationContext.ExitWriteLock();
+
+        /// <summary>
+        /// Called when a property <c>set</c> method is intercepted and executes before the method body.
+        /// </summary>
+        /// <param name="e">The interception event arguments.</param>
+        /// <remarks>
+        /// The value of the <see cref="P:Mimick.Aspect.PropertyInterceptionArgs.Value" /> property will be populated with the
+        /// updated value which has been assigned during the set operation.
+        /// </remarks>
+        public void OnSet(PropertyInterceptionArgs e) => ((IRequireSynchronization)this).SynchronizationContext.EnterWriteLock();
     }
 }

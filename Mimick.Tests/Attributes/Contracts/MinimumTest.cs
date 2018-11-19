@@ -20,15 +20,21 @@ namespace Mimick.Tests.Attributes.Contracts
         public void ShouldPassWhenMinimumIsNotPresent() => target.PassIfBelow(int.MinValue);
 
         [Test]
-        public void ShouldFailWhenMinimumIntIsPassedValueLessThan() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow(0));
+        public void ShouldThrowWhenMinimumIntIsPassedValueLessThan() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfBelow(0));
 
         [Test]
         public void ShouldPassWhenMinimumIntIsPassedValueGreaterThan() => target.ThrowIfBelow(20);
 
         [Test]
-        public void ShouldFailWhenMinimumMethodIsPassedValueLessThan() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAnyBelow(0, 10));
+        public void ShouldThrowWhenMinimumMethodIsPassedValueLessThan() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfAnyBelow(0, 10));
 
         [Test]
         public void ShouldPassWhenMinimumMethodIsPassedValueGreaterThan() => target.ThrowIfAnyBelow(20, 15);
+
+        [Test]
+        public void ShouldThrowWhenMinimumReturnIsReturningValueLessThan() => Assert.Throws(typeof(ArgumentOutOfRangeException), () => target.ThrowIfReturnsBelow(0));
+
+        [Test]
+        public void ShouldPassWhenMinimumReturnIsReturningValueGreaterThan() => target.ThrowIfReturnsBelow(10);
     }
 }

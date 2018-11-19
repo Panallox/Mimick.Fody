@@ -37,6 +37,7 @@ namespace Mimick.Fody
         public TypeReference IInstanceAware { get; set; }
         public TypeReference IMemberAware { get; set; }
         public TypeReference IMethodInterceptor { get; set; }
+        public TypeReference IMethodReturnInterceptor { get; set; }
         public TypeReference IParameterInterceptor { get; set; }
         public TypeReference IPropertyGetInterceptor { get; set; }
         public TypeReference IPropertySetInterceptor { get; set; }
@@ -49,6 +50,7 @@ namespace Mimick.Fody
         public TypeReference MethodBase { get; set; }
         public TypeReference MethodInfo { get; set; }
         public TypeReference MethodInterceptionArgs { get; set; }
+        public TypeReference MethodReturnInterceptionArgs { get; set; }
         public TypeReference ObjectArray { get; set; }
         public TypeReference ParameterInfo { get; set; }
         public TypeReference ParameterInterceptionArgs { get; set; }
@@ -60,6 +62,7 @@ namespace Mimick.Fody
         // constructors
         public MethodReference CompilerGeneratedAttributeCtor { get; set; }
         public MethodReference MethodInterceptionArgsCtor { get; set; }
+        public MethodReference MethodReturnInterceptionArgsCtor { get; set; }
         public MethodReference NonSerializedAttributeCtor { get; set; }
         public MethodReference ParameterInterceptionArgsCtor { get; set; }
         public MethodReference PropertyInterceptionArgsCtor { get; set; }
@@ -71,6 +74,7 @@ namespace Mimick.Fody
         public MethodReference MethodInterceptorOnEnter { get; set; }
         public MethodReference MethodInterceptorOnException { get; set; }
         public MethodReference MethodInterceptorOnExit { get; set; }
+        public MethodReference MethodReturnInterceptorOnReturn { get; set; }
         public MethodReference ParameterInterceptorOnEnter { get; set; }
         public MethodReference PropertyGetInterceptorOnExit { get; set; }
         public MethodReference PropertyGetInterceptorOnGet { get; set; }
@@ -87,6 +91,8 @@ namespace Mimick.Fody
         public MethodReference MethodInterceptionArgsCancelGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnGet { get; set; }
         public MethodReference MethodInterceptionArgsReturnSet { get; set; }
+        public MethodReference MethodReturnInterceptionArgsValueGet { get; set; }
+        public MethodReference MethodReturnInterceptionArgsValueSet { get; set; }
         public MethodReference ParameterInterceptionArgsValueGet { get; set; }
         public MethodReference PropertyInterceptionArgsIsDirtyGet { get; set; }
         public MethodReference PropertyInterceptionArgsValueGet { get; set; }
@@ -155,6 +161,7 @@ namespace Mimick.Fody
             IInstanceAware = ResolveType("IInstanceAware");
             IMemberAware = ResolveType("IMemberAware");
             IMethodInterceptor = ResolveType("IMethodInterceptor");
+            IMethodReturnInterceptor = ResolveType("IMethodReturnInterceptor");
             IParameterInterceptor = ResolveType("IParameterInterceptor");
             IPropertyGetInterceptor = ResolveType("IPropertyGetInterceptor");
             IPropertySetInterceptor = ResolveType("IPropertySetInterceptor");
@@ -167,6 +174,7 @@ namespace Mimick.Fody
             MethodBase = ResolveType("MethodBase");
             MethodInfo = ResolveType("MethodInfo");
             MethodInterceptionArgs = ResolveType("MethodInterceptionArgs");
+            MethodReturnInterceptionArgs = ResolveType("MethodReturnInterceptionArgs");
             ObjectArray = new ArrayType(ResolveType("Object"));
             ParameterInfo = ResolveType("ParameterInfo");
             ParameterInterceptionArgs = ResolveType("ParameterInterceptionArgs");
@@ -178,6 +186,7 @@ namespace Mimick.Fody
             // constructors
             CompilerGeneratedAttributeCtor = ResolveType("CompilerGeneratedAttribute").GetConstructor();
             MethodInterceptionArgsCtor = MethodInterceptionArgs.GetConstructor();
+            MethodReturnInterceptionArgsCtor = MethodReturnInterceptionArgs.GetConstructor();
             NonSerializedAttributeCtor = ResolveType("NonSerializedAttribute").GetConstructor();
             ParameterInterceptionArgsCtor = ParameterInterceptionArgs.GetConstructor();
             PropertyInterceptionArgsCtor = PropertyInterceptionArgs.GetConstructor();
@@ -189,6 +198,7 @@ namespace Mimick.Fody
             MethodInterceptorOnEnter = IMethodInterceptor.GetMethod("OnEnter");
             MethodInterceptorOnException = IMethodInterceptor.GetMethod("OnException");
             MethodInterceptorOnExit = IMethodInterceptor.GetMethod("OnExit");
+            MethodReturnInterceptorOnReturn = IMethodReturnInterceptor.GetMethod("OnReturn");
             ParameterInterceptorOnEnter = IParameterInterceptor.GetMethod("OnEnter");
             PropertyGetInterceptorOnExit = IPropertyGetInterceptor.GetMethod("OnExit");
             PropertyGetInterceptorOnGet = IPropertyGetInterceptor.GetMethod("OnGet");
@@ -206,6 +216,8 @@ namespace Mimick.Fody
             MethodInterceptionArgsCancelGet = MethodInterceptionArgs.GetProperty("Cancel").Resolve().GetMethod.Import();
             MethodInterceptionArgsReturnGet = MethodInterceptionArgs.GetProperty("Return").Resolve().GetMethod.Import();
             MethodInterceptionArgsReturnSet = MethodInterceptionArgs.GetProperty("Return").Resolve().SetMethod.Import();
+            MethodReturnInterceptionArgsValueGet = MethodReturnInterceptionArgs.GetProperty("Value").Resolve().GetMethod.Import();
+            MethodReturnInterceptionArgsValueSet = MethodReturnInterceptionArgs.GetProperty("Value").Resolve().SetMethod.Import();
             ParameterInterceptionArgsValueGet = ParameterInterceptionArgs.GetProperty("Value").Resolve().GetMethod.Import();
             PropertyInterceptionArgsIsDirtyGet = PropertyInterceptionArgs.GetProperty("IsDirty").Resolve().GetMethod.Import();
             PropertyInterceptionArgsValueGet = PropertyInterceptionArgs.GetProperty("Value").Resolve().GetMethod.Import();
@@ -218,8 +230,9 @@ namespace Mimick.Fody
         /// </summary>
         /// <param name="name">The type name.</param>
         /// <param name="full">Whether to match the type based on the fully qualified type name.</param>
+        /// <param name="throws">Whether to throw an exception if the type cannot be found.</param>
         /// <returns>The type reference.</returns>
-        public TypeReference ResolveType(string name, bool full = false)
+        public TypeReference ResolveType(string name, bool full = false, bool throws = true)
         {
             foreach (var module in modules)
             {
@@ -229,7 +242,10 @@ namespace Mimick.Fody
                     return core.ImportReference(match);
             }
 
-            throw new MissingMemberException($"Cannot resolve a reference to {name} in any of '" + string.Join(", ", modules.Select(m => m.Name)) + "'");
+            if (throws)
+                throw new MissingMemberException($"Cannot resolve a reference to {name} in any of '" + string.Join(", ", modules.Select(m => m.Name)) + "'");
+
+            return null;
         }
     }
 }

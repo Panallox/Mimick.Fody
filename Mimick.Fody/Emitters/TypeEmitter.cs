@@ -96,15 +96,16 @@ namespace Mimick.Fody.Weavers
         /// <param name="name">The name.</param>
         /// <param name="type">The type.</param>
         /// <param name="toStatic">Whether the field should be static.</param>
+        /// <param name="toPublic">Whether the field should be public.</param>
         /// <returns>A <see cref="Variable"/> instance.</returns>
-        public Variable EmitField(string name, TypeReference type, bool toStatic = false)
+        public Variable EmitField(string name, TypeReference type, bool toStatic = false, bool toPublic = false)
         {
             var existing = Target.Fields.FirstOrDefault(a => a.Name == name && a.FieldType.FullName == type.FullName && a.IsStatic == toStatic);
 
             if (existing != null)
                 return new Variable(existing);
 
-            var attributes = FieldAttributes.Private;
+            var attributes = toPublic ? FieldAttributes.Assembly : FieldAttributes.Private;
 
             if (toStatic)
                 attributes |= FieldAttributes.Static;

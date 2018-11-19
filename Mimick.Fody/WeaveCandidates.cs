@@ -139,8 +139,9 @@ namespace Mimick.Fody
                     var these = method.GetCustomAttributes().Where(a => a.HasInterface(finder.IMethodInterceptor)).Concat(top);
                     var parameters = method.Parameters.Where(p => p.GetCustomAttributes().Any(a => a.HasInterface(finder.IParameterInterceptor))).Select(p => new ParameterInterceptorInfo { Index = p.Index, Attributes = p.GetCustomAttributes().Where(a => a.HasInterface(finder.IParameterInterceptor)).ToArray() });
                     var allParameters = new ParameterInterceptorInfo { Index = -1, Attributes = method.GetCustomAttributes().Where(a => a.HasInterface(finder.IParameterInterceptor)).ToArray() };
+                    var returns = method.MethodReturnType.CustomAttributes.Where(a => a.HasInterface(finder.IMethodReturnInterceptor));
 
-                    if (these.Any() || parameters.Any() || allParameters.Attributes.Length > 0)
+                    if (these.Any() || parameters.Any() || returns.Any() || allParameters.Attributes.Length > 0)
                     {
                         var generic = type.HasGenericParameters ? method.MakeGeneric(type.GenericParameters.ToArray()) : method;
 
@@ -151,7 +152,8 @@ namespace Mimick.Fody
                         {
                             Method = generic.Resolve(),
                             MethodInterceptors = these.ToArray(),
-                            Parameters = parameters.ToArray()
+                            Parameters = parameters.ToArray(),
+                            ReturnInterceptors = returns.ToArray()
                         });
                     }
                 }

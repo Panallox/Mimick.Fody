@@ -40,5 +40,13 @@ namespace AssemblyToProcess.Attributes.Contracts
         {
 
         }
+
+        /// <summary>
+        /// Throws an exception when the method returns a <c>null</c> value.
+        /// </summary>
+        /// <param name="value">The value to return.</param>
+        /// <returns>The value.</returns>
+        [return: NotNull]
+        public object ThrowIfReturnsNull(object value) => value;
     }
 }

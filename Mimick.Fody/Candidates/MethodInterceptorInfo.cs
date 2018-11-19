@@ -29,6 +29,11 @@ namespace Mimick.Fody
         /// </summary>
         public ParameterInterceptorInfo[] Parameters { get; set; }
 
+        /// <summary>
+        /// Gets or sets the method return interceptors.
+        /// </summary>
+        public CustomAttribute[] ReturnInterceptors { get; set; }
+
         #endregion
     }
 }
