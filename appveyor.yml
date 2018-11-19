@@ -10,7 +10,7 @@ before_build:
 build_script:
   - cmd: dotnet build --configuration Release
 test_script:
-  - ps: nunit3-console Mimick.Testing\bin\Release\net461\Mimick.Tests.dll --x86
-  - ps: nunit3-console Mimick.Testing\bin\Release\netcoreapp2.0\Mimick.Tests.dll --x86
+  - ps: nunit3-console Mimick.Tests\bin\Release\net461\Mimick.Tests.dll --x86
+  - ps: nunit3-console Mimick.Tests\bin\Release\netcoreapp2.0\Mimick.Tests.dll --x86
 artifacts:
   - path: nugets\**\*.nupkg
