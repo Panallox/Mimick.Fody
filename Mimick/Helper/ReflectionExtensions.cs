@@ -39,7 +39,7 @@ namespace Mimick
 
             return null;
         }
-
+        
         /// <summary>
         /// Determines whether the constructor is both default (no required parameters) and accessible (public).
         /// </summary>
@@ -70,7 +70,7 @@ namespace Mimick
             if (m.StartsWith("System.") || m.StartsWith("Microsoft.") || m.StartsWith("Windows."))
                 return true;
 
-            if (type.Namespace == "System" || type.Namespace.StartsWith("System."))
+            if (type.Namespace == null || type.Namespace == "System" || type.Namespace.StartsWith("System."))
                 return true;
 
             return false;

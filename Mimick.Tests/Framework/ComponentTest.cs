@@ -46,5 +46,8 @@ namespace Mimick.Tests.Framework
             Assert.IsNotNull(component2);
             Assert.AreEqual(component1.Guid, component2.Guid);
         }
+
+        [Test]
+        public void ShouldRetrieveForConfigurationComponent() => Assert.IsNotNull(container.Resolve<ConfiguredComponent>());
     }
 }

@@ -35,7 +35,19 @@ namespace AssemblyToProcess.Attributes
         /// </summary>
         [Value("'Test ' + 1 + ' Value'")]
         public string ComputedString { get; set; }
-        
+
+        /// <summary>
+        /// Gets a configured number processed from the associated value attribute.
+        /// </summary>
+        [Value("{Configured.Method}")]
+        public int ConfiguredNumber { get; set; }
+
+        /// <summary>
+        /// Gets a configured string processed from the associated value attribute.
+        /// </summary>
+        [Value("{Configured.Property}")]
+        public string ConfiguredString { get; set; }
+
         /// <summary>
         /// Gets a simple number processed from the associated value attribute.
         /// </summary>
@@ -85,5 +97,25 @@ namespace AssemblyToProcess.Attributes
         /// <param name="text">The text.</param>
         /// <returns>The computed text.</returns>
         public string GetComputedString([Value("'Testing ' + (100 / 5 + 10)")] string text = null) => $"{text} Result";
+    }
+    
+    /// <summary>
+    /// A configuration class which provides configuration values based on member return values.
+    /// </summary>
+    [Configuration]
+    public class ValueConfigurationProvider
+    {
+        /// <summary>
+        /// Gets a configuration property value.
+        /// </summary>
+        [Provide("Configured.Property")]
+        public string FromProperty => "Hello";
+
+        /// <summary>
+        /// Gets a configuration method value.
+        /// </summary>
+        /// <returns></returns>
+        [Provide("Configured.Method")]
+        public int FromMethod() => 123456;
     }
 }

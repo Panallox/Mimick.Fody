@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -12,10 +13,24 @@ namespace Mimick.Framework
     /// </summary>
     sealed class ComponentContext : IComponentContext
     {
+        #region Constants
+
+        /// <summary>
+        /// The binding flags used when determining members which provide components.
+        /// </summary>
+        private const BindingFlags AllInstanced = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        #endregion
+
         /// <summary>
         /// The entries across all implementations.
         /// </summary>
         private readonly IList<ComponentDescriptor> allEntries;
+
+        /// <summary>
+        /// The entries which have the <see cref="ConfigurationAttribute"/> decoration.
+        /// </summary>
+        private readonly IList<ComponentDescriptor> configurationEntries;
 
         /// <summary>
         /// The entries where one concrete type implements an interface type.
@@ -38,6 +53,7 @@ namespace Mimick.Framework
         public ComponentContext()
         {
             allEntries = new ReadWriteList<ComponentDescriptor>();
+            configurationEntries = new ReadWriteList<ComponentDescriptor>();
             implementedEntries = new ReadWriteDictionary<Type, ComponentDescriptor>();
             namedEntries = new ReadWriteDictionary<string, ComponentDescriptor>();
             typedEntries = new ReadWriteDictionary<Type, ComponentDescriptor>();
@@ -50,7 +66,16 @@ namespace Mimick.Framework
         {
             Dispose(false);
         }
-        
+
+        #region Properties
+
+        /// <summary>
+        /// Gets all configuration entries from the component context.
+        /// </summary>
+        public IReadOnlyList<ComponentDescriptor> ConfigurationEntries => new ReadOnlyList<ComponentDescriptor>(configurationEntries);
+
+        #endregion
+
         /// <summary>
         /// Creates a constructor method which can be used to create a new instance of the provided type.
         /// </summary>
@@ -64,7 +89,8 @@ namespace Mimick.Framework
             if (candidates.Length != 1)
                 throw new MissingMethodException($"Cannot find a non-internal unique constructor for type '{type.FullName}'");
 
-            return () => Activator.CreateInstance(type);
+            var construction = Expression.Convert(Expression.New(type), typeof(object));
+            return Expression.Lambda<Func<object>>(construction).Compile();
         }
 
         /// <summary>
@@ -98,6 +124,36 @@ namespace Mimick.Framework
         }
 
         /// <summary>
+        /// Initialize the component context by processing any types within the registered assemblies that have been
+        /// decorated with the <see cref="ConfigurationAttribute"/> decoration.
+        /// </summary>
+        public void Initialize()
+        {
+            foreach (var entry in configurationEntries)
+            {
+                var methods = entry.Type.GetMethods(AllInstanced).Where(m => m.GetAttributeInherited<ComponentAttribute>() != null);
+                var properties = entry.Type.GetProperties(AllInstanced).Where(m => m.GetAttributeInherited<ComponentAttribute>() != null);
+                var instance = entry.Designer.GetComponent();
+
+                foreach (var method in methods)
+                {
+                    var decoration = method.GetAttributeInherited<ComponentAttribute>();
+                    var value = method.Invoke(instance, null);
+
+                    Register(value, new[] { decoration.Name });
+                }
+
+                foreach (var property in properties)
+                {
+                    var decoration = property.GetAttributeInherited<ComponentAttribute>();
+                    var value = property.GetValue(instance);
+
+                    Register(value, new[] { decoration.Name });
+                }
+            }
+        }
+
+        /// <summary>
         /// Registers all classes within the provided assembly which have been decorated with <see cref="ComponentAttribute" />.
         /// </summary>
         /// <param name="assembly">The assembly.</param>
@@ -106,7 +162,7 @@ namespace Mimick.Framework
             if (assembly == null)
                 throw new ArgumentNullException("assembly");
 
-            var candidates = assembly.GetTypes().Where(a => a.GetAttributeInherited<FrameworkAttribute>() != null);
+            var candidates = assembly.GetTypes().Where(a => a.GetAttributeInherited<FrameworkAttribute>() != null || a.GetAttributeInherited<ConfigurationAttribute>() != null);
 
             foreach (var candidate in candidates)
             {
@@ -114,6 +170,11 @@ namespace Mimick.Framework
 
                 if (decoration != null)
                     Register(candidate, decoration.Name).ToScope(decoration.Scope);
+
+                var configuration = candidate.GetAttributeInherited<ConfigurationAttribute>();
+
+                if (configuration != null)
+                    Register(candidate);
             }
         }
 
@@ -214,12 +275,7 @@ namespace Mimick.Framework
             entry.Designer = new SingletonDesigner(constructor);
 
             foreach (var implementedType in implements)
-            {
-                if (implementedEntries.ContainsKey(implementedType))
-                    continue;
-
-                implementedEntries.Add(implementedType, entry);
-            }
+                implementedEntries.AddIfMissing(implementedType, entry);
 
             if (interfaceType != null)
             {
@@ -245,7 +301,51 @@ namespace Mimick.Framework
 
             allEntries.Add(entry);
 
+            if (concreteType.GetAttributeInherited<ConfigurationAttribute>() != null)
+                configurationEntries.Add(entry);
+
             return new ComponentRegistration(new[] { entry });
+        }
+
+        /// <summary>
+        /// Register a provided object instance within the component provider using the default singleton lifetime.
+        /// </summary>
+        /// <param name="instance">The object instance.</param>
+        public void Register(object instance) => Register(instance, null);
+
+        /// <summary>
+        /// Register a provided object instance within the component provider using the default singleton lifetime.
+        /// </summary>
+        /// <param name="instance">The object instance.</param>
+        /// <param name="names">An optional collection of identifiers which the components will be stored under.</param>
+        public void Register(object instance, params string[] names)
+        {
+            if (instance == null)
+                throw new ArgumentNullException("instance", "The component instance cannot be null");
+
+            var type = instance.GetType();
+            var implements = new List<Type>(GetImplementedTypes(type));
+            implements.Add(type);
+
+            var entry = new ComponentDescriptor(type, null, Type.EmptyTypes, names);
+            entry.Designer = new InstancedDesigner(instance);
+
+            foreach (var implementedType in implements)
+                implementedEntries.AddIfMissing(implementedType, entry);
+
+            if (!typedEntries.ContainsKey(type))
+                typedEntries.Add(type, entry);
+
+            foreach (var name in names)
+            {
+                if (name == null)
+                    continue;
+
+                if (namedEntries.TryGetValue(name, out var existing))
+                    throw new ArgumentException($"Conflicting named '{name}' component, adding '{type.FullName}' against '{existing.Type.FullName}'");
+
+                namedEntries.Add(name, entry);
+            }
         }
 
         /// <summary>

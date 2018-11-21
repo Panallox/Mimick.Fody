@@ -30,6 +30,25 @@ namespace Mimick
         }
 
         /// <summary>
+        /// Adds an item to the collection if the key does not exist already.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="dictionary">The collection.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        public static void AddIfMissing<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            if (dictionary == null)
+                throw new ArgumentNullException("dictionary");
+
+            if (dictionary.ContainsKey(key))
+                return;
+
+            dictionary.Add(key, value);
+        }
+
+        /// <summary>
         /// Counts the number of elements in a non-generic enumerable collection.
         /// </summary>
         /// <param name="enumerable">The enumerable collection.</param>

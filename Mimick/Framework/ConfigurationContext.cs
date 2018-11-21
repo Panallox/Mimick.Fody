@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Mimick.Configurations;
 
 namespace Mimick.Framework
 {
@@ -18,7 +19,11 @@ namespace Mimick.Framework
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationContext" /> class.
         /// </summary>
-        public ConfigurationContext() => sources = new List<ConfigurationDescriptor>();
+        public ConfigurationContext()
+        {
+            sources = new List<ConfigurationDescriptor>();
+            Register(new ProviderConfigurationSource());
+        }
         
         /// <summary>
         /// Initializes this instance.

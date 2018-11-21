@@ -102,8 +102,6 @@ namespace Mimick
         /// <returns></returns>
         private object Resolve(Type type)
         {
-            var orDefault = type.IsValueType && type != typeof(string) ? Activator.CreateInstance(type) : null;
-
             if (value.IsSimple && !value.IsVariable)
                 return TypeHelper.Convert(value.Evaluate().ToString(), type);
 

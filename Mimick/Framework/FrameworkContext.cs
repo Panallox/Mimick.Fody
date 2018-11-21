@@ -61,6 +61,7 @@ namespace Mimick
             initialized = true;
 
             configurationContext.Initialize();
+            componentContext.Initialize();
         }
     }
 }

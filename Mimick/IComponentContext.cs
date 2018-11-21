@@ -94,6 +94,19 @@ namespace Mimick
         IComponentRegistration Register(Type interfaceType, Type concreteType, params string[] names);
 
         /// <summary>
+        /// Register a provided object instance within the component provider using the default singleton lifetime.
+        /// </summary>
+        /// <param name="instance">The object instance.</param>
+        void Register(object instance);
+
+        /// <summary>
+        /// Register a provided object instance within the component provider using the default singleton lifetime.
+        /// </summary>
+        /// <param name="instance">The object instance.</param>
+        /// <param name="names">An optional collection of identifiers which the components will be stored under.</param>
+        void Register(object instance, params string[] names);
+
+        /// <summary>
         /// Resolve a component of the provided type.
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>

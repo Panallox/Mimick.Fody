@@ -143,7 +143,7 @@ namespace Mimick
                 case TypeCode.Int64:
                     return default(long);
                 case TypeCode.Object:
-                    return default(object);
+                    return default;
                 case TypeCode.SByte:
                     return default(sbyte);
                 case TypeCode.Single:
