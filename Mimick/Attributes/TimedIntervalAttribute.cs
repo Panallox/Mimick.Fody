@@ -17,50 +17,13 @@ namespace Mimick
     /// previous method invocation has completed. If the method throws an exception during the invocation the task will continue.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Method)]
-    public sealed class TimedIntervalAttribute : FrameworkAttribute
+    public sealed class ScheduledAttribute : FrameworkAttribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="TimedIntervalAttribute"/> class.
+        /// Initializes a new instance of the <see cref="ScheduledAttribute"/> class.
         /// </summary>
-        /// <param name="milliseconds">The milliseconds.</param>
-        public TimedIntervalAttribute(int milliseconds) : this(0, 0, 0, 0, milliseconds) { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimedIntervalAttribute"/> class.
-        /// </summary>
-        /// <param name="seconds">The seconds.</param>
-        /// <param name="milliseconds">The milliseconds.</param>
-        public TimedIntervalAttribute(int seconds, int milliseconds) : this(0, 0, 0, seconds, milliseconds) { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimedIntervalAttribute"/> class.
-        /// </summary>
-        /// <param name="minutes">The minutes.</param>
-        /// <param name="seconds">The seconds.</param>
-        /// <param name="milliseconds">The milliseconds.</param>
-        public TimedIntervalAttribute(int minutes, int seconds, int milliseconds) : this(0, 0, minutes, seconds, milliseconds) { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimedIntervalAttribute"/> class.
-        /// </summary>
-        /// <param name="hours">The hours.</param>
-        /// <param name="minutes">The minutes.</param>
-        /// <param name="seconds">The seconds.</param>
-        /// <param name="milliseconds">The milliseconds.</param>
-        public TimedIntervalAttribute(int hours, int minutes, int seconds, int milliseconds) : this(0, hours, minutes, seconds, milliseconds) { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimedIntervalAttribute"/> class.
-        /// </summary>
-        /// <param name="days">The days.</param>
-        /// <param name="hours">The hours.</param>
-        /// <param name="minutes">The minutes.</param>
-        /// <param name="seconds">The seconds.</param>
-        /// <param name="milliseconds">The milliseconds.</param>
-        public TimedIntervalAttribute(int days, int hours, int minutes, int seconds, int milliseconds)
-        {
-            Interval = new TimeSpan(days, hours, minutes, seconds, milliseconds);
-        }
+        /// <param name="milliseconds">The interval between executions in milliseconds.</param>
+        public ScheduledAttribute(double milliseconds) => Interval = TimeSpan.FromMilliseconds(milliseconds);
 
         #region Properties
 

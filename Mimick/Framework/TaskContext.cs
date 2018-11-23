@@ -64,8 +64,8 @@ namespace Mimick.Framework
         /// Creates a timed interval execution handler for the provided method.
         /// </summary>
         /// <param name="method">The method.</param>
-        /// <returns>A <see cref="TimedIntervalExecutionHandler"/> delegate method.</returns>
-        private TimedIntervalExecutionHandler CreateTimedIntervalHandler(MethodInfo method)
+        /// <returns>A <see cref="IntervalExecutionHandler"/> delegate method.</returns>
+        private IntervalExecutionHandler CreateTimedIntervalHandler(MethodInfo method)
         {
             if (method.IsGenericMethodDefinition)
                 throw new MemberAccessException($"Cannot register a timed task against a generic method for '{method.DeclaringType.FullName}.{method.Name}'");
@@ -76,9 +76,36 @@ namespace Mimick.Framework
             var instance = Expression.Parameter(typeof(object), "instance");
 
             if (method.IsStatic)
-                return Expression.Lambda<TimedIntervalExecutionHandler>(Expression.Call(null, method), instance).Compile();
+                return Expression.Lambda<IntervalExecutionHandler>(Expression.Call(null, method), instance).Compile();
             else
-                return Expression.Lambda<TimedIntervalExecutionHandler>(Expression.Call(Expression.Convert(instance, method.DeclaringType), method), instance).Compile();
+                return Expression.Lambda<IntervalExecutionHandler>(Expression.Call(Expression.Convert(instance, method.DeclaringType), method), instance).Compile();
+        }
+
+        /// <summary>
+        /// Initialize the task context resulting in any timed tasks starting.
+        /// </summary>
+        public void Initialize()
+        {
+            var components = (ComponentContext)FrameworkContext.Current.ComponentContext;
+
+            foreach (var component in components.Components)
+            {
+                var timed = component.Type.GetMethods(ReflectionHelper.All).Where(m => m.GetAttributeInherited<ScheduledAttributeAttribute>() != null);
+
+                if (timed.Any())
+                {
+                    foreach (var method in timed)
+                    {
+                        var instance = method.IsStatic ? null : component.Designer.GetComponent();
+                        var interval = method.GetAttributeInherited<ScheduledAttributeAttribute>().Interval;
+
+                        Register(interval, method, instance);
+                    }
+                }
+            }
+
+            foreach (var task in timedTasks)
+                task.Start();
         }
 
         /// <summary>
@@ -95,6 +122,10 @@ namespace Mimick.Framework
             if (instance == null && !method.IsStatic)
                 throw new ArgumentException($"Cannot register a non-static method without a target instance for '{method.DeclaringType.FullName}.{method.Name}'");
 
+            var handler = CreateTimedIntervalHandler(method);
+            var task = new FixedIntervalTask(interval, handler, instance);
+
+            timedTasks.Add(task);
         }
     }
 }

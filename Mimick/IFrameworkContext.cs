@@ -29,6 +29,14 @@ namespace Mimick
             get;
         }
 
+        /// <summary>
+        /// Gets the task context responsible for maintaining timed and asynchronous tasks.
+        /// </summary>
+        ITaskContext TaskContext
+        {
+            get;
+        }
+
         #endregion
 
         /// <summary>

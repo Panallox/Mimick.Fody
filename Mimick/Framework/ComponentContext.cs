@@ -70,6 +70,11 @@ namespace Mimick.Framework
         #region Properties
 
         /// <summary>
+        /// Gets all component entries from the component context.
+        /// </summary>
+        public IReadOnlyList<ComponentDescriptor> Components => new ReadOnlyList<ComponentDescriptor>(allEntries);
+
+        /// <summary>
         /// Gets all configuration entries from the component context.
         /// </summary>
         public IReadOnlyList<ComponentDescriptor> ConfigurationEntries => new ReadOnlyList<ComponentDescriptor>(configurationEntries);

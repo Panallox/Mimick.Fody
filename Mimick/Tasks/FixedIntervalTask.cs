@@ -10,9 +10,9 @@ namespace Mimick.Tasks
     /// <summary>
     /// A timed task class representing a task which executes at an interval between executions.
     /// </summary>
-    class TimedIntervalTask : ITimedTask
+    class FixedIntervalTask : ITimedTask
     {
-        private readonly TimedIntervalExecutionHandler callback;
+        private readonly IntervalExecutionHandler callback;
         private readonly object instance;
         private readonly Timer timer;
         private readonly object sync;
@@ -20,12 +20,12 @@ namespace Mimick.Tasks
         private volatile bool executing;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TimedIntervalTask"/> class.
+        /// Initializes a new instance of the <see cref="FixedIntervalTask"/> class.
         /// </summary>
         /// <param name="interval">The interval between executions.</param>
         /// <param name="handler">The handler executed when the interval has elapsed.</param>
         /// <param name="target">The optional target object instance the task executes against.</param>
-        public TimedIntervalTask(TimeSpan interval, TimedIntervalExecutionHandler handler, object target = null)
+        public FixedIntervalTask(TimeSpan interval, IntervalExecutionHandler handler, object target = null)
         {
             callback = handler;
             instance = target;
@@ -35,9 +35,9 @@ namespace Mimick.Tasks
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="TimedIntervalTask"/> class.
+        /// Finalizes an instance of the <see cref="FixedIntervalTask"/> class.
         /// </summary>
-        ~TimedIntervalTask() => Dispose(false);
+        ~FixedIntervalTask() => Dispose(false);
 
         #region Properties
 
@@ -137,5 +137,5 @@ namespace Mimick.Tasks
     /// A delegate method representing the handler invoked when a timed interval task has elapsed.
     /// </summary>
     /// <param name="instance">The optional object instance to execute the task against.</param>
-    delegate void TimedIntervalExecutionHandler(object instance);
+    delegate void IntervalExecutionHandler(object instance);
 }

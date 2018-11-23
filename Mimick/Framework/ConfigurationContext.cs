@@ -132,6 +132,6 @@ namespace Mimick.Framework
         /// <returns>
         /// The configuration value; otherwise, the value of <paramref name="or" />.
         /// </returns>
-        public T Resolve<T>(string name, T or = default(T)) => (T)Resolve(name, typeof(T), or);
+        public T Resolve<T>(string name, T or = default) => (T)Resolve(name, typeof(T), or);
     }
 }

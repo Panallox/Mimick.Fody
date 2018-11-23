@@ -20,7 +20,8 @@ namespace Mimick
         private ComponentContext componentContext;
         private ConfigurationContext configurationContext;
         private volatile bool initialized;
-        
+        private TaskContext taskContext;
+
         /// <summary>
         /// Prevents a default instance of the <see cref="FrameworkContext" /> class from being created.
         /// </summary>
@@ -29,6 +30,7 @@ namespace Mimick
             componentContext = new ComponentContext();
             configurationContext = new ConfigurationContext();
             initialized = false;
+            taskContext = new TaskContext();
         }
 
         #region Properties
@@ -48,6 +50,11 @@ namespace Mimick
         /// </summary>
         public IConfigurationContext ConfigurationContext => configurationContext;
 
+        /// <summary>
+        /// Gets the task context responsible for maintaining timed and asynchronous tasks.
+        /// </summary>
+        public ITaskContext TaskContext => taskContext;
+
         #endregion
 
         /// <summary>
@@ -62,6 +69,7 @@ namespace Mimick
 
             configurationContext.Initialize();
             componentContext.Initialize();
+            taskContext.Initialize();
         }
     }
 }
