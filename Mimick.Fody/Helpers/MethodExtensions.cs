@@ -47,7 +47,7 @@ static class MethodExtensions
         var il = body.GetILProcessor();
         var it = body.Instructions;
         var count = it.Count;
-        
+                
         switch (count)
         {
             case 0:
@@ -63,8 +63,15 @@ static class MethodExtensions
                 var code21 = it[0].OpCode;
                 var code22 = it[1].OpCode;
 
-                if ((code21 == OpCodes.Nop && code22 == OpCodes.Ret))
+                if (code21 == OpCodes.Nop && code22 == OpCodes.Ret)
                     return false;
+                if (code21 == OpCodes.Newobj && code22 == OpCodes.Throw)
+                {
+                    var alloc = (TypeReference)it[0].Operand;
+
+                    if (alloc != null && alloc.FullName == "System.NotImplementedException")
+                        return false;
+                }
                 break;
             case 3:
                 var code31 = it[0].OpCode;

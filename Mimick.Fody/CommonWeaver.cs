@@ -75,7 +75,7 @@ public partial class ModuleWeaver
     public Variable CreateAttribute(MethodEmitter method, CustomAttribute attribute)
     {
         var options = attribute.GetAttribute(Context.Finder.CompilationOptionsAttribute);
-        var scope = options.GetProperty("Scope", notFound: AttributeScopeSingleton);
+        var scope = options != null ? options.GetProperty("Scope", notFound: AttributeScopeSingleton) : AttributeScopeSingleton;
 
         if (scope == AttributeScopeInstanced && attribute.HasConstructorArguments)
             scope = AttributeScopeMultiInstanced;

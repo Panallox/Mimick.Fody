@@ -37,6 +37,9 @@ namespace Mimick.Framework
                     case Scope.Singleton:
                         descriptor.Designer = new SingletonDesigner(descriptor.Constructor);
                         break;
+                    case Scope.Thread:
+                        descriptor.Designer = new ThreadDesigner(descriptor.Constructor);
+                        break;
                     default:
                         throw new ArgumentException($"Cannot resolve a component designer for scope {scope}");
                 }

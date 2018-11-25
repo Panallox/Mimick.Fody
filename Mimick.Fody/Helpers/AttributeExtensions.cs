@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 /// </summary>
 static class AttributeExtensions
 {
+    private const int InlineNone = 0;
+    private const int InlineInline = 1;
+    private const int InlineTruncate = 2;
+
     private static readonly string AttributeUsageFullName = typeof(AttributeUsageAttribute).FullName;
 
     public static IEnumerable<CustomAttribute> GetCustomAttributes(this ICustomAttributeProvider member)
@@ -75,4 +79,20 @@ static class AttributeExtensions
     public static bool HasAttribute(this MethodDefinition m, TypeReference type) => m.CustomAttributes.Any(a => a.HasInterface(type));
 
     public static bool HasAttribute(this ParameterDefinition p, TypeReference type) => p.CustomAttributes.Any(a => a.HasInterface(type));
+
+    public static bool HasRequiredMethod(this CustomAttribute a, string method)
+    {
+        var options = a.GetAttribute(ModuleWeaver.GlobalContext.Finder.CompilationOptionsAttribute);
+        var inlining = options != null ? options.GetProperty("Inlining", notFound: InlineTruncate) : InlineTruncate;
+        
+        if ((inlining & InlineTruncate) != InlineTruncate)
+            return true;
+
+        var match = a.AttributeType.GetMethod(method);
+
+        if (match == null)
+            return false;
+
+        return match.HasBody();
+    }
 }

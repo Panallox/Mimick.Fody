@@ -20,12 +20,37 @@ namespace Mimick.Tasks
         public FixedInterval(double interval) => value = (long)interval;
 
         /// <summary>
-        /// Gets the smallest interval time of the task between the task executing. This method is used in the scheduler
-        /// system to calculate an optimum amount of time to wait for elapsed executions.
+        /// Gets an estimate of the time required until the next invocation based on the provided previous invocation time,
+        /// and the current time, expressed in milliseconds.
         /// </summary>
+        /// <param name="previous">The optional date and time that the execution previously elapsed.</param>
+        /// <param name="now">The date and time.</param>
         /// <returns>
-        /// The smallest interval of the task; otherwise, <c>null</c> if no smallest interval could be determined.
+        /// An estimate of the time until the next execution, in milliseconds; otherwise, <c>-1</c>.
         /// </returns>
-        public long? GetSmallest() => value;
+        public long GetElapseTime(DateTime? previous, DateTime now)
+        {
+            if (previous == null)
+                return value;
+
+            var remaining = value - (now - previous.Value).TotalMilliseconds;
+            return remaining < 0 ? -1 : (long)remaining;
+        }
+
+        /// <summary>
+        /// Determines whether the interval has elapsed according to an optional previous invocation time and the current time.
+        /// </summary>
+        /// <param name="previous">The optional date and time that the execution previously elapsed.</param>
+        /// <param name="now">The date and time.</param>
+        /// <returns>
+        ///   <c>true</c> if the interval has elapsed; otherwise, <c>false</c>.
+        /// </returns>
+        public bool HasElapsed(DateTime? previous, DateTime now)
+        {
+            if (previous == null)
+                return true;
+
+            return value - (now - previous.Value).TotalMilliseconds <= 0;
+        }
     }
 }

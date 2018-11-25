@@ -68,6 +68,33 @@ namespace Mimick.Configurations
         }
 
         /// <summary>
+        /// Finalizes an instance of the <see cref="XmlConfigurationSource"/> class.
+        /// </summary>
+        ~XmlConfigurationSource() => Dispose(false);
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        private void Dispose(bool disposing)
+        {
+            if (disposing && source == XmlSource.Stream && stream != null)
+            {
+                try { stream.Dispose(); }
+                catch { }
+            }
+        }
+
+        /// <summary>
         /// Called when the configuration source has been requested and must prepare for resolution.
         /// </summary>
         public void Load()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,6 +34,11 @@ namespace Mimick
             taskContext = new TaskContext();
         }
 
+        /// <summary>
+        /// Finalizes an instance of the <see cref="FrameworkContext"/> class.
+        /// </summary>
+        ~FrameworkContext() => Dispose(false);
+
         #region Properties
 
         /// <summary>
@@ -56,6 +62,28 @@ namespace Mimick
         public ITaskContext TaskContext => taskContext;
 
         #endregion
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                taskContext.Dispose();
+                componentContext.Dispose();
+            }
+        }
 
         /// <summary>
         /// Initialize the framework context in preparation for usage. This method must be called before the framework can be used.

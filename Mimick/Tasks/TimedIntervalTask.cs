@@ -10,34 +10,35 @@ namespace Mimick.Tasks
     /// <summary>
     /// A timed task class representing a task which executes at an interval between executions.
     /// </summary>
-    class FixedIntervalTask : ITimedTask
+    class TimedIntervalTask : ITimedTask
     {
         private readonly IntervalExecutionHandler callback;
         private readonly object instance;
-        private readonly Timer timer;
         private readonly object sync;
 
+        private volatile bool enabled;
         private volatile bool executing;
+        private DateTime? lastExecution;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FixedIntervalTask"/> class.
+        /// Initializes a new instance of the <see cref="TimedIntervalTask"/> class.
         /// </summary>
         /// <param name="interval">The interval between executions.</param>
         /// <param name="handler">The handler executed when the interval has elapsed.</param>
         /// <param name="target">The optional target object instance the task executes against.</param>
-        public FixedIntervalTask(TimeSpan interval, IntervalExecutionHandler handler, object target = null)
+        public TimedIntervalTask(ITimedInterval interval, IntervalExecutionHandler handler, object target = null)
         {
             callback = handler;
             instance = target;
-            timer = new Timer(interval.TotalMilliseconds);
-            timer.Elapsed += OnTimerElapsed;
+            Interval = interval;
+            lastExecution = DateTime.Now;
             sync = new object();
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="FixedIntervalTask"/> class.
+        /// Finalizes an instance of the <see cref="TimedIntervalTask"/> class.
         /// </summary>
-        ~FixedIntervalTask() => Dispose(false);
+        ~TimedIntervalTask() => Dispose(false);
 
         #region Properties
 
@@ -50,11 +51,16 @@ namespace Mimick.Tasks
         }
 
         /// <summary>
+        /// Gets the timed interval which describes when the task should execute.
+        /// </summary>
+        public ITimedInterval Interval { get; }
+
+        /// <summary>
         /// Gets whether the timed task is enabled.
         /// </summary>
         public bool IsEnabled
         {
-            get { lock (sync) return timer.Enabled; }
+            get { lock (sync) return enabled; }
         }
 
         /// <summary>
@@ -63,6 +69,14 @@ namespace Mimick.Tasks
         public bool IsExecuting
         {
             get { lock (sync) return executing; }
+        }
+
+        /// <summary>
+        /// Gets the date and time that the task was last executed. If the task has not been executed in the scheduling system, this will return <c>null</c>.
+        /// </summary>
+        public DateTime? LastExecutedAt
+        {
+            get { lock (sync) return lastExecution; }
         }
 
         #endregion
@@ -83,44 +97,19 @@ namespace Mimick.Tasks
         private void Dispose(bool disposing)
         {
             if (disposing)
-            {
-                lock (sync)
-                {
-                    timer.Enabled = false;
-                    timer.Dispose();
-                }
-            }
+                Stop();
         }
-
-        /// <summary>
-        /// Called when the timed interval timer has elapsed.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="ElapsedEventArgs"/> instance containing the event data.</param>
-        private void OnTimerElapsed(object sender, ElapsedEventArgs e)
-        {
-            try
-            {
-                lock (sync) executing = true;
-
-                callback(instance);
-            }
-            catch
-            {
-                // ignore exception to allow next interval to fire
-            }
-            finally
-            {
-                lock (sync) executing = false;
-            }
-        }
-
+        
         /// <summary>
         /// Starts the timed task processing within the application. If the task is already enabled, this method will do nothing.
         /// </summary>
         public void Start()
         {
-            lock (sync) timer.Enabled = true;
+            lock (sync)
+            {
+                enabled = true;
+                lastExecution = null;
+            }
         }
 
         /// <summary>
@@ -129,7 +118,35 @@ namespace Mimick.Tasks
         /// </summary>
         public void Stop()
         {
-            lock (sync) timer.Enabled = false;
+            lock (sync) enabled = false;
+        }
+
+        /// <summary>
+        /// Triggers the timed task immediately, regardless of whether the task is enabled or of the scheduled state of the task. If the task
+        /// is already executing, this method will do nothing.
+        /// </summary>
+        /// <remarks>
+        /// If manually triggered, this will not affect the scheduled state of the task, such that the task will trigger again when the interval
+        /// has next elapsed. If the interval elapses while the task is processing, the trigger will do nothing but the scheduling system will record
+        /// that the task was executed.
+        /// </remarks>
+        public void Trigger()
+        {
+            lock (sync)
+            {
+                if (executing)
+                    return;
+
+                executing = true;
+            }
+
+            callback(instance);
+
+            lock (sync)
+            {
+                executing = false;
+                lastExecution = DateTime.Now;
+            }
         }
     }
 

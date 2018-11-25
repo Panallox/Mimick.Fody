@@ -9,7 +9,7 @@ namespace Mimick
     /// <summary>
     /// An interface representing the current instance of the framework context active within the application.
     /// </summary>
-    public interface IFrameworkContext
+    public interface IFrameworkContext : IDisposable
     {
         #region Properties
 

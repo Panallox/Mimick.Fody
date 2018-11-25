@@ -13,7 +13,7 @@ namespace Mimick
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    class ReadWriteDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+    public class ReadWriteDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
         private readonly IDictionary<TKey, TValue> collection;
         private readonly ReaderWriterLockSlim locking;

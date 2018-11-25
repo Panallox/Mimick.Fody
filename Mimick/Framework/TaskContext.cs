@@ -15,6 +15,7 @@ namespace Mimick.Framework
     sealed class TaskContext : ITaskContext
     {
         private readonly IList<ITimedTask> timedTasks;
+        private readonly TimedThread timedThread;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskContext" /> class.
@@ -22,6 +23,7 @@ namespace Mimick.Framework
         public TaskContext()
         {
             timedTasks = new ReadWriteList<ITimedTask>();
+            timedThread = new TimedThread();
         }
 
         /// <summary>
@@ -55,6 +57,8 @@ namespace Mimick.Framework
         {
             if (disposing)
             {
+                timedThread.Dispose();
+
                 foreach (var e in timedTasks)
                     e.Dispose();
             }
@@ -90,22 +94,33 @@ namespace Mimick.Framework
 
             foreach (var component in components.Components)
             {
-                var timed = component.Type.GetMethods(ReflectionHelper.All).Where(m => m.GetAttributeInherited<ScheduledAttributeAttribute>() != null);
+                var timed = component.Type.GetMethods(ReflectionHelper.All).Where(m => m.GetAttributeInherited<ScheduledAttribute>() != null);
 
                 if (timed.Any())
                 {
                     foreach (var method in timed)
                     {
                         var instance = method.IsStatic ? null : component.Designer.GetComponent();
-                        var interval = method.GetAttributeInherited<ScheduledAttributeAttribute>().Interval;
+                        var decoration = method.GetAttributeInherited<ScheduledAttribute>();
 
-                        Register(interval, method, instance);
+                        /*if (decoration.CronInterval != null)
+                        {
+                            var interval = new CronInterval(decoration.CronInterval);
+                            Register(interval, method, instance);
+                        }
+                        else*/
+                        {
+                            var interval = new FixedInterval(decoration.FixedInterval.TotalMilliseconds);
+                            Register(interval, method, instance);
+                        }
                     }
                 }
             }
 
             foreach (var task in timedTasks)
                 task.Start();
+
+            timedThread.Start();
         }
 
         /// <summary>
@@ -114,18 +129,19 @@ namespace Mimick.Framework
         /// <param name="interval">The interval between method executions.</param>
         /// <param name="method">The method which must execute.</param>
         /// <param name="instance">The object instance which the method must execute against.</param>
-        public void Register(TimeSpan interval, MethodInfo method, object instance)
+        public void Register(ITimedInterval interval, MethodInfo method, object instance)
         {
-            if (interval.Ticks == 0)
+            if (interval == null)
                 throw new ArgumentException("Cannot register a timed task with no interval", "interval");
 
             if (instance == null && !method.IsStatic)
                 throw new ArgumentException($"Cannot register a non-static method without a target instance for '{method.DeclaringType.FullName}.{method.Name}'");
 
             var handler = CreateTimedIntervalHandler(method);
-            var task = new FixedIntervalTask(interval, handler, instance);
+            var task = new TimedIntervalTask(interval, handler, instance);
 
             timedTasks.Add(task);
+            timedThread.Add(task);
         }
     }
 }

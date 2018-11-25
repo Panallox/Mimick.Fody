@@ -12,7 +12,7 @@ namespace Mimick
     /// a source collection to ensure that the collection is immutable.
     /// </summary>
     /// <typeparam name="T">The type of the elements in the list.</typeparam>
-    class ReadOnlyList<T> : IReadOnlyList<T>
+    public class ReadOnlyList<T> : IReadOnlyList<T>
     {
         private readonly IList<T> collection;
 

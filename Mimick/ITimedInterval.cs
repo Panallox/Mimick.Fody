@@ -12,10 +12,19 @@ namespace Mimick
     public interface ITimedInterval
     {
         /// <summary>
-        /// Gets the smallest interval time of the task between the task executing. This method is used in the scheduler
-        /// system to calculate an optimum amount of time to wait for elapsed executions.
+        /// Gets an estimate of the time required until the next invocation based on the provided previous invocation time and the current time.
         /// </summary>
-        /// <returns>The smallest interval, in milliseconds, of the task; otherwise, <c>null</c> if no interval could be determined.</returns>
-        long? GetSmallest();
+        /// <param name="previous">The optional date and time that the execution previously elapsed.</param>
+        /// <param name="now">The date and time.</param>
+        /// <returns>An estimate of the time until the next execution, in milliseconds; otherwise, <c>-1</c>.</returns>
+        long GetElapseTime(DateTime? previous, DateTime now);
+
+        /// <summary>
+        /// Determines whether the interval has elapsed according to an optional previous invocation time and the current time.
+        /// </summary>
+        /// <param name="previous">The optional date and time that the execution previously elapsed.</param>
+        /// <param name="now">The date and time.</param>
+        /// <returns><c>true</c> if the interval has elapsed; otherwise, <c>false</c>.</returns>
+        bool HasElapsed(DateTime? previous, DateTime now);
     }
 }

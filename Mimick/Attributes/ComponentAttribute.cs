@@ -84,5 +84,10 @@ namespace Mimick
         /// The component should persist as a singleton instance for the duration of the framework.
         /// </summary>
         Singleton,
+
+        /// <summary>
+        /// The component should persist as a singleton instance for the duration of a thread, created only when required.
+        /// </summary>
+        Thread,
     }
 }

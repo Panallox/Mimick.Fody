@@ -39,7 +39,12 @@ namespace Mimick.Configurations
 
             return invocation.Compile();
         }
-        
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose() { }
+
         /// <summary>
         /// Called when the configuration source has been requested and must prepare for resolution.
         /// </summary>

@@ -15,7 +15,19 @@ namespace Mimick.Aspect
         #region Properties
 
         /// <summary>
-        /// Gets or sets the persistence scope of the associated attribute.
+        /// Gets or sets how an aspect attribute should be inlined during compile-time. If not specified, defaults to <see cref="Inlining.Truncate"/>.
+        /// </summary>
+        /// <remarks>
+        /// Any inlining specified is introduced cautiously, rather than aggressively. The compiler will attempt to calculate whether
+        /// a method is eligible for inlining based on the content of the implemented method body.
+        /// </remarks>
+        public Inlining Inlining
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets or sets the persistence scope of the associated attribute. If not specified, defaults to <see cref="AttributeScope.Singleton"/>.
         /// </summary>
         public AttributeScope Scope
         {
@@ -64,5 +76,29 @@ namespace Mimick.Aspect
         /// An attribute should persist as a singleton within the runtime, with one instance per usage.
         /// </summary>
         MultiSingleton = 5
+    }
+
+    [Flags]
+    public enum Inlining : int
+    {
+        /// <summary>
+        /// A method should not be inlined.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// A method should be inlined where possible.
+        /// </summary>
+        Inline = 1,
+
+        /// <summary>
+        /// A method should not be implemented or called if the method is considered to be empty.
+        /// </summary>
+        Truncate = 2,
+
+        /// <summary>
+        /// A method should either be inlined or not implemented or called.
+        /// </summary>
+        InlineAndTruncate = Inline | Truncate
     }
 }

@@ -9,7 +9,7 @@ namespace Mimick
     /// <summary>
     /// An interface representing a source which loads and resolves configuration values.
     /// </summary>
-    public interface IConfigurationSource
+    public interface IConfigurationSource : IDisposable
     {
         /// <summary>
         /// Called when the configuration source has been requested and must prepare for resolution.

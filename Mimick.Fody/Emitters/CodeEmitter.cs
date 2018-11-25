@@ -91,7 +91,7 @@ namespace Mimick.Fody.Weavers
             block.State = 1;
             block.CatchStart = position;
         }
-
+        
         /// <summary>
         /// Create a new label within the method.
         /// </summary>

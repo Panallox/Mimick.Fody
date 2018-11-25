@@ -15,7 +15,7 @@ namespace Mimick.Tests
     public class AssemblyInitializer
     {
         [OneTimeSetUp]
-        public static void BeforeAssembly()
+        public static void SetUp()
         {
             var framework = FrameworkContext.Current;
 
@@ -38,5 +38,14 @@ namespace Mimick.Tests
             framework
                 .Initialize();
         }
+
+        [OneTimeTearDown]
+        public static void TearDown()
+        {
+            var framework = FrameworkContext.Current;
+            framework.Dispose();
+        }
+
+        public static void Throwing() => throw new NotImplementedException();
     }
 }

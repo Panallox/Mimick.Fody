@@ -49,6 +49,15 @@ public partial class ModuleWeaver
         var mInterceptors = new Variable[item.MethodInterceptors.Length];
         var rInterceptors = new Variable[rAttributes.Length];
 
+        var needsEnter = mAttributes.Any(m => m.HasRequiredMethod("OnEnter"));
+        var needsCatch = mAttributes.Any(m => m.HasRequiredMethod("OnException"));
+        var needsExit = mAttributes.Any(m => m.HasRequiredMethod("OnExit"));
+        var needsParams = pAttributes.Any(m => m.Attribute.HasRequiredMethod("OnEnter"));
+        var needsReturns = rAttributes.Any(m => m.HasRequiredMethod("OnReturn"));
+        
+        if (!needsEnter && !needsCatch && !needsExit && !needsParams && !needsReturns)
+            return;
+
         var method = weaver.Target;
         var il = weaver.GetIL();
 
@@ -135,7 +144,7 @@ public partial class ModuleWeaver
             il.Try();
         }
 
-        if (hasParams)
+        if (hasParams && needsParams)
         {
             var pEventArgs = weaver.EmitLocal(Context.Finder.ParameterInterceptionArgs);
 
@@ -172,26 +181,30 @@ public partial class ModuleWeaver
 
         if (hasMethod || hasReturn)
         {
-            if (hasMethod)
+            if (hasMethod && needsEnter)
             {
                 for (int i = 0, count = mInterceptors.Length; i < count; i++)
                 {
                     var inc = mInterceptors[i];
+                    var att = mAttributes[i];
 
-                    il.Emit(Codes.ThisIf(inc));
-                    il.Emit(Codes.Load(inc));
-                    il.Emit(Codes.Load(mEventArgs));
-                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnEnter));
+                    if (att.HasRequiredMethod("OnEnter"))
+                    {
+                        il.Emit(Codes.ThisIf(inc));
+                        il.Emit(Codes.Load(inc));
+                        il.Emit(Codes.Load(mEventArgs));
+                        il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnEnter));
 
-                    il.Emit(Codes.Load(mEventArgs));
-                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                    il.Emit(Codes.IfTrue(cancel));
+                        il.Emit(Codes.Load(mEventArgs));
+                        il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
+                        il.Emit(Codes.IfTrue(cancel));
+                    }
                 }
             }
 
             il.Position = leave;
 
-            if (hasMethod)
+            if (hasMethod && needsCatch)
             { 
                 var exception = il.EmitLocal(Context.Finder.Exception);
 
@@ -200,19 +213,24 @@ public partial class ModuleWeaver
                 for (int i = 0, count = mInterceptors.Length; i < count; i++)
                 {
                     var inc = mInterceptors[i];
+                    var att = mAttributes[i];
 
-                    il.Emit(Codes.ThisIf(inc));
-                    il.Emit(Codes.Load(inc));
-                    il.Emit(Codes.Load(mEventArgs));
-                    il.Emit(Codes.Load(exception));
-                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnException));
+                    if (att.HasRequiredMethod("OnException"))
+                    {
+                        il.Emit(Codes.ThisIf(inc));
+                        il.Emit(Codes.Load(inc));
+                        il.Emit(Codes.Load(mEventArgs));
+                        il.Emit(Codes.Load(exception));
+                        il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnException));
+                    }
                 }
 
                 il.Emit(Codes.Nop);
                 il.Emit(Codes.Leave(leave));
             }
 
-            il.Finally(leave);
+            if (needsExit || needsReturns)
+                il.Finally(leave);
 
             if (hasMethod)
             {
@@ -224,24 +242,31 @@ public partial class ModuleWeaver
                     il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnSet));
                 }
 
-                for (int i = 0, count = mInterceptors.Length; i < count; i++)
+                if (needsExit)
                 {
-                    var inc = mInterceptors[i];
+                    for (int i = 0, count = mInterceptors.Length; i < count; i++)
+                    {
+                        var inc = mInterceptors[i];
+                        var att = mAttributes[i];
 
-                    il.Emit(Codes.ThisIf(inc));
-                    il.Emit(Codes.Load(inc));
-                    il.Emit(Codes.Load(mEventArgs));
-                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnExit));
+                        if (att.HasRequiredMethod("OnExit"))
+                        {
+                            il.Emit(Codes.ThisIf(inc));
+                            il.Emit(Codes.Load(inc));
+                            il.Emit(Codes.Load(mEventArgs));
+                            il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnExit));
 
-                    il.Emit(Codes.Load(mEventArgs));
-                    il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                    il.Emit(Codes.IfTrue(cancel));
+                            il.Emit(Codes.Load(mEventArgs));
+                            il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
+                            il.Emit(Codes.IfTrue(cancel));
+                        }
+                    }
                 }
 
                 il.Mark(cancel);
             }
 
-            if (hasReturn && result != null)
+            if (hasReturn && needsReturns && result != null)
             {
                 var rEventArgs = il.EmitLocal(Context.Finder.MethodReturnInterceptionArgs);
 
@@ -255,11 +280,15 @@ public partial class ModuleWeaver
                 for (int i = 0, count = rInterceptors.Length; i < count; i++)
                 {
                     var inc = rInterceptors[i];
+                    var att = rAttributes[i];
 
-                    il.Emit(Codes.ThisIf(inc));
-                    il.Emit(Codes.Load(inc));
-                    il.Emit(Codes.Load(rEventArgs));
-                    il.Emit(Codes.Invoke(Context.Finder.MethodReturnInterceptorOnReturn));
+                    if (att.HasRequiredMethod("OnReturn"))
+                    {
+                        il.Emit(Codes.ThisIf(inc));
+                        il.Emit(Codes.Load(inc));
+                        il.Emit(Codes.Load(rEventArgs));
+                        il.Emit(Codes.Invoke(Context.Finder.MethodReturnInterceptorOnReturn));
+                    }
                 }
 
                 il.Emit(Codes.Load(rEventArgs));

@@ -18,13 +18,26 @@ namespace Mimick.Tests.Attributes
         public void SetUp() => target = FrameworkContext.Current.ComponentContext.Resolve<ScheduledAttributes>();
 
         [Test]
-        public void ShouldIncrementCounterEachSecond()
+        public void ShouldIncrementTimedCounterEachSecond()
         {
-            var before = target.Counter;
+            var before = target.TimedCounter;
             Thread.Sleep(1500);
-            var after = target.Counter;
+            var after = target.TimedCounter;
 
             Assert.That(after > before);
         }
+
+        /*
+        [Test]
+        public void ShouldIncrementScheduledCounterEveryTwoSeconds()
+        {
+            var before = target.TimedCounter;
+            Thread.Sleep(5000);
+            var after = target.TimedCounter;
+
+            Assert.That(after > before);
+            Assert.AreEqual(before + 2, after);
+        }
+        */
     }
 }

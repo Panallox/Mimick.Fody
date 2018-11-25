@@ -12,7 +12,7 @@ namespace Mimick
     /// A class representing a <see cref="List{T}"/> with internal read and write lock support.
     /// </summary>
     /// <typeparam name="T">The type of the elements.</typeparam>
-    class ReadWriteList<T> : IList<T>
+    public class ReadWriteList<T> : IList<T>
     {
         private readonly List<T> list;
         private readonly ReaderWriterLockSlim locking;
