@@ -16,6 +16,19 @@ static class TypeExtensions
 
     public static TypeReference Import(this TypeReference type)
         => ModuleWeaver.GlobalModule.ImportReference(type) ?? throw new InvalidOperationException($"Cannot import type {type.FullName}");
+
+    public static IEnumerable<MethodDefinition> GetAllMethods(this TypeReference type)
+    {
+        var current = type.Resolve();
+
+        while (current != null)
+        {
+            foreach (var method in current.Methods)
+                yield return method;
+
+            current = current.BaseType?.Resolve();
+        }
+    }
     
     public static EventReference GetEvent(this TypeReference type, string name, TypeReference eventType)
         => type.Resolve().Events.FirstOrDefault(e => e.Name == name && e.EventType.FullName == eventType.FullName);
@@ -42,10 +55,16 @@ static class TypeExtensions
 
         return query.FirstOrDefault()?.Import();
     }
+
+    public static MethodReference GetMethod(this TypeReference type, MethodReference method)
+    {
+        var def = method as MethodDefinition ?? method.Resolve();
+        return GetMethod(type, method.Name, returns: method.ReturnType, parameters: method.Parameters.Select(p => p.ParameterType).ToArray(), generics: method.GenericParameters.ToArray());
+    }
     
     public static MethodReference GetMethod(this TypeReference type, string name, TypeReference returns = null, TypeReference[] parameters = null, GenericParameter[] generics = null)
-    {        
-        foreach (var method in type.Resolve().Methods.Where(m => m.Name == name))
+    {
+        foreach (var method in type.Resolve().GetAllMethods().Where(m => m.Name == name))
         {
             if (returns != null && !method.ReturnType.FullName.Equals(returns.FullName))
                 continue;

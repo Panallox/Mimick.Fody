@@ -95,6 +95,11 @@ namespace Mimick
 
             initialized = true;
 
+            componentContext.Register<IComponentContext>(componentContext);
+            componentContext.Register<IConfigurationContext>(configurationContext);
+            componentContext.Register<IFrameworkContext>(this);
+            componentContext.Register<ITaskContext>(taskContext);
+
             configurationContext.Initialize();
             componentContext.Initialize();
             taskContext.Initialize();

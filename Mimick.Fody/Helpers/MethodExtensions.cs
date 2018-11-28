@@ -139,4 +139,35 @@ static class MethodExtensions
 
         return genericMethod;
     }
+
+    public static bool UsesParameter(this MethodReference method, ParameterReference parameter) => UsesParameter(method, parameter.Index);
+
+    public static bool UsesParameter(this MethodReference method, int index)
+    {
+        var def = method as MethodDefinition ?? method.Resolve();
+        var il = def.Body.Instructions;
+        var check = def.IsStatic ? index : index + 1;
+
+        foreach (var i in il)
+        {
+            if (i.OpCode == OpCodes.Ldarg ||
+                i.OpCode == OpCodes.Ldarga ||
+                i.OpCode == OpCodes.Ldarga_S ||
+                i.OpCode == OpCodes.Ldarg_S)
+            {
+                var p = (ParameterReference)i.Operand;
+
+                if (p.Index == check)
+                    return true;
+            }
+
+            if ((check == 0 && i.OpCode == OpCodes.Ldarg_0) ||
+                (check == 1 && i.OpCode == OpCodes.Ldarg_1) ||
+                (check == 2 && i.OpCode == OpCodes.Ldarg_2) ||
+                (check == 3 && i.OpCode == OpCodes.Ldarg_3))
+                return true;
+        }
+
+        return false;
+    }
 }

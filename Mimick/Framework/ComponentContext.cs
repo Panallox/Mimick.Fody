@@ -313,6 +313,35 @@ namespace Mimick.Framework
         }
 
         /// <summary>
+        /// Register a provided object instance within the component provider as an implementation of the provided
+        /// interface type, using the default singleton lifetime.
+        /// </summary>
+        /// <typeparam name="TInterface">The interface type.</typeparam>
+        /// <param name="instance">The object instance.</param>
+        /// <exception cref="ArgumentNullException">instance - The component instance cannot be null</exception>
+        /// <exception cref="ArgumentException">
+        /// </exception>
+        public void Register<TInterface>(object instance)
+        {
+            if (instance == null)
+                throw new ArgumentNullException("instance", "The component instance cannot be null");
+
+            var type = instance.GetType();
+            var interfaceType = typeof(TInterface);
+            
+            if (!interfaceType.IsAssignableFrom(type))
+                throw new ArgumentException($"The component instance does not implement the interface '{interfaceType.FullName}'");
+
+            var entry = new ComponentDescriptor(type, null, new[] { interfaceType }, null);
+            entry.Designer = new InstancedDesigner(instance);
+
+            if (implementedEntries.ContainsKey(interfaceType))
+                throw new ArgumentException($"Conflicting implementation of '{interfaceType.FullName}'");
+
+            implementedEntries.Add(interfaceType, entry);
+        }
+
+        /// <summary>
         /// Register a provided object instance within the component provider using the default singleton lifetime.
         /// </summary>
         /// <param name="instance">The object instance.</param>

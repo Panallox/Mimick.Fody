@@ -49,12 +49,22 @@ public partial class ModuleWeaver
         var mInterceptors = new Variable[item.MethodInterceptors.Length];
         var rInterceptors = new Variable[rAttributes.Length];
 
-        var needsEnter = mAttributes.Any(m => m.HasRequiredMethod("OnEnter"));
-        var needsCatch = mAttributes.Any(m => m.HasRequiredMethod("OnException"));
-        var needsExit = mAttributes.Any(m => m.HasRequiredMethod("OnExit"));
-        var needsParams = pAttributes.Any(m => m.Attribute.HasRequiredMethod("OnEnter"));
-        var needsReturns = rAttributes.Any(m => m.HasRequiredMethod("OnReturn"));
-        
+        var needsEnter = mAttributes.Any(m => m.HasRequiredMethod(Context.Finder.MethodInterceptorOnEnter));
+        var needsCatch = mAttributes.Any(m => m.HasRequiredMethod(Context.Finder.MethodInterceptorOnException));
+        var needsExit = mAttributes.Any(m => m.HasRequiredMethod(Context.Finder.MethodInterceptorOnExit));
+        var needsParams = pAttributes.Any(m => m.Attribute.HasRequiredMethod(Context.Finder.ParameterInterceptorOnEnter));
+        var needsReturns = rAttributes.Any(m => m.HasRequiredMethod(Context.Finder.MethodReturnInterceptorOnReturn));
+
+        var needsMethodArgs = mAttributes.Any(m =>
+        {
+            return m.AttributeType.GetMethod(Context.Finder.MethodInterceptorOnEnter).UsesParameter(0) ||
+                   m.AttributeType.GetMethod(Context.Finder.MethodInterceptorOnException).UsesParameter(0) ||
+                   m.AttributeType.GetMethod(Context.Finder.MethodInterceptorOnExit).UsesParameter(0);
+        });
+
+        var needsParamArgs = pAttributes.Any(m => m.Attribute.AttributeType.GetMethod(Context.Finder.ParameterInterceptorOnEnter).UsesParameter(0));
+        var needsReturnsArgs = rAttributes.Any(m => m.AttributeType.GetMethod(Context.Finder.MethodReturnInterceptorOnReturn).UsesParameter(0));
+                                
         if (!needsEnter && !needsCatch && !needsExit && !needsParams && !needsReturns)
             return;
 
@@ -119,11 +129,11 @@ public partial class ModuleWeaver
 
         var arguments = hasMethod ? CreateArgumentArray(weaver) : null;
         var invocation = CreateMethodInfo(weaver);
-        var mEventArgs = hasMethod ? weaver.EmitLocal(Context.Finder.MethodInterceptionArgs, name: "methodEventArgs") : null;
+        var mEventArgs = hasMethod && needsMethodArgs ? weaver.EmitLocal(Context.Finder.MethodInterceptionArgs, name: "methodEventArgs") : null;
         
         if (hasMethod || hasReturn)
         {
-            if (hasMethod)
+            if (hasMethod && needsMethodArgs)
             {
                 il.Emit(method.IsStatic ? Codes.Null : Codes.This);
                 il.Emit(Codes.Load(arguments));
@@ -146,7 +156,7 @@ public partial class ModuleWeaver
 
         if (hasParams && needsParams)
         {
-            var pEventArgs = weaver.EmitLocal(Context.Finder.ParameterInterceptionArgs);
+            var pEventArgs = needsParamArgs ? weaver.EmitLocal(Context.Finder.ParameterInterceptionArgs) : null;
 
             for (int i = 0, count = pInterceptors.Length; i < count; i++)
             {
@@ -159,22 +169,33 @@ public partial class ModuleWeaver
                     var pVariable = new Variable(prm);
                     var pInfo = CreateParameterInfo(weaver, prm);
 
-                    il.Emit(method.IsStatic ? Codes.Null : Codes.This);
-                    il.Emit(Codes.Load(pInfo));
-                    il.Emit(Codes.Arg(pVariable));
-                    il.Emit(Codes.Box(prm.ParameterType));
-                    il.Emit(Codes.Create(Context.Finder.ParameterInterceptionArgsCtor));
-                    il.Emit(Codes.Store(pEventArgs));
+                    if (needsParamArgs)
+                    {
+                        il.Emit(method.IsStatic ? Codes.Null : Codes.This);
+                        il.Emit(Codes.Load(pInfo));
+                        il.Emit(Codes.Arg(pVariable));
+                        il.Emit(Codes.Box(prm.ParameterType));
+                        il.Emit(Codes.Create(Context.Finder.ParameterInterceptionArgsCtor));
+                        il.Emit(Codes.Store(pEventArgs));
+                    }
                     
                     il.Emit(Codes.ThisIf(inc));
                     il.Emit(Codes.Load(inc));
-                    il.Emit(Codes.Load(pEventArgs));
+
+                    if (needsParamArgs)
+                        il.Emit(Codes.Load(pEventArgs));
+                    else
+                        il.Emit(Codes.Null);
+
                     il.Emit(Codes.Invoke(Context.Finder.ParameterInterceptorOnEnter));
 
-                    il.Emit(Codes.Load(pEventArgs));
-                    il.Emit(Codes.Invoke(Context.Finder.ParameterInterceptionArgsValueGet));
-                    il.Emit(Codes.Unbox(prm.ParameterType));
-                    il.Emit(Codes.Store(pVariable));
+                    if (needsParamArgs)
+                    {
+                        il.Emit(Codes.Load(pEventArgs));
+                        il.Emit(Codes.Invoke(Context.Finder.ParameterInterceptionArgsValueGet));
+                        il.Emit(Codes.Unbox(prm.ParameterType));
+                        il.Emit(Codes.Store(pVariable));
+                    }
                 }
             }
         }
@@ -192,12 +213,20 @@ public partial class ModuleWeaver
                     {
                         il.Emit(Codes.ThisIf(inc));
                         il.Emit(Codes.Load(inc));
-                        il.Emit(Codes.Load(mEventArgs));
+
+                        if (needsMethodArgs)
+                            il.Emit(Codes.Load(mEventArgs));
+                        else
+                            il.Emit(Codes.Null);
+
                         il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnEnter));
 
-                        il.Emit(Codes.Load(mEventArgs));
-                        il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                        il.Emit(Codes.IfTrue(cancel));
+                        if (needsMethodArgs)
+                        {
+                            il.Emit(Codes.Load(mEventArgs));
+                            il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
+                            il.Emit(Codes.IfTrue(cancel));
+                        }
                     }
                 }
             }
@@ -219,7 +248,12 @@ public partial class ModuleWeaver
                     {
                         il.Emit(Codes.ThisIf(inc));
                         il.Emit(Codes.Load(inc));
-                        il.Emit(Codes.Load(mEventArgs));
+
+                        if (needsMethodArgs)
+                            il.Emit(Codes.Load(mEventArgs));
+                        else
+                            il.Emit(Codes.Null);
+
                         il.Emit(Codes.Load(exception));
                         il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnException));
                     }
@@ -234,7 +268,7 @@ public partial class ModuleWeaver
 
             if (hasMethod)
             {
-                if (result != null)
+                if (result != null && needsMethodArgs)
                 {
                     il.Emit(Codes.Load(mEventArgs));
                     il.Emit(Codes.Load(result));
@@ -253,12 +287,20 @@ public partial class ModuleWeaver
                         {
                             il.Emit(Codes.ThisIf(inc));
                             il.Emit(Codes.Load(inc));
-                            il.Emit(Codes.Load(mEventArgs));
+
+                            if (needsMethodArgs)
+                                il.Emit(Codes.Load(mEventArgs));
+                            else
+                                il.Emit(Codes.Null);
+
                             il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnExit));
 
-                            il.Emit(Codes.Load(mEventArgs));
-                            il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                            il.Emit(Codes.IfTrue(cancel));
+                            if (needsMethodArgs)
+                            {
+                                il.Emit(Codes.Load(mEventArgs));
+                                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
+                                il.Emit(Codes.IfTrue(cancel));
+                            }
                         }
                     }
                 }
@@ -268,14 +310,17 @@ public partial class ModuleWeaver
 
             if (hasReturn && needsReturns && result != null)
             {
-                var rEventArgs = il.EmitLocal(Context.Finder.MethodReturnInterceptionArgs);
+                var rEventArgs = needsReturnsArgs ? il.EmitLocal(Context.Finder.MethodReturnInterceptionArgs) : null;
 
-                il.Emit(method.IsStatic ? Codes.Null : Codes.This);
-                il.Emit(Codes.Load(result));
-                il.Emit(Codes.Box(result.Type));
-                il.Emit(Codes.Load(invocation));
-                il.Emit(Codes.Create(Context.Finder.MethodReturnInterceptionArgsCtor));
-                il.Emit(Codes.Store(rEventArgs));
+                if (needsReturnsArgs)
+                {
+                    il.Emit(method.IsStatic ? Codes.Null : Codes.This);
+                    il.Emit(Codes.Load(result));
+                    il.Emit(Codes.Box(result.Type));
+                    il.Emit(Codes.Load(invocation));
+                    il.Emit(Codes.Create(Context.Finder.MethodReturnInterceptionArgsCtor));
+                    il.Emit(Codes.Store(rEventArgs));
+                }
 
                 for (int i = 0, count = rInterceptors.Length; i < count; i++)
                 {
@@ -286,22 +331,32 @@ public partial class ModuleWeaver
                     {
                         il.Emit(Codes.ThisIf(inc));
                         il.Emit(Codes.Load(inc));
-                        il.Emit(Codes.Load(rEventArgs));
+
+                        if (needsReturnsArgs)
+                            il.Emit(Codes.Load(rEventArgs));
+                        else
+                            il.Emit(Codes.Null);
+
                         il.Emit(Codes.Invoke(Context.Finder.MethodReturnInterceptorOnReturn));
                     }
                 }
 
-                il.Emit(Codes.Load(rEventArgs));
-                il.Emit(Codes.Invoke(Context.Finder.MethodReturnInterceptionArgsValueGet));
-                il.Emit(Codes.Unbox(result.Type));
-                il.Emit(Codes.Store(result));
+                if (needsReturnsArgs)
+                {
+                    il.Emit(Codes.Load(rEventArgs));
+                    il.Emit(Codes.Invoke(Context.Finder.MethodReturnInterceptionArgsValueGet));
+                    il.Emit(Codes.Unbox(result.Type));
+                    il.Emit(Codes.Store(result));
+                }
             }
 
             il.EndTry();
 
-            if (hasMethod && result != null)
+            if (hasMethod && needsMethodArgs && result != null)
             {
                 il.Insert = CodeInsertion.After;
+
+                il.Emit(Codes.Nop);
                 il.Emit(Codes.Load(mEventArgs));
                 il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnGet));
                 il.Emit(Codes.Unbox(weaver.Target.ReturnType));

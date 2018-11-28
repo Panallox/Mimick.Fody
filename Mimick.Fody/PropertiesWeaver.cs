@@ -67,6 +67,11 @@ public partial class ModuleWeaver
         if (field != null)
             backing = new Variable(field.Resolve());
 
+        if (field != null)
+        {
+            LogInfo($"Property '{property.Name}' found backing field '{field.FullName}'");
+        }
+
         if (getter != null && hasGetter)
         {
             var il = getter.GetIL();
@@ -120,7 +125,7 @@ public partial class ModuleWeaver
                 il.Emit(Codes.Load(args));
                 il.Emit(Codes.Invoke(Context.Finder.PropertyGetInterceptorOnGet));
             }
-
+            
             il.Position = leave;
             il.Finally();
 
@@ -150,7 +155,7 @@ public partial class ModuleWeaver
                 il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsIsDirtyGet));
                 il.Emit(Codes.IfFalse(unchanged));
                 
-                if (!setter.Target.IsStatic)
+                if (!getter.Target.IsStatic)
                     il.Emit(Codes.This);
 
                 il.Emit(Codes.Load(args));

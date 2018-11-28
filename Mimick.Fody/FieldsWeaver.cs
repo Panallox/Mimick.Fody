@@ -61,7 +61,13 @@ public partial class ModuleWeaver
             {
                 var reference = i.Operand as FieldReference ?? i.Operand as FieldDefinition;
                                 
-                if (reference == null || (!reference.IsGenericMatch(path) && !reference.IsGenericMatch(field.FullName)))
+                if (reference == null)
+                    continue;
+
+                if (reference.Name.EndsWith(">k__BackingField"))
+                    continue;
+
+                if (!reference.IsGenericMatch(path) && !reference.IsGenericMatch(field.FullName))
                     continue;
 
                 var declaring = reference.DeclaringType;

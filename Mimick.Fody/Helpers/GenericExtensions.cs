@@ -73,7 +73,7 @@ static class GenericExtensions
     public static bool IsGenericMatch(this FieldReference field, string path)
     {
         var parts = new[] { field.FullName, path };
-
+        
         for (int i = 0; i < 2; i++)
         {
             var start = parts[i].IndexOf('<');

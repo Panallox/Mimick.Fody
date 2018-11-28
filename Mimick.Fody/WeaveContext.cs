@@ -22,7 +22,7 @@ namespace Mimick.Fody
         }
 
         #region Properties
-
+        
         /// <summary>
         /// Gets or sets the candidate types which have been identified as eligible for scanning.
         /// </summary>

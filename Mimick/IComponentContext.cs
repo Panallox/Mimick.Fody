@@ -94,6 +94,14 @@ namespace Mimick
         IComponentRegistration Register(Type interfaceType, Type concreteType, params string[] names);
 
         /// <summary>
+        /// Register a provided object instance within the component provider as an implementation of the provided
+        /// interface type, using the default singleton lifetime.
+        /// </summary>
+        /// <typeparam name="TInterface">The interface type.</typeparam>
+        /// <param name="instance">The object instance.</param>
+        void Register<TInterface>(object instance);
+
+        /// <summary>
         /// Register a provided object instance within the component provider using the default singleton lifetime.
         /// </summary>
         /// <param name="instance">The object instance.</param>

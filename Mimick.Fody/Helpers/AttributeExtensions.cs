@@ -80,7 +80,13 @@ static class AttributeExtensions
 
     public static bool HasAttribute(this ParameterDefinition p, TypeReference type) => p.CustomAttributes.Any(a => a.HasInterface(type));
 
-    public static bool HasRequiredMethod(this CustomAttribute a, string method)
+    public static bool HasRequiredMethod(this CustomAttribute a, MethodReference method)
+    {
+        var def = method as MethodDefinition ?? method.Resolve();
+        return HasRequiredMethod(a, method.Name, returns: def.ReturnType, parameters: def.Parameters.Select(p => p.ParameterType).ToArray(), generics: def.GenericParameters.ToArray());
+    }
+
+    public static bool HasRequiredMethod(this CustomAttribute a, string method, TypeReference returns = null, TypeReference[] parameters = null, GenericParameter[] generics = null)
     {
         var options = a.GetAttribute(ModuleWeaver.GlobalContext.Finder.CompilationOptionsAttribute);
         var inlining = options != null ? options.GetProperty("Inlining", notFound: InlineTruncate) : InlineTruncate;
@@ -88,11 +94,11 @@ static class AttributeExtensions
         if ((inlining & InlineTruncate) != InlineTruncate)
             return true;
 
-        var match = a.AttributeType.GetMethod(method);
+        var match = a.AttributeType.GetMethod(method, returns: returns, parameters: parameters, generics: generics);
 
         if (match == null)
             return false;
-
+        
         return match.HasBody();
     }
 }
