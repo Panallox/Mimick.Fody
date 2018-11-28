@@ -100,10 +100,7 @@ static class MethodExtensions
 
         if (method.ReturnType.FullName == typeof(void).FullName)
             return false;
-
-        if (method.ReturnType.FullName.StartsWith(typeof(Task).FullName) && !method.ReturnType.IsGenericInstance)
-            return false;
-
+        
         return true;
     }
 

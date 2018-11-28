@@ -19,6 +19,8 @@ namespace Mimick
         public static readonly Type Int32 = typeof(int);
         public static readonly Type Int64 = typeof(long);
         public static readonly Type Nullable = typeof(Nullable<>);
+        public static readonly Type Object = typeof(object);
+        public static readonly Type ObjectArray = typeof(object[]);
         public static readonly Type String = typeof(string);
         public static readonly Type UInt8 = typeof(byte);
         public static readonly Type UInt8Array = typeof(byte[]);

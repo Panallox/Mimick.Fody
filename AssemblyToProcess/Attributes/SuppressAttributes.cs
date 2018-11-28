@@ -41,5 +41,11 @@ namespace AssemblyToProcess.Attributes
         /// <returns>The default value.</returns>
         [Suppress]
         public int ThrowAndSuppressExceptionAndReturnDefault() => throw new Exception();
+
+        [Suppress]
+        public async Task ThrowAndSuppressExceptionAsync()
+        {
+            await Task.Run(() => throw new Exception());
+        }
     }
 }

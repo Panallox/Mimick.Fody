@@ -97,6 +97,20 @@ namespace AssemblyToProcess.Attributes
         /// <param name="text">The text.</param>
         /// <returns>The computed text.</returns>
         public string GetComputedString([Value("'Testing ' + (100 / 5 + 10)")] string text = null) => $"{text} Result";
+
+        /// <summary>
+        /// Gets a value using a computed value from the parameter value attribute asynchronously.
+        /// </summary>
+        /// <param name="number">The number.</param>
+        /// <returns>The computer number.</returns>
+        public async Task<int> GetComputedNumberAsync([Value("10 + 50 / 2 - 100 / 5")] int number = 0) => await Task.Run(() => number * 4);
+
+        /// <summary>
+        /// Gets a value using a computed value from the parameter value attribute asynchronously.
+        /// </summary>
+        /// <param name="text">The text.</param>
+        /// <returns>The computed text.</returns>
+        public async Task<string> GetComputedStringAsync([Value("'Testing ' + (100 / 5 + 10)")] string text = null) => await Task.Run(() => $"{text} Result");
     }
     
     /// <summary>

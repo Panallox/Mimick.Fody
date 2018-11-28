@@ -42,5 +42,15 @@ namespace Mimick.Tests.Attributes
 
             Assert.AreEqual(target.CachedArgument(123), target.CachedArgument(123));
         }
+
+        [Test]
+        public void ShouldReturnSameValueWhenCachedWithDifferentByRefArgument()
+        {
+            int a = 1;
+            int b = 2;
+            var target = new CachedAttributes();
+
+            Assert.AreEqual(target.CachedIgnoringByRef(10, ref a), target.CachedIgnoringByRef(10, ref b));
+        }
     }
 }

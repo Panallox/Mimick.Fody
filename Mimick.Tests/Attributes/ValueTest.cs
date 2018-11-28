@@ -57,5 +57,19 @@ namespace Mimick.Tests.Attributes
 
         [Test]
         public void ShouldReturnValidConfiguredString() => Assert.AreEqual("Hello", target.ConfiguredString);
+
+        [Test]
+        public async Task ShouldReturnValidAsyncMethodNumberWhenComputed()
+        {
+            var result = await target.GetComputedNumberAsync();
+            Assert.AreEqual(60, result);
+        }
+
+        [Test]
+        public async Task ShouldReturnValidAsyncMethodStringWhenComputed()
+        {
+            var result = await target.GetComputedStringAsync();
+            Assert.AreEqual("Testing 30 Result", result);
+        }
     }
 }

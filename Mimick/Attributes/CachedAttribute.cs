@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,7 +15,7 @@ namespace Mimick
     /// </summary>
     [CompilationOptions(Scope = AttributeScope.MultiInstanced)]
     [AttributeUsage(AttributeTargets.Method)]
-    public sealed class CachedAttribute : Attribute, IMethodInterceptor
+    public sealed class CachedAttribute : Attribute, IMemberAware, IMethodInterceptor, IRequireInitialization
     {
         /// <summary>
         /// The managed encryption instance used to generate hashes of parameter values.
@@ -22,6 +23,8 @@ namespace Mimick
         private static readonly SHA256Managed sha256 = new SHA256Managed();
 
         private readonly ICache<string, object> cache;
+
+        private bool[] accepts;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CachedAttribute" /> class.
@@ -52,6 +55,36 @@ namespace Mimick
                 MaximumCount = maxCount,
                 MaximumTime = TimeSpan.FromMilliseconds(maxTimeMilliseconds)
             };
+        }
+
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets the member that the attribute was associated with.
+        /// </summary>
+        public MemberInfo Member
+        {
+            get; set;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Initialize the attribute.
+        /// </summary>
+        public void Initialize()
+        {
+            var method = Member as MethodInfo;
+
+            if (method == null || method.IsConstructor)
+                throw new ArgumentException($"Cannot initialize a cache against a non-method");
+
+            var parameters = method.GetParameters();
+
+            if (parameters == null)
+                accepts = new bool[0];
+            else
+                accepts = parameters.Select(p => !p.IsOut && !p.ParameterType.IsByRef).ToArray();
         }
 
         /// <summary>
@@ -92,11 +125,11 @@ namespace Mimick
         /// <summary>
         /// Gets a unique hash for the provided parameter collection.
         /// </summary>
-        /// <param name="parameters">The parameter values.</param>
+        /// <param name="values">The parameter values.</param>
         /// <returns>The unique hash.</returns>
-        private string GetHash(object[] parameters)
+        private string GetHash(object[] values)
         {
-            var merged = Encoding.UTF8.GetBytes(string.Join("_", parameters.Select(p => p?.ToString()?.Replace('_', '.') ?? "null")));
+            var merged = Encoding.UTF8.GetBytes(string.Join("_", values.Where((p, i) => accepts[i]).Select(p => p?.ToString()?.Replace('_', '.') ?? "null")));
             var hash = sha256.ComputeHash(merged);
             return Convert.ToBase64String(hash);
         }

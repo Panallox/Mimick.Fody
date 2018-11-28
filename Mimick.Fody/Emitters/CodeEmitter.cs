@@ -103,6 +103,13 @@ namespace Mimick.Fody.Weavers
         /// <param name="type">The variable type.</param>
         /// <param name="name">The variable name.</param>
         public Variable EmitLocal(TypeReference type, string name = null) => Parent.EmitLocal(type, name);
+
+        /// <summary>
+        /// Emit code within the method body.
+        /// </summary>
+        /// <param name="code">The code.</param>
+        /// <returns></returns>
+        public CodeEmitter Emit(OpCode code) => Emit(Instruction.Create(code));
         
         /// <summary>
         /// Emit code within the method body.

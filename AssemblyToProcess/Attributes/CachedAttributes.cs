@@ -53,5 +53,15 @@ namespace AssemblyToProcess.Attributes
         /// <returns></returns>
         [Cached(int.MaxValue, 10000)]
         public string CachedTimeLimit(int value) => $"Value {value}";
+
+        /// <summary>
+        /// A cached method which will return a cached value when the provided argument is the same, excluding
+        /// the by-reference argument.
+        /// </summary>
+        /// <param name="value">The argument value.</param>
+        /// <param name="value2">The argument reference value.</param>
+        /// <returns></returns>
+        [Cached]
+        public string CachedIgnoringByRef(int value, ref int value2) => $"Value {value}";
     }
 }

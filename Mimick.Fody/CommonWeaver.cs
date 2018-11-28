@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 /// <summary>
 /// A class containing common weaving methods shared across the member weavers.
@@ -33,6 +34,38 @@ public partial class ModuleWeaver
     /// </summary>
     private TypeEmitter singletons;
 
+    public void CopyArgumentArrayToReferences(MethodEmitter method, Variable array)
+    {
+        var parameters = method.Target.Parameters;
+        var count = parameters.Count;
+
+        var il = method.GetIL();
+
+        for (int i = 0; i < count; i++)
+        {
+            var p = parameters[i];
+            var type = p.ParameterType;
+
+            if (!type.IsByReference)
+                continue;
+
+            var spec = (TypeSpecification)type;
+            var unboxing = true;
+
+            il.Emit(Codes.Arg(p));
+            il.Emit(Codes.Load(array));
+            il.Emit(Codes.Int(i));
+            il.Emit(Codes.LoadArray);
+            
+            switch (spec.ElementType.MetadataType)
+            {
+                case MetadataType.Boolean:
+                case MetadataType.SByte:
+                    il.Emit()
+            }
+        }
+    }
+
     /// <summary>
     /// Create an array variable containing the arguments of the method invocation.
     /// </summary>
@@ -54,11 +87,71 @@ public partial class ModuleWeaver
         for (int i = 0; i < count; i++)
         {
             var p = parameters[i];
+            var type = p.ParameterType;
 
             il.Emit(Codes.Load(array));
             il.Emit(Codes.Int(i));
             il.Emit(Codes.Arg(p));
-            il.Emit(Codes.Box(p.ParameterType));
+
+            if (type.IsByReference)
+            {
+                var spec = (TypeSpecification)type;
+                var boxing = true;
+                
+                switch (spec.ElementType.MetadataType)
+                {
+                    case MetadataType.Boolean:
+                    case MetadataType.SByte:
+                        il.Emit(OpCodes.Ldind_I1);
+                        break;
+                    case MetadataType.Int16:
+                        il.Emit(OpCodes.Ldind_I2);
+                        break;
+                    case MetadataType.Int32:
+                        il.Emit(OpCodes.Ldind_I4);
+                        break;
+                    case MetadataType.Int64:
+                    case MetadataType.UInt64:
+                        il.Emit(OpCodes.Ldind_I8);
+                        break;
+                    case MetadataType.Byte:
+                        il.Emit(OpCodes.Ldind_U1);
+                        break;
+                    case MetadataType.UInt16:
+                        il.Emit(OpCodes.Ldind_U2);
+                        break;
+                    case MetadataType.UInt32:
+                        il.Emit(OpCodes.Ldind_U4);
+                        break;
+                    case MetadataType.Single:
+                        il.Emit(OpCodes.Ldind_R4);
+                        break;
+                    case MetadataType.Double:
+                        il.Emit(OpCodes.Ldind_R8);
+                        break;
+                    case MetadataType.IntPtr:
+                    case MetadataType.UIntPtr:
+                        il.Emit(OpCodes.Ldind_I);
+                        break;
+                    default:
+                        if (spec.ElementType.IsValueType)
+                            il.Emit(Instruction.Create(OpCodes.Ldobj, spec.ElementType));
+                        else
+                        {
+                            il.Emit(OpCodes.Ldind_Ref);
+                            boxing = false;
+                        }
+                        break;
+                }
+
+                if (boxing)
+                    il.Emit(Codes.Box(spec.ElementType));
+            }
+            else
+            {
+                il.Emit(Codes.Box(p.ParameterType));
+            }
+
             il.Emit(Codes.StoreArray);
         }
 

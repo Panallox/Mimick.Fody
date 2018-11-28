@@ -67,11 +67,6 @@ public partial class ModuleWeaver
         if (field != null)
             backing = new Variable(field.Resolve());
 
-        if (field != null)
-        {
-            LogInfo($"Property '{property.Name}' found backing field '{field.FullName}'");
-        }
-
         if (getter != null && hasGetter)
         {
             var il = getter.GetIL();
