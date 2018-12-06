@@ -33,7 +33,43 @@ public partial class ModuleWeaver
     /// An emitter for the container which will hold all singleton references.
     /// </summary>
     private TypeEmitter singletons;
+        
+    /// <summary>
+    /// Copies the values of an array of parameter values into the corresponding parameters.
+    /// </summary>
+    /// <param name="method">The method.</param>
+    /// <param name="array">The array.</param>
+    public void CopyArgumentArrayToParameters(MethodEmitter method, Variable array)
+    {
+        var parameters = method.Target.Parameters;
+        var count = parameters.Count;
 
+        var il = method.GetIL();
+
+        for (int i = 0; i < count; i++)
+        {
+            var p = parameters[i];
+            var variable = new Variable(p);
+            var type = p.ParameterType;
+
+            if (type.IsByReference || p.IsOut)
+                continue;
+
+            il.Emit(Codes.Load(array));
+            il.Emit(Codes.Int(i));
+            il.Emit(Codes.LoadArray);
+            il.Emit(Codes.Unbox(type));
+            il.Emit(Codes.Store(variable));
+        }
+
+        CopyArgumentArrayToReferences(method, array);
+    }
+    
+    /// <summary>
+    /// Copies the values of an array of parameter values into the required references.
+    /// </summary>
+    /// <param name="method">The method.</param>
+    /// <param name="array">The array.</param>
     public void CopyArgumentArrayToReferences(MethodEmitter method, Variable array)
     {
         var parameters = method.Target.Parameters;
@@ -46,7 +82,7 @@ public partial class ModuleWeaver
             var p = parameters[i];
             var type = p.ParameterType;
 
-            if (!type.IsByReference)
+            if (!type.IsByReference || p.IsOut)
                 continue;
 
             var spec = (TypeSpecification)type;
@@ -56,13 +92,54 @@ public partial class ModuleWeaver
             il.Emit(Codes.Load(array));
             il.Emit(Codes.Int(i));
             il.Emit(Codes.LoadArray);
+
+            var code = OpCodes.Nop;
             
             switch (spec.ElementType.MetadataType)
             {
                 case MetadataType.Boolean:
                 case MetadataType.SByte:
-                    il.Emit()
+                case MetadataType.Byte:
+                    code = OpCodes.Stind_I1;
+                    break;
+                case MetadataType.Int16:
+                case MetadataType.UInt16:
+                    code = OpCodes.Stind_I2;
+                    break;
+                case MetadataType.Int32:
+                case MetadataType.UInt32:
+                    code = OpCodes.Stind_I4;
+                    break;
+                case MetadataType.Int64:
+                case MetadataType.UInt64:
+                    code = OpCodes.Stind_I8;
+                    break;
+                case MetadataType.Single:
+                    code = OpCodes.Stind_R4;
+                    break;
+                case MetadataType.Double:
+                    code = OpCodes.Stind_R8;
+                    break;
+                case MetadataType.IntPtr:
+                case MetadataType.UIntPtr:
+                    code = OpCodes.Stind_I;
+                    break;
+                default:
+                    if (spec.ElementType.IsValueType)
+                        il.Emit(Instruction.Create(OpCodes.Stobj, spec.ElementType));
+                    else
+                    {
+                        code = OpCodes.Stind_Ref;
+                        unboxing = false;
+                    }
+                    break;
             }
+
+            if (unboxing)
+                il.Emit(Codes.Unbox(spec.ElementType));
+
+            if (code != OpCodes.Nop)
+                il.Emit(code);
         }
     }
 
@@ -91,6 +168,22 @@ public partial class ModuleWeaver
 
             il.Emit(Codes.Load(array));
             il.Emit(Codes.Int(i));
+
+            if (p.IsOut)
+            {
+                var spec = (TypeSpecification)type;
+
+                if (spec.ElementType.IsValueType)
+                    il.Emit(Codes.Init(spec.ElementType));
+                else
+                {
+                    il.Emit(Codes.Null);
+                    il.Emit(Codes.StoreArray);
+                }
+
+                continue;
+            }
+
             il.Emit(Codes.Arg(p));
 
             if (type.IsByReference)
@@ -100,7 +193,6 @@ public partial class ModuleWeaver
                 
                 switch (spec.ElementType.MetadataType)
                 {
-                    case MetadataType.Boolean:
                     case MetadataType.SByte:
                         il.Emit(OpCodes.Ldind_I1);
                         break;
@@ -114,6 +206,7 @@ public partial class ModuleWeaver
                     case MetadataType.UInt64:
                         il.Emit(OpCodes.Ldind_I8);
                         break;
+                    case MetadataType.Boolean:
                     case MetadataType.Byte:
                         il.Emit(OpCodes.Ldind_U1);
                         break;

@@ -35,8 +35,8 @@ namespace Mimick.Aspect
         /// the individual argument values can be changed.
         /// </summary>
         /// <remarks>
-        /// The values assigned to the arguments array must match those defined against the method. If an invalid value is
-        /// assigned then the application will throw an exception.
+        /// The values assigned to the arguments array must match those defined against the method, and will not be copied
+        /// back to the method arguments unless the option <see cref="CompilationOptionsAttribute.CopyArguments"/> is enabled.
         /// </remarks>
         public object[] Arguments
         {

@@ -14,7 +14,7 @@ namespace Mimick
     /// <remarks>
     /// When applied at the method level, the injection will occur across all parameters of the method.
     /// </remarks>
-    [CompilationOptions(Scope = AttributeScope.Instanced)]
+    [CompilationOptions(Scope = AttributeScope.Instanced, CopyArguments = true)]
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property)]
     public sealed class AutowireAttribute : Attribute, IParameterInterceptor, IPropertyGetInterceptor
     {

@@ -64,6 +64,8 @@ public partial class ModuleWeaver
 
         var needsParamArgs = pAttributes.Any(m => m.Attribute.AttributeType.GetMethod(Context.Finder.ParameterInterceptorOnEnter).UsesParameter(0));
         var needsReturnsArgs = rAttributes.Any(m => m.AttributeType.GetMethod(Context.Finder.MethodReturnInterceptorOnReturn).UsesParameter(0));
+
+        var needsMethodCopyArgs = mAttributes.Any(m => m.GetAttribute(Context.Finder.CompilationOptionsAttribute)?.GetProperty("CopyArguments", notFound: false) ?? false);
                                 
         if (!needsEnter && !needsCatch && !needsExit && !needsParams && !needsReturns)
             return;
@@ -168,6 +170,7 @@ public partial class ModuleWeaver
                     var prm = parameters[j];
                     var pVariable = new Variable(prm);
                     var pInfo = CreateParameterInfo(weaver, prm);
+                    var needsCopyArgs = pAttributes[i].Attribute.GetAttribute(Context.Finder.CompilationOptionsAttribute)?.GetProperty("CopyArguments", notFound: false) ?? false;
 
                     if (needsParamArgs)
                     {
@@ -189,7 +192,7 @@ public partial class ModuleWeaver
 
                     il.Emit(Codes.Invoke(Context.Finder.ParameterInterceptorOnEnter));
 
-                    if (needsParamArgs)
+                    if (needsParamArgs && !prm.IsOut && needsCopyArgs)
                     {
                         il.Emit(Codes.Load(pEventArgs));
                         il.Emit(Codes.Invoke(Context.Finder.ParameterInterceptionArgsValueGet));
@@ -229,6 +232,9 @@ public partial class ModuleWeaver
                         }
                     }
                 }
+
+                if (needsMethodArgs && needsMethodCopyArgs && arguments != null)
+                    CopyArgumentArrayToParameters(weaver, arguments);
             }
 
             il.Position = leave;
@@ -351,11 +357,13 @@ public partial class ModuleWeaver
             }
 
             il.EndTry();
+            il.Insert = CodeInsertion.After;
+
+            if (hasMethod && arguments != null)
+                CopyArgumentArrayToReferences(weaver, arguments);
 
             if (hasMethod && needsMethodArgs && result != null)
             {
-                il.Insert = CodeInsertion.After;
-
                 il.Emit(Codes.Nop);
                 il.Emit(Codes.Load(mEventArgs));
                 il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnGet));

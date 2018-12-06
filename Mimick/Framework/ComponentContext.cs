@@ -144,8 +144,13 @@ namespace Mimick.Framework
                 {
                     var decoration = method.GetAttributeInherited<ComponentAttribute>();
                     var value = method.Invoke(instance, null);
+                    var extra = (string)null;
 
-                    Register(value, new[] { decoration.Name });
+                    if (method.Name.Length > 3 &&
+                        method.Name.StartsWith("get", StringComparison.InvariantCultureIgnoreCase))
+                        extra = method.Name.Substring(3);
+
+                    Register(value, decoration.Name, extra);
                 }
 
                 foreach (var property in properties)
@@ -153,7 +158,7 @@ namespace Mimick.Framework
                     var decoration = property.GetAttributeInherited<ComponentAttribute>();
                     var value = property.GetValue(instance);
 
-                    Register(value, new[] { decoration.Name });
+                    Register(value, decoration.Name, property.Name);
                 }
             }
         }
@@ -440,6 +445,9 @@ namespace Mimick.Framework
         /// </returns>
         public object Resolve(Type type, string name)
         {
+            if (TypeHelper.Nullable.IsAssignableFrom(type))
+                type = Nullable.GetUnderlyingType(type);
+
             if (name != null && namedEntries.TryGetValue(name, out var named))
                 return named.Designer.GetComponent();
 

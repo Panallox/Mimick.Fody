@@ -107,7 +107,7 @@ namespace Mimick
         /// </summary>
         /// <param name="e">The interception event arguments.</param>
         /// <param name="ex">The intercepted exception.</param>
-        public void OnException(MethodInterceptionArgs e, Exception ex) => throw ex;
+        public void OnException(MethodInterceptionArgs e, Exception ex) { }
         
         /// <summary>
         /// Called when a method has been invoked, and executes after the method body.

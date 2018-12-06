@@ -15,6 +15,16 @@ namespace Mimick.Aspect
         #region Properties
 
         /// <summary>
+        /// Gets or sets whether, when used against a method or parameter interceptor, any updates to the arguments of the invocation should
+        /// be copied across to the arguments of the method before the execution of the method body. If enabled, updates to the <see cref="MethodInterceptionArgs.Arguments"/>
+        /// values or an update to the <see cref="ParameterInterceptionArgs.Value"/> will be reflected on the method arguments.
+        /// </summary>
+        public bool CopyArguments
+        {
+            get; set;
+        }
+        
+        /// <summary>
         /// Gets or sets how an aspect attribute should be inlined during compile-time. If not specified, defaults to <see cref="Inlining.Truncate"/>.
         /// </summary>
         /// <remarks>

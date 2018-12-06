@@ -15,7 +15,7 @@ namespace Mimick
     /// The value can be anything ranging from: a basic, constant value ("text", "1234"); a complex value which is computed during runtime
     /// when the value is resolved ("2 * 3 * 4", "'Test ' + 1"); or a value which contains a configuration which must be resolved ("{my.configuration}")
     /// </remarks>
-    [CompilationOptions(Scope = AttributeScope.MultiInstanced)]
+    [CompilationOptions(Scope = AttributeScope.MultiInstanced, CopyArguments = true)]
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property)]
     public sealed class ValueAttribute : Attribute, IParameterInterceptor, IPropertyGetInterceptor
     {

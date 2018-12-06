@@ -48,8 +48,8 @@ namespace Mimick.Aspect
         /// Gets or sets the value of the argument which was supplied into the method during invocation.
         /// </summary>
         /// <remarks>
-        /// The value assigned to this property must match the type of the parameter. If an invalid value is assigned
-        /// then the application will throw an exception.
+        /// The value assigned to this property must match the type of the parameter, and will not be copied
+        /// back to the method arguments unless the option <see cref="CompilationOptionsAttribute.CopyArguments"/> is enabled.
         /// </remarks>
         public object Value
         {
