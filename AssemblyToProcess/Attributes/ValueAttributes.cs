@@ -49,6 +49,18 @@ namespace AssemblyToProcess.Attributes
         public string ConfiguredString { get; set; }
 
         /// <summary>
+        /// Gets a number processed from the associated value attribute sourced from a JSON document.
+        /// </summary>
+        [Value("{Values.JsonNumber}")]
+        public int JsonNumber { get; set; }
+
+        /// <summary>
+        /// Gets a string processed from the associated value attribute sourced from a JSON document.
+        /// </summary>
+        [Value("{Values.JsonString}")]
+        public string JsonString { get; set; }
+
+        /// <summary>
         /// Gets a simple number processed from the associated value attribute.
         /// </summary>
         [Value("10")]

@@ -111,6 +111,14 @@ public partial class ModuleWeaver
         foreach (var attribute in mAttributes)
             weaver.Target.CustomAttributes.Remove(attribute);
 
+        foreach (var attribute in pAttributes)
+        {
+            if (attribute.Index == -1)
+                weaver.Target.CustomAttributes.Remove(attribute.Attribute);
+            else
+                weaver.Target.Parameters[attribute.Index].CustomAttributes.Remove(attribute.Attribute);
+        }
+
         foreach (var attribute in rAttributes)
             weaver.Target.MethodReturnType.CustomAttributes.Remove(attribute);
 

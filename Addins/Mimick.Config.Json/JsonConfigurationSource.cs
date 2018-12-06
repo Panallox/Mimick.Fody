@@ -1,69 +1,59 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Threading;
-using YamlDotNet.RepresentationModel;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Mimick
 {
     /// <summary>
-    /// A configuration source class which loads values from a YAML document.
+    /// A configuration source class which loads values from a JSON document.
     /// </summary>
-    public sealed class YamlConfigurationSource : IConfigurationSource
+    public sealed class JsonConfigurationSource : IConfigurationSource
     {
+        private readonly JsonSerializer serializer;
         private readonly ReaderWriterLockSlim sync;
 
-        private YamlDocument document;
+        private JObject document;
         private FileInfo path;
-        private YamlSource source;
+        private JsonSource source;
         private Stream stream;
         private long streamPosition;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="YamlConfigurationSource"/> class.
-        /// </summary>
-        /// <param name="doc">The document.</param>
-        public YamlConfigurationSource(YamlDocument doc)
-        {
-            document = doc ?? throw new ArgumentNullException("doc");
-            source = YamlSource.Document;
-            sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="YamlConfigurationSource"/> class.
+        /// Initializes a new instance of the <see cref="JsonConfigurationSource"/> class.
         /// </summary>
         /// <param name="filename">The full path to the document.</param>
-        public YamlConfigurationSource(string filename)
+        public JsonConfigurationSource(string filename)
         {
             path = new FileInfo(filename ?? throw new ArgumentNullException("filename"));
-            source = YamlSource.File;
-            sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+            serializer = new JsonSerializer();
+            source = JsonSource.File;
+            sync = new ReaderWriterLockSlim();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="YamlConfigurationSource"/> class.
+        /// Initializes a new instance of the <see cref="JsonConfigurationSource"/> class.
         /// </summary>
         /// <param name="src">The source.</param>
-        public YamlConfigurationSource(Stream src)
+        public JsonConfigurationSource(Stream src)
         {
             if (src == null)
                 throw new ArgumentNullException("src");
             if (!src.CanRead)
                 throw new IOException("Cannot read content from the provided stream");
 
-            source = YamlSource.Stream;
+            serializer = new JsonSerializer();
+            source = JsonSource.Stream;
             stream = src;
             streamPosition = src.Position;
             sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         }
 
-        /// <summary>
-        /// Finalizes an instance of the <see cref="YamlConfigurationSource"/> class.
-        /// </summary>
-        ~YamlConfigurationSource() => Dispose(false);
-        
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
@@ -79,7 +69,7 @@ namespace Mimick
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         private void Dispose(bool disposing)
         {
-            if (disposing && source == YamlSource.Stream && stream != null)
+            if (disposing && source == JsonSource.Stream && stream != null)
             {
                 try { stream.Dispose(); }
                 catch { }
@@ -89,6 +79,7 @@ namespace Mimick
         /// <summary>
         /// Called when the configuration source has been requested and must prepare for resolution.
         /// </summary>
+        /// <exception cref="ConfigurationException"></exception>
         public void Load()
         {
             sync.EnterWriteLock();
@@ -97,30 +88,26 @@ namespace Mimick
             {
                 switch (source)
                 {
-                    case YamlSource.File:
+                    case JsonSource.File:
                         using (var reader = new StreamReader(path.FullName))
-                        using (var content = new StringReader(reader.ReadToEnd()))
+                        using (var content = new JsonTextReader(reader))
                         {
-                            var yaml = new YamlStream();
-                            yaml.Load(content);
-                            document = yaml.Documents[0];
+                            document = serializer.Deserialize<JObject>(content);
                         }
                         break;
 
-                    case YamlSource.Stream:
+                    case JsonSource.Stream:
                         using (var reader = new StreamReader(stream))
-                        using (var content = new StringReader(reader.ReadToEnd()))
+                        using (var content = new JsonTextReader(reader))
                         {
-                            var yaml = new YamlStream();
-                            yaml.Load(content);
-                            document = yaml.Documents[0];
+                            document = serializer.Deserialize<JObject>(content);
                         }
                         break;
                 }
             }
             catch (Exception ex)
             {
-                throw new ConfigurationException($"Cannot load a {source.ToString().ToLower()} YAML document", ex);
+                throw new ConfigurationException($"Cannot load a {source.ToString().ToLower()} JSON document", ex);
             }
             finally
             {
@@ -135,11 +122,11 @@ namespace Mimick
         {
             switch (source)
             {
-                case YamlSource.File:
+                case JsonSource.File:
                     Load();
                     break;
 
-                case YamlSource.Stream:
+                case JsonSource.Stream:
                     if (stream.CanSeek)
                     {
                         stream.Seek(streamPosition, SeekOrigin.Begin);
@@ -163,30 +150,20 @@ namespace Mimick
             try
             {
                 var parts = name.Split('.');
-                var current = document.RootNode;
+                var current = (JToken)document;
 
                 foreach (var part in parts)
                 {
-                    try
-                    {
-                        var key = new YamlScalarNode(part);
-                        var node = current[key];
-
-                        if (node == null)
-                            return null;
-
-                        current = node;
-                    }
-                    catch (KeyNotFoundException)
-                    {
+                    if (current.Type != JTokenType.Object)
                         return null;
-                    }
+
+                    current = current[part];
+
+                    if (current == null)
+                        return null;
                 }
 
-                if (current.NodeType == YamlNodeType.Scalar)
-                    return ((YamlScalarNode)current).Value;
-
-                throw new ConfigurationException($"Cannot process the value of a YAML configuration", name);
+                return current.Value<string>();
             }
             finally
             {
@@ -205,15 +182,10 @@ namespace Mimick
         public bool TryResolve(string name, out string value) => (value = Resolve(name)) != null;
 
         /// <summary>
-        /// Indicates the source of a YAML configuration source.
+        /// Indicates the source of a JSON configuration source.
         /// </summary>
-        private enum YamlSource
+        private enum JsonSource
         {
-            /// <summary>
-            /// The configuration source was provided a concrete YAML document.
-            /// </summary>
-            Document,
-
             /// <summary>
             /// The configuration source was provided a file path.
             /// </summary>

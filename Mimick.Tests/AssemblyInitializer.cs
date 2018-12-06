@@ -35,6 +35,12 @@ namespace Mimick.Tests
                 .ConfigurationContext
                 .Register(new YamlConfigurationSource(stream));
 
+            stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Mimick.Tests.Configuration.json");
+
+            framework
+                .ConfigurationContext
+                .Register(new JsonConfigurationSource(stream));
+
             framework
                 .Initialize();
         }

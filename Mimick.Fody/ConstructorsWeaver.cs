@@ -44,7 +44,7 @@ public partial class ModuleWeaver
 
             var after = init.GetAttribute(Context.Finder.IInjectAfterInitializer);
             var before = init.GetAttribute(Context.Finder.IInjectBeforeInitializer);
-
+            
             if (init.HasGenericParameters)
                 throw new NotSupportedException($"Cannot use constructor injection against a generic method");
 

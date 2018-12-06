@@ -11,16 +11,19 @@
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Configuration.json" />
     <None Remove="Configuration.xml" />
     <None Remove="Configuration.yaml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Configuration.json" />
     <EmbeddedResource Include="Configuration.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Configuration.yaml" />
   </ItemGroup>
   <ItemGroup>
+	<ProjectReference Include="..\Addins\Mimick.Config.Json\Mimick.Config.Json.csproj" />
 	<ProjectReference Include="..\Addins\Mimick.Config.Yaml\Mimick.Config.Yaml.csproj" />
 	<ProjectReference Include="..\AssemblyToProcess\AssemblyToProcess.csproj" />
   </ItemGroup>

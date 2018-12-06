@@ -53,6 +53,12 @@ namespace Mimick.Tests.Attributes
         public void ShouldReturnValidYamlString() => Assert.AreEqual("Testing", target.YamlString);
 
         [Test]
+        public void ShouldReturnValidJsonNumber() => Assert.AreEqual(12345, target.JsonNumber);
+
+        [Test]
+        public void ShouldReturnValidJsonString() => Assert.AreEqual("Hello world", target.JsonString);
+
+        [Test]
         public void ShouldReturnValidConfiguredNumber() => Assert.AreEqual(123456, target.ConfiguredNumber);
 
         [Test]
