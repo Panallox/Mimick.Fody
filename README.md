@@ -2,6 +2,8 @@
 
 ## This is an add-in for [Fody](http://github.com/Fody/Fody)
 
+![Mimick](https://github.com/Epoque1/Mimick.Fody/raw/master/icon.png)
+
 This framework introduces automated behaviour when developing an application, and provides dependency injection support, and dependency resolution.
 
 ## Usage
