@@ -31,7 +31,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Addins", "Addins", "{1F6A98
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3A1C3DE3-77E8-4A57-8F30-01CDB3F5C1A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mimick.Config.Json", "Addins\Mimick.Config.Json\Mimick.Config.Json.csproj", "{AE9ED45C-AA7B-46F2-B34B-D4376C0D026A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mimick.Config.Json", "Addins\Mimick.Config.Json\Mimick.Config.Json.csproj", "{AE9ED45C-AA7B-46F2-B34B-D4376C0D026A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
