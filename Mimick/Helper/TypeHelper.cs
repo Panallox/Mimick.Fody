@@ -72,13 +72,13 @@ namespace Mimick
         /// <exception cref="InvalidCastException">If the value cannot be converted.</exception>
         public static object Convert(string value, Type type)
         {
+            var code = Type.GetTypeCode(type);
+
             if (value == null)
-                return type.IsValueType ? Activator.CreateInstance(type) : null;
+                return type.IsValueType && code != TypeCode.String ? Activator.CreateInstance(type) : null;
 
             if (Nullable.IsAssignableFrom(type))
                 type = type.GenericTypeArguments.First();
-
-            var code = Type.GetTypeCode(type);
 
             if (code == TypeCode.DBNull)
                 return DBNull.Value;
