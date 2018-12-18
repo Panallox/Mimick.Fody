@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -91,7 +92,7 @@ public partial class ModuleWeaver
         }
 
         var emitted = emitter.EmitEvent(evt.Name, implemented.EventType);
-        var definition = implemented.Resolve();
+        var definition = evt.Resolve() ?? implemented.Resolve();
 
         if (!emitted.HasAdd)
         {
@@ -154,8 +155,6 @@ public partial class ModuleWeaver
                 throw new MissingMemberException($"Cannot implement '{field.Type.FullName}' as it does not implement method '{method.FullName}'");
         }
 
-        var imported = implemented.Import();
-
         var il = emitted.GetIL();
 
         il.Emit(Codes.Nop);
@@ -165,7 +164,7 @@ public partial class ModuleWeaver
         for (int i = 0, count = method.Parameters.Count; i < count; i++)
             il.Emit(Codes.Arg(i + 1));
 
-        il.Emit(Codes.Invoke(imported.GetGeneric()));
+        il.Emit(Codes.Invoke(method.Import().GetGeneric()));
         il.Emit(Codes.Return);
     }
 
@@ -195,10 +194,11 @@ public partial class ModuleWeaver
         {
             var getter = emitted.GetGetter();
             var il = getter.GetIL();
-            var propertyGet = implemented.GetMethod.Import();
+            var propertyGet = property.GetMethod?.Import() ?? implemented.GetMethod.Import();
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.ThisIf(field));
+            il.Emit(Codes.Cast(interfaceType));
             il.Emit(Codes.Load(field));
             il.Emit(Codes.Invoke(propertyGet.GetGeneric()));
             il.Emit(Codes.Return);
@@ -208,7 +208,7 @@ public partial class ModuleWeaver
         {
             var setter = emitted.GetSetter();
             var il = setter.GetIL();
-            var propertySet = implemented.SetMethod.Import();
+            var propertySet = property.SetMethod?.Import() ?? implemented.SetMethod.Import();
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.ThisIf(field));

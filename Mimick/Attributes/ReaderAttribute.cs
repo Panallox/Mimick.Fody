@@ -15,7 +15,7 @@ namespace Mimick
     [CompilationImplements(Interface = typeof(IRequireSynchronization))]
     [CompilationOptions(Scope = AttributeScope.Instanced)]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-    public sealed class ReaderAttribute : Attribute, IRequireInitialization, IRequireSynchronization, IMethodInterceptor, IPropertyGetInterceptor
+    public sealed class ReaderAttribute : Attribute, IInstanceAware, IRequireInitialization, IRequireSynchronization, IMethodInterceptor, IPropertyGetInterceptor
     {
         #region Properties
 
@@ -27,18 +27,38 @@ namespace Mimick
             get; set;
         }
 
+        /// <summary>
+        /// Gets or sets the object instance which the attribute is associated with.
+        /// </summary>
+        object IInstanceAware.Instance
+        {
+            get; set;
+        }
+
         #endregion
+
+        /// <summary>
+        /// Gets the lock mechanism used when synchronizing.
+        /// </summary>
+        /// <returns>A <see cref="ReaderWriterLockSlim"/> value.</returns>
+        private ReaderWriterLockSlim GetSynchronizationLock() => ((IRequireSynchronization)((IInstanceAware)this).Instance).SynchronizationContext;
 
         /// <summary>
         /// Initialize the attribute.
         /// </summary>
-        public void Initialize() => ((IRequireSynchronization)this).SynchronizationContext = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        public void Initialize()
+        {
+            var context = (IRequireSynchronization)this;
+
+            if (context.SynchronizationContext == null)
+                context.SynchronizationContext = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        }
 
         /// <summary>
         /// Called when a method has been invoked, and executes before the method body.
         /// </summary>
         /// <param name="e">The interception event arguments.</param>
-        public void OnEnter(MethodInterceptionArgs e) => ((IRequireSynchronization)this).SynchronizationContext.EnterReadLock();
+        public void OnEnter(MethodInterceptionArgs e) => GetSynchronizationLock().EnterReadLock();
 
         /// <summary>
         /// Called when a method has been invoked and has produced an unhandled exception.
@@ -58,13 +78,13 @@ namespace Mimick
         /// Called when a method has been invoked, and executes after the method body.
         /// </summary>
         /// <param name="e">The interception event arguments.</param>
-        public void OnExit(MethodInterceptionArgs e) => ((IRequireSynchronization)this).SynchronizationContext.ExitReadLock();
+        public void OnExit(MethodInterceptionArgs e) => GetSynchronizationLock().ExitReadLock();
 
         /// <summary>
         /// Called when a property <c>get</c> method is intercepted and executes after the method body.
         /// </summary>
         /// <param name="e">The interception event arguments.</param>
-        public void OnExit(PropertyInterceptionArgs e) => ((IRequireSynchronization)this).SynchronizationContext.ExitReadLock();
+        public void OnExit(PropertyInterceptionArgs e) => GetSynchronizationLock().ExitReadLock();
 
         /// <summary>
         /// Called when a property <c>get</c> method is intercepted and executes before the method body.
@@ -75,6 +95,6 @@ namespace Mimick
         /// <see cref="P:Mimick.Aspect.PropertyInterceptionArgs.Value" /> property. If the value of this property is changed
         /// during the interception, the updated value will be copied into the backing field.
         /// </remarks>
-        public void OnGet(PropertyInterceptionArgs e) => ((IRequireSynchronization)this).SynchronizationContext.EnterReadLock();
+        public void OnGet(PropertyInterceptionArgs e) => GetSynchronizationLock().EnterReadLock();
     }
 }

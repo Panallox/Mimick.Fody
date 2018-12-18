@@ -377,6 +377,11 @@ public partial class ModuleWeaver
                 il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnGet));
                 il.Emit(Codes.Unbox(weaver.Target.ReturnType));
             }
+            else if (hasMethod && result != null)
+            {
+                il.Emit(Codes.Nop);
+                il.Emit(Codes.Load(result));
+            }
         }
     }
     
