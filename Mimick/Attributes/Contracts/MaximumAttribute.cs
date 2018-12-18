@@ -54,7 +54,7 @@ namespace Mimick
         public override void Validate(string name, Type type, object value)
         {
             if (value == null)
-                throw new ArgumentNullException(name, "The value cannot be null");
+                return;
 
             if (!double.TryParse(value.ToString(), out var result))
                 throw new ArgumentException(name, "The value is not a valid number");

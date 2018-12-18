@@ -72,6 +72,12 @@ static class MethodExtensions
                     if (alloc != null && alloc.FullName == "System.NotImplementedException")
                         return false;
                 }
+                if (method.Parameters.Count > 0 && code22 == OpCodes.Throw)
+                {
+                    if ((code21 == (method.Resolve().IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1)) ||
+                        ((code21 == OpCodes.Ldarg || code21 == OpCodes.Ldarg_S) && it[0].Operand == method.Parameters[0]))
+                        return false;
+                }
                 break;
             case 3:
                 var code31 = it[0].OpCode;
