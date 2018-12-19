@@ -64,8 +64,6 @@ public partial class ModuleWeaver
                 if (reference == null)
                     continue;
 
-                //if (!reference.IsGenericMatch(path) && !reference.IsGenericMatch(field.FullName))
-                //    continue;
                 if (reference != field)
                     continue;
 

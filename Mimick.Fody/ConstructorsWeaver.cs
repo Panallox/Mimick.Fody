@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
 
 /// <summary>
 /// Weaves all types which are candidates for constructor interception.
@@ -53,6 +54,7 @@ public partial class ModuleWeaver
                 var il = ctor.GetIL();
                 var st = init.IsStatic;
 
+                il.Body.SimplifyMacros();
                 il.Insert = CodeInsertion.Before;
                 il.Position = before != null ? (il.GetConstructorBaseOrThis()?.Next ?? il.GetFirst()) : il.GetLast();
 
@@ -75,6 +77,8 @@ public partial class ModuleWeaver
 
                 if (method.IsReturn())
                     il.Emit(Codes.Pop);
+
+                il.Body.OptimizeMacros();
             }
 
             if (after != null)

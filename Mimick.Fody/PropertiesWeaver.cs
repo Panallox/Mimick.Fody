@@ -1,6 +1,7 @@
 ﻿using Mimick.Fody;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,6 +73,7 @@ public partial class ModuleWeaver
             var il = getter.GetIL();
             var result = getter.EmitLocal(property.PropertyType);
 
+            il.Body.SimplifyMacros();
             il.Position = il.GetFirst();
             il.Insert = CodeInsertion.Before;
             
@@ -169,12 +171,15 @@ public partial class ModuleWeaver
             il.Emit(Codes.Load(args));
             il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
             il.Emit(Codes.Unbox(type));
+
+            il.Body.OptimizeMacros();
         }
 
         if (setter != null && hasSetter)
         {
             var il = setter.GetIL();
 
+            il.Body.SimplifyMacros();
             il.Position = il.GetFirst();
             il.Insert = CodeInsertion.Before;
 
@@ -235,6 +240,7 @@ public partial class ModuleWeaver
             }
 
             il.EndTry();
+            il.Body.OptimizeMacros();
         }
     }
 }

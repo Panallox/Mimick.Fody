@@ -3,6 +3,7 @@ using Mimick.Fody.Weavers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Mono.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,8 @@ public partial class ModuleWeaver
     /// <param name="item">The method information.</param>
     public void WeaveMethodInterceptors(MethodEmitter weaver, MethodInterceptorInfo item)
     {
+        weaver.Body.SimplifyMacros();
+
         var pAttributes = item.Parameters.SelectMany(p => p.Attributes.Select(a => new { p.Index, Attribute = a })).ToArray();
         var mAttributes = item.MethodInterceptors;
         var rAttributes = item.ReturnInterceptors;
@@ -383,6 +386,8 @@ public partial class ModuleWeaver
                 il.Emit(Codes.Load(result));
             }
         }
+
+        weaver.Body.OptimizeMacros();
     }
     
     /// <summary>
@@ -396,14 +401,11 @@ public partial class ModuleWeaver
     {
         var il = weaver.Body.Instructions;
         var pos = weaver.GetIL().Position;
-        var replaced = new List<ReplacedInstruction>();
         var instruction = (Instruction)null;
-        var exclude = 1;
 
         if (weaver.Target.IsReturn())
         {
             instruction = hasMethodInterceptors ? Codes.Nop : Codes.Load(storage);
-            exclude = 2;
 
             il.Add(instruction);
             il.Add(Codes.Return);
@@ -412,17 +414,12 @@ public partial class ModuleWeaver
             {
                 if (il[i].OpCode == OpCodes.Ret)
                 {
-                    var original = il[i];
-                    var current = il[i] == pos;
-                    var replacement = il[i] = Codes.Leave(instruction);
+                    var store = Codes.Store(storage);
 
-                    replaced.Add(new ReplacedInstruction { replaced = original, replacement = replacement });
+                    il[i].OpCode = store.OpCode;
+                    il[i].Operand = store.Operand;
 
-                    if (current)
-                        weaver.GetIL().Position = replacement;
-
-                    il.Insert(i, Codes.Store(storage));
-                    i++;
+                    weaver.Body.GetILProcessor().InsertAfter(il[i], Codes.Leave(instruction));
                 }
             }
         }
@@ -433,88 +430,17 @@ public partial class ModuleWeaver
 
             for (int i = 0, count = il.Count - 1; i < count; i++)
             {
-                if (il[i].OpCode == OpCodes.Ret)
+                var ix = il[i];
+
+                if (ix.OpCode == OpCodes.Ret)
                 {
-                    var original = il[i];
-                    var current = il[i] == pos;
-                    var replacement = Codes.Leave(instruction);
-
-                    il[i] = replacement;
-                    replaced.Add(new ReplacedInstruction { replaced = original, replacement = replacement });
-
-                    if (current)
-                        weaver.GetIL().Position = replacement;
+                    ix.OpCode = OpCodes.Leave;
+                    ix.Operand = instruction;
                 }
             }
         }
-
-        WeaveReplacedInstructionAndAllReferences(weaver, replaced, exclude: exclude);
-
+        
         return instruction;
-    }
-
-    /// <summary>
-    /// Weaves the replacement of an instruction within a method body, including cascading that replacement to any others.
-    /// </summary>
-    /// <param name="weaver">The method weaver.</param>
-    /// <param name="replacements">The replacement instructions.</param>
-    /// <param name="exclude">The number of instructions to exclude from the end of the method.</param>
-    public void WeaveReplacedInstructionAndAllReferences(MethodEmitter weaver, List<ReplacedInstruction> replacements, int exclude = 1)
-    {
-        var ins = weaver.Body.Instructions;
-        var il = weaver.GetIL();
-        var position = il.Position;
-
-        foreach (var replaced in replacements)
-        {
-            for (int i = 0, count = ins.Count - exclude; i < count; i++)
-            {
-                var x = ins[i];
-                var o = ins[i].OpCode;
-
-                if (o == OpCodes.Br ||
-                    o == OpCodes.Br_S ||
-                    o == OpCodes.Brtrue ||
-                    o == OpCodes.Brtrue_S ||
-                    o == OpCodes.Brfalse ||
-                    o == OpCodes.Brfalse_S ||
-                    o == OpCodes.Leave ||
-                    o == OpCodes.Leave_S)
-                {
-                    if (x.Operand == replaced.replaced)
-                    {
-                        LogInfo($"###########");
-                        LogInfo($"Found reference to {x.Operand}, replacing with {replaced.replacement}");
-
-                        if (o == OpCodes.Br_S)
-                            x.OpCode = OpCodes.Br;
-                        if (o == OpCodes.Brtrue_S)
-                            x.OpCode = OpCodes.Brtrue;
-                        if (o == OpCodes.Brfalse_S)
-                            x.OpCode = OpCodes.Brfalse;
-                        if (o == OpCodes.Leave_S)
-                            x.OpCode = OpCodes.Leave;
-
-                        x.Operand = replaced.replacement;
-                    }
-                }
-            }
-
-            foreach (var eh in weaver.Target.Body.ExceptionHandlers)
-            {
-                if (eh.TryStart == replaced.replaced)
-                    eh.TryStart = replaced.replacement;
-
-                if (eh.TryEnd == replaced.replaced)
-                    eh.TryEnd = replaced.replacement;
-
-                if (eh.HandlerStart == replaced.replaced)
-                    eh.HandlerStart = replaced.replacement;
-
-                if (eh.HandlerEnd == replaced.replaced)
-                    eh.HandlerEnd = replaced.replacement;
-            }
-        }
     }
 
     public class ReplacedInstruction

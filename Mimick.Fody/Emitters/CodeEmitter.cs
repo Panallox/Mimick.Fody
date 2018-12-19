@@ -254,7 +254,7 @@ namespace Mimick.Fody.Weavers
                     var i = Body.Instructions[index];
 
                     if (i.Operand == leave)
-                        Body.Instructions[index] = Instruction.Create(OpCodes.Leave, routed);
+                        i.Operand = routed;
 
                     if (i == block.TryEnd)
                         break;
