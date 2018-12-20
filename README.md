@@ -30,6 +30,26 @@ The package must then be added to the Fody `FodyWeavers.xml` document, such as b
 </Weavers>
 ```
 
-### Attributes
+### Getting Started
 
-The Mimick framework provides a collection of standard attributes which can be applied at class, field, property, constructor and method levels. For more information, please see the [Attributes wiki page](https://github.com/Epoque1/Mimick.Fody/wiki/Attributes) for a complete list of all built-in attributes.
+The Mimick Framework requires a little configuration before it can be immediately used within an application. For more information, please refer to the [Getting Started](https://github.com/Epoque1/Mimick.Fody/wiki/Getting-Started) page.
+
+## Building
+
+The framework is designed to run on both .NET Framework (4.6.1+) and .NET Standard (2.0+). Running the `dotnet build` command, as described below, will result in a `net461` and `netstandard2.0` build being created.
+
+### Build
+
+The library can be built locally by running the following against the solution directory:
+
+```powershell
+C:\Path> dotnet build -c Release
+```
+
+### Test
+
+The library can be tested locally by running the following againstthe solution directory:
+
+```powershell
+C:\Path> dotnet test -c Release Mimick.Tests\Mimick.Tests.csproj
+```
