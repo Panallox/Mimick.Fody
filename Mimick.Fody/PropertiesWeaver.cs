@@ -177,13 +177,16 @@ public partial class ModuleWeaver
                 else
                     il.Emit(Codes.Invoke(setter.Target));
 
+                il.Emit(Codes.Load(args));
+                il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
+                il.Emit(Codes.Unbox(type));
+                il.Emit(Codes.Store(result));
+
                 il.Emit(Codes.Nop);
                 il.Mark(unchanged);
             }
 
-            il.Emit(Codes.Load(args));
-            il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
-            il.Emit(Codes.Unbox(type));
+            il.Emit(Codes.Load(result));
 
             il.Body.InitLocals = true;
             il.Body.OptimizeMacros();
