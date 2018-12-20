@@ -11,7 +11,7 @@
     <PackageLicenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Epoque1/Mimick.Fody</PackageProjectUrl>
     <PackageIconUrl>https://github.com/Epoque1/Mimick.Fody/raw/master/nuget_icon.png</PackageIconUrl>
-	<NoWarn>CS1591</NoWarn>
+	<NoWarn>CS1591;NU5118</NoWarn>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <Target Name="CopyFiles" AfterTargets="build">

@@ -66,7 +66,12 @@ public partial class ModuleWeaver
         var backing = (Variable)null;
 
         if (field != null)
-            backing = new Variable(field.Resolve());
+        {
+            var def = field.Resolve();
+
+            def.Attributes &= ~Mono.Cecil.FieldAttributes.InitOnly;
+            backing = new Variable(def);
+        }
 
         if (getter != null && hasGetter)
         {
@@ -155,6 +160,14 @@ public partial class ModuleWeaver
                 if (!getter.Target.IsStatic)
                     il.Emit(Codes.This);
 
+                if (backing == null)
+                {
+                    var pcount = setter.Target.Parameters.Count - 1;
+
+                    for (int i = 0; i < pcount; i++)
+                        il.Emit(Codes.Arg(setter.Target.Parameters[i]));
+                }
+
                 il.Emit(Codes.Load(args));
                 il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
                 il.Emit(Codes.Unbox(type));
@@ -172,6 +185,7 @@ public partial class ModuleWeaver
             il.Emit(Codes.Invoke(Context.Finder.PropertyInterceptionArgsValueGet));
             il.Emit(Codes.Unbox(type));
 
+            il.Body.InitLocals = true;
             il.Body.OptimizeMacros();
         }
 
@@ -185,7 +199,7 @@ public partial class ModuleWeaver
 
             var args = il.EmitLocal(Context.Finder.PropertyInterceptionArgs);
             var cancel = il.EmitLabel();
-            var argument = new Variable(setter.Target.Parameters.First());
+            var argument = new Variable(setter.Target.Parameters.Last());
 
             il.Try();
 
@@ -240,6 +254,8 @@ public partial class ModuleWeaver
             }
 
             il.EndTry();
+
+            il.Body.InitLocals = true;
             il.Body.OptimizeMacros();
         }
     }

@@ -237,9 +237,22 @@ public partial class ModuleWeaver
 
                         if (needsMethodArgs)
                         {
+                            var proceed = il.EmitLabel();
+
                             il.Emit(Codes.Load(mEventArgs));
                             il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                            il.Emit(Codes.IfTrue(cancel));
+                            il.Emit(Codes.IfFalse(proceed));
+
+                            if (result != null && needsMethodArgs)
+                            {
+                                il.Emit(Codes.Load(mEventArgs));
+                                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsReturnGet));
+                                il.Emit(Codes.Unbox(result.Type));
+                                il.Emit(Codes.Store(result));
+                            }
+
+                            il.Emit(Codes.Leave(leave));
+                            il.Mark(proceed);
                         }
                     }
                 }
@@ -276,13 +289,16 @@ public partial class ModuleWeaver
                     }
                 }
 
-                il.Emit(Codes.Nop);
-                il.Emit(Codes.Leave(leave));
+                if (needsExit || needsReturns)
+                {
+                    il.Emit(Codes.Nop);
+                    il.Emit(Codes.Leave(leave));
+                }
             }
 
             if (needsExit || needsReturns)
                 il.Finally(leave);
-
+            
             if (hasMethod)
             {
                 if (result != null && needsMethodArgs)
@@ -311,20 +327,13 @@ public partial class ModuleWeaver
                                 il.Emit(Codes.Null);
 
                             il.Emit(Codes.Invoke(Context.Finder.MethodInterceptorOnExit));
-
-                            if (needsMethodArgs)
-                            {
-                                il.Emit(Codes.Load(mEventArgs));
-                                il.Emit(Codes.Invoke(Context.Finder.MethodInterceptionArgsCancelGet));
-                                il.Emit(Codes.IfTrue(cancel));
-                            }
                         }
                     }
                 }
 
                 il.Mark(cancel);
             }
-
+            
             if (hasReturn && needsReturns && result != null)
             {
                 var rEventArgs = needsReturnsArgs ? il.EmitLocal(Context.Finder.MethodReturnInterceptionArgs) : null;
@@ -367,6 +376,12 @@ public partial class ModuleWeaver
                 }
             }
 
+            if (!needsExit && !needsReturns)
+            {
+                il.Emit(Codes.Nop);
+                il.Emit(Codes.Leave(leave));
+            }
+
             il.EndTry();
             il.Insert = CodeInsertion.After;
 
@@ -387,6 +402,7 @@ public partial class ModuleWeaver
             }
         }
 
+        weaver.Body.InitLocals = true;
         weaver.Body.OptimizeMacros();
     }
     

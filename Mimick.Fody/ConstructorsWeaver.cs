@@ -78,6 +78,7 @@ public partial class ModuleWeaver
                 if (method.IsReturn())
                     il.Emit(Codes.Pop);
 
+                il.Body.InitLocals = true;
                 il.Body.OptimizeMacros();
             }
 

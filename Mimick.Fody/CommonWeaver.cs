@@ -684,6 +684,8 @@ public partial class ModuleWeaver
         gil.Emit(Codes.Load(variable));
         gil.Emit(Codes.Return);
 
+        getter.Body.InitLocals = true;
+
         var setter = property.GetSetter();
         var sil = setter.GetIL();
 
@@ -692,6 +694,8 @@ public partial class ModuleWeaver
         sil.Emit(Codes.Arg(field.IsStatic ? 0 : 1));
         sil.Emit(Codes.Store(variable));
         sil.Emit(Codes.Return);
+
+        setter.Body.InitLocals = true;
 
         return property;
     }
@@ -759,12 +763,12 @@ public partial class ModuleWeaver
         var id = method.Target.GetHashString();
         var name = $"<{method.Target.Name}${id}${param.Index}>k__ParameterInfo";
 
-        var existing = parent.GetField(name, Context.Finder.PropertyInfo, toStatic: true);
+        var existing = parent.GetField(name, Context.Finder.ParameterInfo, toStatic: true);
 
         if (existing != null)
             return existing;
 
-        var field = parent.EmitField(name, Context.Finder.PropertyInfo, toStatic: true, toPublic: true);
+        var field = parent.EmitField(name, Context.Finder.ParameterInfo, toStatic: true, toPublic: true);
 
         var il = parent.GetStaticConstructor().GetIL();
         il.Emit(Codes.Nop);

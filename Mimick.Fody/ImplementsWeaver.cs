@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mimick.Fody.Weavers;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
 
 /// <summary>
 /// A class containing methods for weaving an implementation into a class.
@@ -94,9 +95,13 @@ public partial class ModuleWeaver
         var emitted = emitter.EmitEvent(evt.Name, implemented.EventType);
         var definition = evt.Resolve() ?? implemented.Resolve();
 
-        if (!emitted.HasAdd)
+        var hasAdd = emitted.HasAdd;
+        var add = emitted.GetAdd();
+
+        if (!hasAdd)
         {
-            var add = emitted.GetAdd();
+            add.Body.SimplifyMacros();
+
             var ail = add.GetIL();
             var interfaceAdd = definition.AddMethod.Import();
 
@@ -106,11 +111,20 @@ public partial class ModuleWeaver
             ail.Emit(Codes.Arg(add.IsStatic ? 0 : 1));
             ail.Emit(Codes.Invoke(interfaceAdd.GetGeneric()));
             ail.Emit(Codes.Return);
+
+            add.Body.OptimizeMacros();
         }
+
+
+        add.Body.InitLocals = true;
+
+        var hasRemove = emitted.HasRemove;
+        var remove = emitted.GetRemove();
 
         if (!emitted.HasRemove)
         {
-            var remove = emitted.GetRemove();
+            remove.Body.SimplifyMacros();
+
             var ril = remove.GetIL();
             var interfaceRemove = definition.RemoveMethod.Import();
 
@@ -120,7 +134,11 @@ public partial class ModuleWeaver
             ril.Emit(Codes.Arg(remove.IsStatic ? 0 : 1));
             ril.Emit(Codes.Invoke(interfaceRemove.GetGeneric()));
             ril.Emit(Codes.Return);
+
+            remove.Body.OptimizeMacros();
         }
+
+        remove.Body.InitLocals = true;
     }
 
     /// <summary>
@@ -166,6 +184,8 @@ public partial class ModuleWeaver
 
         il.Emit(Codes.Invoke(method.Import().GetGeneric()));
         il.Emit(Codes.Return);
+
+        emitted.Body.InitLocals = true;
     }
 
     /// <summary>
@@ -189,12 +209,14 @@ public partial class ModuleWeaver
         }
 
         var source = new PropertyEmitter(emitter, implemented);
-
+        
         if (source.HasGetter && !emitted.HasGetter)
         {
             var getter = emitted.GetGetter();
             var il = getter.GetIL();
             var propertyGet = property.GetMethod?.Import() ?? implemented.GetMethod.Import();
+
+            getter.Body.SimplifyMacros();
 
             il.Emit(Codes.Nop);
             il.Emit(Codes.ThisIf(field));
@@ -202,6 +224,9 @@ public partial class ModuleWeaver
             il.Emit(Codes.Load(field));
             il.Emit(Codes.Invoke(propertyGet.GetGeneric()));
             il.Emit(Codes.Return);
+
+            getter.Body.OptimizeMacros();
+            getter.Body.InitLocals = true;
         }
 
         if (source.HasSetter && !emitted.HasSetter)
@@ -210,12 +235,17 @@ public partial class ModuleWeaver
             var il = setter.GetIL();
             var propertySet = property.SetMethod?.Import() ?? implemented.SetMethod.Import();
 
+            setter.Body.SimplifyMacros();
+
             il.Emit(Codes.Nop);
             il.Emit(Codes.ThisIf(field));
             il.Emit(Codes.Load(field));
             il.Emit(Codes.Arg(setter.Target.IsStatic ? 0 : 1));
             il.Emit(Codes.Invoke(propertySet.GetGeneric()));
             il.Emit(Codes.Return);
+
+            setter.Body.OptimizeMacros();
+            setter.Body.InitLocals = true;
         }
     }
 }
