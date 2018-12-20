@@ -9,6 +9,7 @@
     <PackageId>Mimick.Tests</PackageId>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Platforms>AnyCPU</Platforms>
+	<IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Configuration.json" />

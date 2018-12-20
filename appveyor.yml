@@ -10,6 +10,6 @@ before_build:
 build_script:
   - cmd: dotnet build --configuration Release
 test_script:
-  - ps: dotnet test --configuration Release
+  - ps: dotnet test --configuration Release Mimick.Tests\Mimick.Tests.csproj
 artifacts:
   - path: nugets\**\*.nupkg
