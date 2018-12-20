@@ -14,6 +14,9 @@ namespace AssemblyToProcess.Attributes
     public class AutowireAttributes
     {
         [Autowire]
+        private SingletonComponent autoPrivateField = null;
+
+        [Autowire]
         public SingletonComponent autoField;
 
         /// <summary>
@@ -39,5 +42,11 @@ namespace AssemblyToProcess.Attributes
         /// <returns>The component.</returns>
         [Autowire]
         public SingletonComponent AutoAnyMethod(SingletonComponent autoParameter = null) => autoParameter;
+
+        /// <summary>
+        /// Gets an auto-wired component which has been associated with a private field.
+        /// </summary>
+        /// <returns>The component.</returns>
+        public SingletonComponent GetAutoPrivateField() => autoPrivateField;
     }
 }

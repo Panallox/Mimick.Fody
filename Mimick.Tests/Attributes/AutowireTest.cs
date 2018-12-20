@@ -27,5 +27,8 @@ namespace Mimick.Tests.Attributes
 
         [Test]
         public void ShouldReturnValueWhenMethodAnyParameterIsAutowired() => Assert.NotNull(target.AutoAnyMethod());
+
+        [Test]
+        public void ShouldReturnValueWhenPrivateFieldIsAutowired() => Assert.NotNull(target.GetAutoPrivateField());
     }
 }
