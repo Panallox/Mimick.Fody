@@ -46,7 +46,7 @@ namespace Mimick
         public override void Validate(string name, Type type, object value)
         {
             var empty = false;
-
+            
             if (value == null)
                 empty = true;
             else if (value is string text)
