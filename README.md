@@ -1,5 +1,5 @@
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/ifjrmddnbmedidb0?svg=true&style=flat)](https://ci.appveyor.com/project/Epoque1/mimick-fody) 
-[![NuGet Status](http://img.shields.io/nuget/v/Mimick.Fody.svg?style=flat&max-age=86400)](https://www.nuget.org/packages/PropertyChanged.Fody/)
+[![NuGet Status](http://img.shields.io/nuget/v/Mimick.Fody.svg?style=flat&max-age=86400)](https://www.nuget.org/packages/Mimick.Fody/)
 
 ## This is an add-in for [Fody](http://github.com/Fody/Fody)
 
