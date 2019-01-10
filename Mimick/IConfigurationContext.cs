@@ -9,7 +9,7 @@ namespace Mimick
     /// <summary>
     /// An interface representing the configurations context of the framework, which is the central source for resolving configuration values.
     /// </summary>
-    public interface IConfigurationContext
+    public interface IConfigurationContext : IDisposable
     {
         /// <summary>
         /// Register a configuration source within the configuration context.

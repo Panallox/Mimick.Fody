@@ -20,6 +20,7 @@ namespace Mimick
 
         private ComponentContext componentContext;
         private ConfigurationContext configurationContext;
+        private volatile bool disposed;
         private volatile bool initialized;
         private TaskContext taskContext;
 
@@ -78,10 +79,13 @@ namespace Mimick
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         private void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !disposed)
             {
                 taskContext.Dispose();
                 componentContext.Dispose();
+                configurationContext.Dispose();
+
+                disposed = true;
             }
         }
 
@@ -90,6 +94,9 @@ namespace Mimick
         /// </summary>
         public void Initialize()
         {
+            if (disposed)
+                throw new ObjectDisposedException("this");
+
             if (initialized)
                 throw new InvalidProgramException("Cannot initialize the framework more than once");
 

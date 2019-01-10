@@ -14,6 +14,7 @@ namespace Mimick.Framework
     {
         private readonly IList<ConfigurationDescriptor> sources;
 
+        private volatile bool disposed;
         private volatile bool initialized;
 
         /// <summary>
@@ -24,7 +25,40 @@ namespace Mimick.Framework
             sources = new List<ConfigurationDescriptor>();
             Register(new ProviderConfigurationSource());
         }
-        
+
+        /// <summary>
+        /// Finalizes an instance of the <see cref="ConfigurationContext"/> class.
+        /// </summary>
+        ~ConfigurationContext() => Dispose(false);
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing">
+        ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        private void Dispose(bool disposing)
+        {
+            if (disposing && !disposed && initialized)
+            {
+                foreach (var descriptor in sources)
+                {
+                    descriptor.Source.Dispose();
+                    descriptor.LastUpdated = DateTime.Now;
+                }
+
+                disposed = true;
+            }
+        }
+
         /// <summary>
         /// Initializes this instance.
         /// </summary>
@@ -51,6 +85,9 @@ namespace Mimick.Framework
         /// </returns>
         public IConfigurationRegistration Register(IConfigurationSource source)
         {
+            if (disposed)
+                throw new ObjectDisposedException("this");
+
             if (source == null)
                 throw new ArgumentNullException("source");
 
@@ -72,7 +109,13 @@ namespace Mimick.Framework
         /// <returns>
         /// A configurator which can be used to further configure the source.
         /// </returns>
-        public IConfigurationRegistration Register<T>() where T : IConfigurationSource => Register(Activator.CreateInstance<T>());
+        public IConfigurationRegistration Register<T>() where T : IConfigurationSource
+        {
+            if (disposed)
+                throw new ObjectDisposedException("this");
+
+            return Register(Activator.CreateInstance<T>());
+        }
 
         /// <summary>
         /// Resolves the value of a configuration from the configuration context with the provided name.
@@ -84,6 +127,9 @@ namespace Mimick.Framework
         /// </returns>
         public string Resolve(string name, string or = null)
         {
+            if (disposed)
+                throw new ObjectDisposedException("this");
+
             if (name == null)
                 throw new ArgumentNullException("name");
 
@@ -114,6 +160,9 @@ namespace Mimick.Framework
         /// </returns>
         public object Resolve(string name, Type type, object or = null)
         {
+            if (disposed)
+                throw new ObjectDisposedException("this");
+
             var value = Resolve(name);
 
             if (name == null)

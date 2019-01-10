@@ -7,23 +7,23 @@ using System.Threading.Tasks;
 namespace Mimick
 {
     /// <summary>
-    /// Represents an error when a value should not be considered empty.
+    /// Represents an error when a value is not within a required range or satisfies a specific condition.
     /// </summary>
-    public class EmptyException : Exception
+    public class InvalidValueException : Exception
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="EmptyException" /> class.
+        /// Initializes a new instance of the <see cref="InvalidValueException" /> class.
         /// </summary>
-        public EmptyException() : this(null)
+        public InvalidValueException() : this(null)
         {
 
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EmptyException"/> class.
+        /// Initializes a new instance of the <see cref="InvalidValueException" /> class.
         /// </summary>
         /// <param name="paramName">The name of the parameter.</param>
-        public EmptyException(string paramName) => ParamName = paramName;
+        public InvalidValueException(string paramName) => ParamName = paramName;
 
         #region Properties
 
