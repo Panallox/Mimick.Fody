@@ -18,6 +18,25 @@ namespace Mimick
     public interface IComponentContext : IDisposable
     {
         /// <summary>
+        /// Gets an immutable collection containing all components which were recognised by the context.
+        /// </summary>
+        /// <returns>An <see cref="IReadOnlyList{IComponentDescriptor}"/> containing the component descriptors.</returns>
+        IReadOnlyList<IComponentDescriptor> GetAllComponents();
+
+        /// <summary>
+        /// Gets an immutable collection containing all configuration components which were recognised by the context. A component
+        /// is considered a configuration if the class is decorated with the <see cref="ConfigurationAttribute"/> class.
+        /// </summary>
+        /// <returns>An <see cref="IReadOnlyList{IComponentDescriptor}"/> containing the component descriptors.</returns>
+        IReadOnlyList<IComponentDescriptor> GetConfigurationComponents();
+
+        /// <summary>
+        /// Initialize the component context by processing any types within the registered assemblies that have been
+        /// decorated with the <see cref="ConfigurationAttribute"/> decoration.
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
         /// Registers all classes within the provided assembly which have been decorated with <see cref="ComponentAttribute"/>.
         /// </summary>
         /// <param name="assembly">The assembly.</param>

@@ -90,9 +90,9 @@ namespace Mimick.Framework
         /// </summary>
         public void Initialize()
         {
-            var components = (ComponentContext)FrameworkContext.Current.ComponentContext;
+            var components = FrameworkContext.Current.ComponentContext;
 
-            foreach (var component in components.Components)
+            foreach (var component in components.GetAllComponents())
             {
                 var timed = component.Type.GetMethods(ReflectionHelper.All).Where(m => m.GetAttributeInherited<ScheduledAttribute>() != null);
 

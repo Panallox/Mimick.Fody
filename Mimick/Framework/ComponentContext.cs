@@ -66,21 +66,7 @@ namespace Mimick.Framework
         {
             Dispose(false);
         }
-
-        #region Properties
-
-        /// <summary>
-        /// Gets all component entries from the component context.
-        /// </summary>
-        public IReadOnlyList<ComponentDescriptor> Components => new ReadOnlyList<ComponentDescriptor>(allEntries);
-
-        /// <summary>
-        /// Gets all configuration entries from the component context.
-        /// </summary>
-        public IReadOnlyList<ComponentDescriptor> ConfigurationEntries => new ReadOnlyList<ComponentDescriptor>(configurationEntries);
-
-        #endregion
-
+        
         /// <summary>
         /// Creates a constructor method which can be used to create a new instance of the provided type.
         /// </summary>
@@ -127,6 +113,19 @@ namespace Mimick.Framework
                     e.Dispose();
             }
         }
+
+        /// <summary>
+        /// Gets an immutable collection containing all components which were recognised by the context.
+        /// </summary>
+        /// <returns>An <see cref="IReadOnlyList{IComponentDescriptor}"/> containing the component descriptors.</returns>
+        public IReadOnlyList<IComponentDescriptor> GetAllComponents() => new ReadOnlyList<ComponentDescriptor>(allEntries);
+
+        /// <summary>
+        /// Gets an immutable collection containing all configuration components which were recognised by the context. A component
+        /// is considered a configuration if the class is decorated with the <see cref="ConfigurationAttribute"/> class.
+        /// </summary>
+        /// <returns>An <see cref="IReadOnlyList{IComponentDescriptor}"/> containing the component descriptors.</returns>
+        public IReadOnlyList<IComponentDescriptor> GetConfigurationComponents() => new ReadOnlyList<ComponentDescriptor>(configurationEntries);
 
         /// <summary>
         /// Initialize the component context by processing any types within the registered assemblies that have been

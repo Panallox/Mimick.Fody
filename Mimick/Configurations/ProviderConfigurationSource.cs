@@ -50,11 +50,11 @@ namespace Mimick.Configurations
         /// </summary>
         public void Load()
         {
-            var context = FrameworkContext.Current.ComponentContext as ComponentContext;
+            var context = FrameworkContext.Current.ComponentContext;
 
             providers = new Dictionary<string, Tuple<IComponentDescriptor, ProviderHandler>>();
 
-            foreach (var entry in context.ConfigurationEntries)
+            foreach (var entry in context.GetConfigurationComponents())
             {
                 var methods = entry.Type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(m => m.GetAttributeInherited<ProvideAttribute>() != null);
                 var properties = entry.Type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(p => p.GetAttributeInherited<ProvideAttribute>() != null);

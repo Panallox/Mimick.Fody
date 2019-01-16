@@ -18,7 +18,7 @@ namespace Mimick
         /// </summary>
         private static readonly Lazy<FrameworkContext> current = new Lazy<FrameworkContext>(() => new FrameworkContext());
 
-        private ComponentContext componentContext;
+        private IComponentContext componentContext;
         private ConfigurationContext configurationContext;
         private volatile bool disposed;
         private volatile bool initialized;
@@ -98,7 +98,7 @@ namespace Mimick
                 throw new ObjectDisposedException("this");
 
             if (initialized)
-                throw new InvalidProgramException("Cannot initialize the framework more than once");
+                throw new InvalidOperationException("Cannot initialize the framework more than once");
 
             initialized = true;
 
@@ -110,6 +110,23 @@ namespace Mimick
             configurationContext.Initialize();
             componentContext.Initialize();
             taskContext.Initialize();
+        }
+
+        /// <summary>
+        /// Update the framework context with a new component context manager, allowing for custom dependency container implementations.
+        /// </summary>
+        /// <param name="context">The component context.</param>
+        /// <exception cref="ObjectDisposedException">this</exception>
+        /// <exception cref="InvalidOperationException">Cannot change component context once the framework is initialized</exception>
+        public void SetComponentContext(IComponentContext context)
+        {
+            if (disposed)
+                throw new ObjectDisposedException("this");
+
+            if (initialized)
+                throw new InvalidOperationException("Cannot change component context once the framework is initialized");
+
+            componentContext = context;
         }
     }
 }
