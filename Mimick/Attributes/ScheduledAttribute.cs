@@ -25,21 +25,14 @@ namespace Mimick
         /// <param name="milliseconds">The interval between executions in milliseconds.</param>
         public ScheduledAttribute(double milliseconds) => FixedInterval = TimeSpan.FromMilliseconds(milliseconds);
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ScheduledAttribute"/> class.
-        /// </summary>
-        /// <param name="cron">The cron expression describing when the invocations should occur.</param>
-        public ScheduledAttribute(string cron) => CronInterval = cron;
+        //public ScheduledAttribute(string cron) => CronInterval = cron;
 
         #region Properties
 
-        /// <summary>
-        /// Gets the interval between method invocations.
-        /// </summary>
-        public string CronInterval
+        /*public string CronInterval
         {
             get;
-        }
+        }*/
 
         /// <summary>
         /// Gets the interval between method invocations.
