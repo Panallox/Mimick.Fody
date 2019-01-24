@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+	<DisableFody>true</DisableFody>
+    <SignAssembly>true</SignAssembly>
+	<AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+    <Authors>Chris Copeland</Authors>
+    <Product>Mimick.Config.AppConfig</Product>
+	<PackageTags>Mimick, Framework, AppConfig</PackageTags>
+	<Description>Mimick AppConfig adds support for configuration sources from standard or custom application configuration files.</Description>
+    <Copyright>Chris Copeland</Copyright>
+    <PackageLicenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Epoque1/Mimick.Fody</PackageProjectUrl>
+	<NoWarn>CS1591</NoWarn>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Configuration" Condition="'$(TargetFramework)' == 'net461'" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Mimick\Mimick.csproj" developmentDependency="true" />
+  </ItemGroup>
+</Project>

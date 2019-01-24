@@ -75,7 +75,7 @@ namespace Mimick.Framework
         /// <exception cref="MissingMethodException">If a default constructor cannot be found.</exception>
         private Func<object> CreateConstructor(Type type)
         {
-            var candidates = type.GetConstructors().Where(c => c.IsDefaultAndAccessible()).ToArray();
+            var candidates = type.GetConstructors().Where(c => ReflectionHelper.IsDefaultAndAccessible(c)).ToArray();
 
             if (candidates.Length != 1)
                 throw new MissingMethodException($"Cannot find a non-internal unique constructor for type '{type.FullName}'");
@@ -89,7 +89,7 @@ namespace Mimick.Framework
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns>A <see cref="Type"/> array containing the results.</returns>
-        private Type[] GetImplementedTypes(Type type) => type.GetInterfaces().Where(i => !i.IsSystem()).ToArray();
+        private Type[] GetImplementedTypes(Type type) => type.GetInterfaces().Where(i => !ReflectionHelper.IsSystem(i)).ToArray();
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -135,13 +135,13 @@ namespace Mimick.Framework
         {
             foreach (var entry in configurationEntries)
             {
-                var methods = entry.Type.GetMethods(AllInstanced).Where(m => m.GetAttributeInherited<ComponentAttribute>() != null);
-                var properties = entry.Type.GetProperties(AllInstanced).Where(m => m.GetAttributeInherited<ComponentAttribute>() != null);
+                var methods = ReflectionHelper.GetMethodsWithAttribute<ComponentAttribute>(entry.Type);
+                var properties = ReflectionHelper.GetPropertiesWithAttribute<ComponentAttribute>(entry.Type);
                 var instance = entry.Designer.GetComponent();
 
                 foreach (var method in methods)
                 {
-                    var decoration = method.GetAttributeInherited<ComponentAttribute>();
+                    var decoration = ReflectionHelper.GetAttributeInherited<ComponentAttribute>(method);
                     var value = method.Invoke(instance, null);
                     var extra = (string)null;
 
@@ -154,7 +154,7 @@ namespace Mimick.Framework
 
                 foreach (var property in properties)
                 {
-                    var decoration = property.GetAttributeInherited<ComponentAttribute>();
+                    var decoration = ReflectionHelper.GetAttributeInherited<ComponentAttribute>(property);
                     var value = property.GetValue(instance);
 
                     Register(value, decoration.Name, property.Name);
@@ -171,16 +171,16 @@ namespace Mimick.Framework
             if (assembly == null)
                 throw new ArgumentNullException("assembly");
 
-            var candidates = assembly.GetTypes().Where(a => a.GetAttributeInherited<FrameworkAttribute>() != null || a.GetAttributeInherited<ConfigurationAttribute>() != null);
+            var candidates = assembly.GetTypes().Where(a => ReflectionHelper.GetAttributeInherited<FrameworkAttribute>(a) != null || ReflectionHelper.GetAttributeInherited<ConfigurationAttribute>(a) != null);
 
             foreach (var candidate in candidates)
             {
-                var decoration = candidate.GetAttributeInherited<ComponentAttribute>();
+                var decoration = ReflectionHelper.GetAttributeInherited<ComponentAttribute>(candidate);
 
                 if (decoration != null)
                     Register(candidate, decoration.Name).ToScope(decoration.Scope);
 
-                var configuration = candidate.GetAttributeInherited<ConfigurationAttribute>();
+                var configuration = ReflectionHelper.GetAttributeInherited<ConfigurationAttribute>(candidate);
 
                 if (configuration != null)
                     Register(candidate);
@@ -274,6 +274,7 @@ namespace Mimick.Framework
         public IComponentRegistration Register(Type interfaceType, Type concreteType, params string[] names)
         {
             var implements = new List<Type>(GetImplementedTypes(concreteType));
+            var hasName = names != null && names.Length != 0;
             
             if (names == null || names.Length == 0)
                 names = implements.Concat(new[] { interfaceType, concreteType }).Where(t => t != null).Distinct().Select(t => t.Name).ToArray();
@@ -288,10 +289,11 @@ namespace Mimick.Framework
 
             if (interfaceType != null)
             {
-                if (implementedEntries.TryGetValue(interfaceType, out var existing))
+                if (implementedEntries.TryGetValue(interfaceType, out var existing) && !hasName)
                     throw new ArgumentException($"Conflicting '{interfaceType.FullName}' component, adding '{concreteType.FullName}' against '{existing.Type.FullName}'");
 
-                implementedEntries.Add(interfaceType, entry);
+                if (existing == null)
+                    implementedEntries.Add(interfaceType, entry);
             }
 
             if (!typedEntries.ContainsKey(concreteType))
@@ -310,7 +312,7 @@ namespace Mimick.Framework
 
             allEntries.Add(entry);
 
-            if (concreteType.GetAttributeInherited<ConfigurationAttribute>() != null)
+            if (ReflectionHelper.GetAttributeInherited<ConfigurationAttribute>(concreteType) != null)
                 configurationEntries.Add(entry);
 
             return new ComponentRegistration(new[] { entry });

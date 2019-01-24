@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -22,7 +23,7 @@ namespace Mimick
         {
             if (collection == null)
                 throw new ArgumentNullException("list");
-
+            
             if (collection.Contains(item))
                 return;
             
@@ -49,6 +50,48 @@ namespace Mimick
         }
 
         /// <summary>
+        /// Gets whether the collection contains all of the provided values.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="collection">The collection.</param>
+        /// <param name="values">The values.</param>
+        /// <returns><c>true</c> if the collection contains all values; otherwise, <c>false</c>.</returns>
+        public static bool ContainsAll<T>(this ICollection<T> collection, params T[] values)
+        {
+            if (collection == null)
+                throw new ArgumentNullException("collection");
+
+            foreach (var value in values)
+            {
+                if (!collection.Contains(value))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets whether the collection contains any of the provided values.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="collection">The collection.</param>
+        /// <param name="values">The values.</param>
+        /// <returns><c>true</c> if the collection contains any values; otherwise, <c>false</c>.</returns>
+        public static bool ContainsAny<T>(this ICollection<T> collection, params T[] values)
+        {
+            if (collection == null)
+                throw new ArgumentNullException("collection");
+
+            foreach (var value in values)
+            {
+                if (collection.Contains(value))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Counts the number of elements in a non-generic enumerable collection.
         /// </summary>
         /// <param name="enumerable">The enumerable collection.</param>
@@ -68,11 +111,36 @@ namespace Mimick
         }
 
         /// <summary>
+        /// Gets whether the collection is <c>null</c> or contains no values.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="collection">The collection.</param>
+        /// <returns><c>true</c> if the collection is empty; otherwise, <c>false</c>.</returns>
+#if NET461
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        public static bool IsEmpty<T>(this ICollection<T> collection) => collection == null || collection.Count == 0;
+        
+        /// <summary>
+        /// Gets whether the collection is not <c>null</c> and contains values.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="collection">The collection.</param>
+        /// <returns><c>true</c> if the collection is not empty; otherwise, <c>false</c>.</returns>
+#if NET461
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        public static bool IsNotEmpty<T>(this ICollection<T> collection) => !IsEmpty(collection);
+
+        /// <summary>
         /// Converts the enumerable collection to an immutable read-only list.
         /// </summary>
         /// <typeparam name="T">The type of the elements.</typeparam>
         /// <param name="enumerable">The enumerable collection.</param>
         /// <returns>An <see cref="IReadOnlyList{T}"/> value.</returns>
+#if NET461
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static IReadOnlyList<T> ToReadOnly<T>(this IEnumerable<T> enumerable) => new ReadOnlyList<T>(enumerable);
     }
 }

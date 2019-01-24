@@ -94,14 +94,14 @@ namespace Mimick.Framework
 
             foreach (var component in components.GetAllComponents())
             {
-                var timed = component.Type.GetMethods(ReflectionHelper.All).Where(m => m.GetAttributeInherited<ScheduledAttribute>() != null);
-
+                var timed = ReflectionHelper.GetMethodsWithAttribute<ScheduledAttribute>(component.Type, binding: ReflectionHelper.All);
+                                                
                 if (timed.Any())
                 {
                     foreach (var method in timed)
                     {
                         var instance = method.IsStatic ? null : component.Designer.GetComponent();
-                        var decoration = method.GetAttributeInherited<ScheduledAttribute>();
+                        var decoration = ReflectionHelper.GetAttributeInherited<ScheduledAttribute>(method);
 
                         /*if (decoration.CronInterval != null)
                         {

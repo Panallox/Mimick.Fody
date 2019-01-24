@@ -24,6 +24,7 @@
     <EmbeddedResource Include="Configuration.yaml" />
   </ItemGroup>
   <ItemGroup>
+	<ProjectReference Include="..\Addins\Mimick.Config.AppConfig\Mimick.Config.AppConfig.csproj" />
 	<ProjectReference Include="..\Addins\Mimick.Config.Json\Mimick.Config.Json.csproj" />
 	<ProjectReference Include="..\Addins\Mimick.Config.Yaml\Mimick.Config.Yaml.csproj" />
 	<ProjectReference Include="..\AssemblyToProcess\AssemblyToProcess.csproj" />
@@ -35,5 +36,8 @@
 	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
     <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Configuration" Condition="'$(TargetFramework)' == 'net461'" />
   </ItemGroup>
 </Project>

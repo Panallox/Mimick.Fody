@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3A1C3DE3
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mimick.Config.Json", "Addins\Mimick.Config.Json\Mimick.Config.Json.csproj", "{AE9ED45C-AA7B-46F2-B34B-D4376C0D026A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mimick.Config.AppConfig", "Addins\Mimick.Config.AppConfig\Mimick.Config.AppConfig.csproj", "{9D78887A-5F85-44F2-ABDA-EC6B56609206}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{AE9ED45C-AA7B-46F2-B34B-D4376C0D026A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE9ED45C-AA7B-46F2-B34B-D4376C0D026A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE9ED45C-AA7B-46F2-B34B-D4376C0D026A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D78887A-5F85-44F2-ABDA-EC6B56609206}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D78887A-5F85-44F2-ABDA-EC6B56609206}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D78887A-5F85-44F2-ABDA-EC6B56609206}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D78887A-5F85-44F2-ABDA-EC6B56609206}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -72,6 +78,7 @@ Global
 		{8743DA02-2D95-4EC5-AABF-42391939B22F} = {3A1C3DE3-77E8-4A57-8F30-01CDB3F5C1A1}
 		{866E64C4-D25A-4824-AC28-A7639568A5F4} = {1F6A9825-B891-4EDC-B40E-7059CF66EC0E}
 		{AE9ED45C-AA7B-46F2-B34B-D4376C0D026A} = {1F6A9825-B891-4EDC-B40E-7059CF66EC0E}
+		{9D78887A-5F85-44F2-ABDA-EC6B56609206} = {1F6A9825-B891-4EDC-B40E-7059CF66EC0E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29EB81CF-5A98-4C04-879F-B8356797A3EF}

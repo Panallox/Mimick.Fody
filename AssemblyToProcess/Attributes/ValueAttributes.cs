@@ -13,6 +13,18 @@ namespace AssemblyToProcess.Attributes
     public class ValueAttributes
     {
         /// <summary>
+        /// Gets a number processed from the associated value attribute sourced from an application configuration document.
+        /// </summary>
+        [Value("{AppConfig.Number}")]
+        public int AppConfigNumber { get; set; }
+
+        /// <summary>
+        /// Gets a string processed from the associated value attribute sourced from an application configuration document.
+        /// </summary>
+        [Value("{AppConfig.String}")]
+        public string AppConfigString { get; set; }
+
+        /// <summary>
         /// Gets a complex number processed from the associated value attribute.
         /// </summary>
         [Value("20 + 100 / 2 - 40 / 4 + (10 + 5 * 4)")]
@@ -47,6 +59,18 @@ namespace AssemblyToProcess.Attributes
         /// </summary>
         [Value("{Configured.Property}")]
         public string ConfiguredString { get; set; }
+
+        /// <summary>
+        /// Gets a configured number processed from the associated value attribute.
+        /// </summary>
+        [Value("{factory.Number}")]
+        public int FactoryNumber { get; set; }
+
+        /// <summary>
+        /// Gets a configured string processed from the associated value attribute.
+        /// </summary>
+        [Value("{factory.String}")]
+        public string FactoryString { get; set; }
 
         /// <summary>
         /// Gets a number processed from the associated value attribute sourced from a JSON document.

@@ -56,12 +56,12 @@ namespace Mimick.Configurations
 
             foreach (var entry in context.GetConfigurationComponents())
             {
-                var methods = entry.Type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(m => m.GetAttributeInherited<ProvideAttribute>() != null);
-                var properties = entry.Type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(p => p.GetAttributeInherited<ProvideAttribute>() != null);
+                var methods = ReflectionHelper.GetMethodsWithAttribute<ProvideAttribute>(entry.Type);
+                var properties = ReflectionHelper.GetPropertiesWithAttribute<ProvideAttribute>(entry.Type);
 
                 foreach (var method in methods)
                 {
-                    var decoration = method.GetAttributeInherited<ProvideAttribute>();
+                    var decoration = ReflectionHelper.GetAttributeInherited<ProvideAttribute>(method);
 
                     if (decoration.Name == null)
                         throw new ArgumentException($"Cannot register a provided value without a name for '{entry.Type.FullName}.{method.Name}");
@@ -71,7 +71,7 @@ namespace Mimick.Configurations
 
                 foreach (var property in properties)
                 {
-                    var decoration = property.GetAttributeInherited<ProvideAttribute>();
+                    var decoration = ReflectionHelper.GetAttributeInherited<ProvideAttribute>(property);
                     
                     if (decoration.Name == null)
                         throw new ArgumentException($"Cannot register a provided value without a name for '{entry.Type.FullName}.{property.Name}");

@@ -42,6 +42,28 @@ namespace Mimick.Tests
                 .Register(new JsonConfigurationSource(stream));
 
             framework
+                .ConfigurationContext
+                .Register(new FactoryConfigurationSource(s =>
+                {
+                    if (s.StartsWith("factory."))
+                    {
+                        switch (s.Substring("factory.".Length))
+                        {
+                            case "Number":
+                                return "1234";
+                            case "String":
+                                return "Hello";
+                        }
+                    }
+
+                    return null;
+                }));
+
+            framework
+                .ConfigurationContext
+                .Register(new AppConfigConfigurationSource());
+
+            framework
                 .Initialize();
         }
 

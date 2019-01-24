@@ -96,9 +96,14 @@ namespace Mimick
                 if (code == TypeCode.Boolean && char.IsNumber(value[0]) && int.TryParse(value, out var int32))
                     return int32 > 0;
 
+                var converter = TypeDescriptor.GetConverter(value);
+
+                if (converter != null && converter.CanConvertTo(type))
+                    return converter.ConvertTo(value, type);
+
                 if (code != TypeCode.Object)
                 {
-                    var converter = TypeDescriptor.GetConverter(type);
+                    converter = TypeDescriptor.GetConverter(type);
                     return converter.ConvertFromString(null, CultureInfo.InvariantCulture, value);
                 }
             }

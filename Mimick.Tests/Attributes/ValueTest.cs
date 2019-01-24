@@ -65,6 +65,18 @@ namespace Mimick.Tests.Attributes
         public void ShouldReturnValidConfiguredString() => Assert.AreEqual("Hello", target.ConfiguredString);
 
         [Test]
+        public void ShouldReturnValidFactoryNumber() => Assert.AreEqual(1234, target.FactoryNumber);
+
+        [Test]
+        public void ShouldReturnValidFactoryString() => Assert.AreEqual("Hello", target.FactoryString);
+
+        [Test]
+        public void ShouldReturnValidAppConfigNumber() => Assert.AreEqual(123456, target.AppConfigNumber);
+
+        [Test]
+        public void ShouldReturnValidAppConfigString() => Assert.AreEqual("Hello", target.AppConfigString);
+
+        [Test]
         public async Task ShouldReturnValidAsyncMethodNumberWhenComputed()
         {
             var result = await target.GetComputedNumberAsync();
