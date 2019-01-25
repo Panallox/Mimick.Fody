@@ -10,16 +10,14 @@ namespace Mimick
     /// <summary>
     /// A class containing extension methods for common object operations.
     /// </summary>
-    public static class ObjectExtensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Invokes an action if the object value is not <c>null</c>.
         /// </summary>
         /// <param name="o">The object to check.</param>
         /// <param name="action">The action to invoke.</param>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static void IfNotNull(this object o, Action action)
         {
             if (o != null)
@@ -33,9 +31,7 @@ namespace Mimick
         /// <param name="o">The object to check.</param>
         /// <param name="action">The action to invoke.</param>
         /// <returns>The result of the action if the value is <c>null</c>; otherwise, the default value of <typeparamref name="T"/>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T IfNotNull<T>(this object o, Func<T> action) => o != null ? action() : default;
 
         /// <summary>
@@ -43,9 +39,7 @@ namespace Mimick
         /// </summary>
         /// <param name="o">The object to check.</param>
         /// <param name="action">The action to invoke.</param>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static void IfNull(this object o, Action action)
         {
             if (o == null)
@@ -59,9 +53,7 @@ namespace Mimick
         /// <param name="o">The object to check.</param>
         /// <param name="action">The action to invoke.</param>
         /// <returns>The result of the action if the value is <c>null</c>; otherwise, the default value of <typeparamref name="T"/>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T IfNull<T>(this object o, Func<T> action) => o == null ? action() : default;
 
         /// <summary>
@@ -69,9 +61,7 @@ namespace Mimick
         /// </summary>
         /// <param name="o">The object to check.</param>
         /// <returns><c>true</c> if the object is not <c>null</c>; otherwise, <c>false</c>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static bool IsNotNull(this object o) => o != null;
 
         /// <summary>
@@ -79,9 +69,7 @@ namespace Mimick
         /// </summary>
         /// <param name="o">The object to check.</param>
         /// <returns><c>true</c> if the object is <c>null</c>; otherwise, <c>false</c>.</returns>
- #if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static bool IsNull(this object o) => o == null;
     }
 }

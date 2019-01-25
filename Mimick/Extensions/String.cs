@@ -11,7 +11,7 @@ namespace Mimick
     /// <summary>
     /// A class containing extension methods for common string operations.
     /// </summary>
-    public static class StringExtensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Gets whether the current value matches any of the provided comparison values.
@@ -19,9 +19,7 @@ namespace Mimick
         /// <param name="value">The value.</param>
         /// <param name="values">The values to compare against the current value.</param>
         /// <returns><c>true</c> if the value matches one of the comparison values; otherwise, <c>false</c>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static bool IsAny(this string value, params string[] values) => IsAny(value, StringComparison.Ordinal, values);
 
         /// <summary>
@@ -31,9 +29,7 @@ namespace Mimick
         /// <param name="comparison">The comparison mode to use.</param>
         /// <param name="values">The values to compare against the current value.</param>
         /// <returns><c>true</c> if the value matches one of the comparison values; otherwise, <c>false</c>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static bool IsAny(this string value, StringComparison comparison, params string[] values) => values.Any(e => string.Equals(value, e, comparison));
 
         /// <summary>
@@ -64,9 +60,7 @@ namespace Mimick
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns><c>true</c> if the value is <c>null</c> or contains no characters; otherwise, <c>false</c>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static bool IsEmpty(this string value)
         {
 #if NET461
@@ -81,9 +75,7 @@ namespace Mimick
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns><c>true</c> if the value is not <c>null</c> and does not contain only whitespaces; otherwise, <c>false</c>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static bool IsNotBlank(this string value) => !IsBlank(value);
 
         /// <summary>
@@ -91,9 +83,7 @@ namespace Mimick
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns><c>true</c> if the value is not <c>null</c> and contains at-least one character; otherwise, <c>false</c>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static bool IsNotEmpty(this string value) => !IsEmpty(value);
 
         /// <summary>
@@ -127,9 +117,7 @@ namespace Mimick
         /// <param name="value">The value.</param>
         /// <param name="length">The length of the substring.</param>
         /// <returns>The substring of the current value.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static string Left(this string value, int length) => value.Substring(0, length);
 
         /// <summary>
@@ -160,9 +148,7 @@ namespace Mimick
         /// <param name="value">The value.</param>
         /// <param name="length">The length of the substring.</param>
         /// <returns>The substring of the current value.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static string Right(this string value, int length) => value.Substring(value.Length - length);
 
         /// <summary>
@@ -171,9 +157,7 @@ namespace Mimick
         /// <param name="value">The value.</param>
         /// <param name="encoding">The optional encoding to use.</param>
         /// <returns>A byte array value.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static byte[] ToByteArray(this string value, Encoding encoding = null) => (encoding ?? Encoding.ASCII).GetBytes(value);
 
         /// <summary>
@@ -182,19 +166,15 @@ namespace Mimick
         /// <typeparam name="T">The type of the enumerator.</typeparam>
         /// <param name="value">The value.</param>
         /// <returns>An enumerator value matching a <typeparamref name="T"/> value.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static T ToEnum<T>(this string value) => (T)Enum.Parse(typeof(T), value);
+        public static T ToEnum<T>(this string value) where T : Enum => (T)Enum.Parse(typeof(T), value);
 
         /// <summary>
         /// Converts the current value into a <see cref="FileInfo"/> where the value represents the file path.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>A <see cref="FileInfo"/> value.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static FileInfo ToFileInfo(this string value) => new FileInfo(value);
 
         /// <summary>
@@ -202,9 +182,7 @@ namespace Mimick
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The trimmed value; otherwise, <c>null</c>.</returns>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static string TrimToNull(this string value) => value == null || (value = value.Trim()).Length == 0 ? null : value;
     }
 }

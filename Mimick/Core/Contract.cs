@@ -23,9 +23,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The value.</returns>
         /// <exception cref="InvalidValueException">If the value is not equal.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T Equal<T>(T value, T expected, string arg = null) => ReferenceEquals(value, expected) || Equals(value, expected) ? value : throw new InvalidValueException(arg);
 
         /// <summary>
@@ -37,9 +35,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The value.</returns>
         /// <exception cref="InvalidValueException">If the value is not greater than the minimum.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T GreaterThan<T>(T value, T minimum, string arg = null) where T : IComparable<T> => value.CompareTo(minimum) > 0 ? value : throw new InvalidValueException(arg);
 
         /// <summary>
@@ -51,9 +47,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The value.</returns>
         /// <exception cref="InvalidValueException">If the value is not greater than or equal to the minimum.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T GreaterThanEqual<T>(T value, T minimum, string arg = null) where T : IComparable<T> => value.CompareTo(minimum) >= 0 ? value : throw new InvalidValueException(arg);
 
         /// <summary>
@@ -65,9 +59,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The value.</returns>
         /// <exception cref="InvalidValueException">If the value is not less than the maximum.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T LessThan<T>(T value, T maximum, string arg = null) where T : IComparable<T> => maximum.CompareTo(value) > 0 ? value : throw new InvalidValueException(arg);
 
         /// <summary>
@@ -79,9 +71,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The value.</returns>
         /// <exception cref="InvalidValueException">If the value is not less than or equal to the maximum.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T LessThanEqual<T>(T value, T maximum, string arg = null) where T : IComparable<T> => maximum.CompareTo(value) >= 0 ? value : throw new InvalidValueException(arg);
 
         /// <summary>
@@ -91,9 +81,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The string.</returns>
         /// <exception cref="EmptyException">If the string is <c>null</c>, empty or contain only whitespaces.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static string NotBlank(string str, string arg = null) => !string.IsNullOrWhiteSpace(str) ? str : throw new EmptyException(arg);
 
         /// <summary>
@@ -125,9 +113,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The array.</returns>
         /// <exception cref="EmptyException">If the array is <c>null</c> or empty.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T[] NotEmpty<T>(T[] array, string arg = null) => array != null && array.Length > 0 ? array : throw new EmptyException(arg);
 
         /// <summary>
@@ -138,9 +124,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The object.</returns>
         /// <exception cref="EmptyException">If the object is <c>null</c> or empty.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static ICollection<T> NotEmpty<T>(ICollection<T> collection, string arg = null) => collection != null && collection.Count > 0 ? collection : throw new EmptyException(arg);
 
         /// <summary>
@@ -150,9 +134,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The string.</returns>
         /// <exception cref="EmptyException">If the string is <c>null</c> or empty.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static string NotEmpty(string str, string arg = null) => !string.IsNullOrEmpty(str) ? str : throw new EmptyException(arg);
 
         /// <summary>
@@ -162,9 +144,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The string builder.</returns>
         /// <exception cref="EmptyException">If the string builder is <c>null</c> or empty.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static StringBuilder NotEmpty(StringBuilder builder, string arg = null) => builder != null && builder.Length > 0 ? builder : throw new EmptyException(arg);
 
         /// <summary>
@@ -176,9 +156,7 @@ namespace Mimick
         /// <param name="arg">The optional argument name.</param>
         /// <returns>The value.</returns>
         /// <exception cref="InvalidValueException">If the value is equal to the comparison value.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T NotEqual<T>(T value, T compare, string arg = null) => !Equals(value, compare) ? value : throw new InvalidValueException(arg);
 
         /// <summary>
@@ -188,9 +166,7 @@ namespace Mimick
         /// <param name="o">The object.</param>
         /// <returns>The object.</returns>
         /// <exception cref="NullReferenceException">If the object is <c>null</c>.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T NotNull<T>(T o) where T : class => o ?? throw new NullReferenceException();
 
         /// <summary>
@@ -201,9 +177,7 @@ namespace Mimick
         /// <param name="name">The argument name.</param>
         /// <returns>The object.</returns>
         /// <exception cref="ArgumentNullException">If the argument object is <c>null</c>.</exception>
-#if NET461
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static T NotNull<T>(T o, string name) where T : class => o ?? throw new ArgumentNullException(name);
 
     }
