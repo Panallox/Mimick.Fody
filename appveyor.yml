@@ -9,6 +9,7 @@ before_build:
   - cmd: dotnet --version
 build_script:
   - cmd: dotnet build --configuration Release
+  - cmd: dotnet pack --configuration Release Addins\Mimick.Config.AppConfig\Mimick.Config.AppConfig.csproj -o ..\..\nugets\
   - cmd: dotnet pack --configuration Release Addins\Mimick.Config.Json\Mimick.Config.Json.csproj -o ..\..\nugets\
   - cmd: dotnet pack --configuration Release Addins\Mimick.Config.Yaml\Mimick.Config.Yaml.csproj -o ..\..\nugets\
 test_script:

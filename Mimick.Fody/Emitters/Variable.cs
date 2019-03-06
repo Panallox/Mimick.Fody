@@ -17,19 +17,19 @@ namespace Mimick.Fody.Weavers
         /// Initializes a new instance of the <see cref="Variable"/> class.
         /// </summary>
         /// <param name="field">The field.</param>
-        public Variable(FieldReference field) => Reference = field ?? throw new ArgumentNullException("field");
+        public Variable(FieldReference field) => Reference = field ?? throw new ArgumentNullException(nameof(field));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Variable"/> class.
         /// </summary>
         /// <param name="local">The local.</param>
-        public Variable(VariableDefinition local) => Reference = local ?? throw new ArgumentNullException("local");
+        public Variable(VariableDefinition local) => Reference = local ?? throw new ArgumentNullException(nameof(local));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Variable"/> class.
         /// </summary>
         /// <param name="parameter">The parameter.</param>
-        public Variable(ParameterReference parameter) => Reference = parameter ?? throw new ArgumentNullException("parameter");
+        public Variable(ParameterReference parameter) => Reference = parameter ?? throw new ArgumentNullException(nameof(parameter));
 
         #region Properties
 

@@ -35,7 +35,7 @@ static class AttributeExtensions
     public static CustomAttribute GetAttribute(this CustomAttribute a, TypeReference type)
     {
         if (type == null)
-            throw new ArgumentNullException("type");
+            throw new ArgumentNullException(nameof(type));
 
         var current = a.AttributeType;
 

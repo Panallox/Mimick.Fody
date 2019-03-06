@@ -89,7 +89,7 @@ namespace Mimick.Framework
                 throw new ObjectDisposedException("this");
 
             if (source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if (initialized)
                 throw new InvalidOperationException("Cannot register new configuration sources once the context has been initialized");
@@ -131,7 +131,7 @@ namespace Mimick.Framework
                 throw new ObjectDisposedException("this");
 
             if (name == null)
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             foreach (var descriptor in sources)
             {

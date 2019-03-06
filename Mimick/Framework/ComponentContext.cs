@@ -169,7 +169,7 @@ namespace Mimick.Framework
         public void RegisterAssembly(Assembly assembly)
         {
             if (assembly == null)
-                throw new ArgumentNullException("assembly");
+                throw new ArgumentNullException(nameof(assembly));
 
             var candidates = assembly.GetTypes().Where(a => ReflectionHelper.GetAttributeInherited<FrameworkAttribute>(a) != null || ReflectionHelper.GetAttributeInherited<ConfigurationAttribute>(a) != null);
 
@@ -330,7 +330,7 @@ namespace Mimick.Framework
         public void Register<TInterface>(object instance)
         {
             if (instance == null)
-                throw new ArgumentNullException("instance", "The component instance cannot be null");
+                throw new ArgumentNullException(nameof(instance), "The component instance cannot be null");
 
             var type = instance.GetType();
             var interfaceType = typeof(TInterface);
@@ -361,7 +361,7 @@ namespace Mimick.Framework
         public void Register(object instance, params string[] names)
         {
             if (instance == null)
-                throw new ArgumentNullException("instance", "The component instance cannot be null");
+                throw new ArgumentNullException(nameof(instance), "The component instance cannot be null");
 
             var type = instance.GetType();
             var implements = new List<Type>(GetImplementedTypes(type));
@@ -419,7 +419,7 @@ namespace Mimick.Framework
         public object Resolve(string name)
         {
             if (name == null)
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             if (namedEntries.TryGetValue(name, out var named))
                 return named.Designer.GetComponent();

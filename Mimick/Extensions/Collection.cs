@@ -22,7 +22,7 @@ namespace Mimick
         public static void AddIfMissing<T>(this ICollection<T> collection, T item)
         {
             if (collection == null)
-                throw new ArgumentNullException("list");
+                throw new ArgumentNullException(nameof(collection));
             
             if (collection.Contains(item))
                 return;
@@ -41,7 +41,7 @@ namespace Mimick
         public static void AddIfMissing<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
         {
             if (dictionary == null)
-                throw new ArgumentNullException("dictionary");
+                throw new ArgumentNullException(nameof(dictionary));
 
             if (dictionary.ContainsKey(key))
                 return;
@@ -59,7 +59,7 @@ namespace Mimick
         public static bool ContainsAll<T>(this ICollection<T> collection, params T[] values)
         {
             if (collection == null)
-                throw new ArgumentNullException("collection");
+                throw new ArgumentNullException(nameof(collection));
 
             foreach (var value in values)
             {
@@ -80,7 +80,7 @@ namespace Mimick
         public static bool ContainsAny<T>(this ICollection<T> collection, params T[] values)
         {
             if (collection == null)
-                throw new ArgumentNullException("collection");
+                throw new ArgumentNullException(nameof(collection));
 
             foreach (var value in values)
             {
@@ -118,7 +118,7 @@ namespace Mimick
         public static void RemoveRange<T>(this ICollection<T> collection, IEnumerable<T> values)
         {
             if (collection == null)
-                throw new ArgumentNullException("collection");
+                throw new ArgumentNullException(nameof(collection));
 
             foreach (T element in values)
                 collection.Remove(element);

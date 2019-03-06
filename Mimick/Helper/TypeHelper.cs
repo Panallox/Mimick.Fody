@@ -123,7 +123,7 @@ namespace Mimick
         public static object Default(Type type)
         {
             if (type == null)
-                throw new ArgumentNullException("type");
+                throw new ArgumentNullException(nameof(type));
 
             switch (Type.GetTypeCode(type))
             {

@@ -28,10 +28,10 @@ namespace Mimick.Values
         public ValueParser(string expression)
         {
             if (expression == null)
-                throw new ArgumentNullException("expression", "Cannot parse a null expresson");
+                throw new ArgumentNullException(nameof(expression), "Cannot parse a null expresson");
             
             if (expression.Trim().Length == 0)
-                throw new ArgumentException("expression", "Cannot parse a blank expression");
+                throw new ArgumentException(nameof(expression), "Cannot parse a blank expression");
 
             buf = expression.ToCharArray();
             children = new List<Node>();

@@ -36,11 +36,11 @@ namespace Mimick
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonConfigurationSource"/> class.
         /// </summary>
-        /// <param name="filename">The full path to the document.</param>
-        public AppConfigConfigurationSource(string filename)
+        /// <param name="exeName">The full path to the executable whose configuration must be loaded.</param>
+        public AppConfigConfigurationSource(string exeName)
         {
-            configuration = ConfigurationManager.OpenExeConfiguration(filename);
-            path = new FileInfo(filename ?? throw new ArgumentNullException("filename"));
+            configuration = ConfigurationManager.OpenExeConfiguration(exeName);
+            path = new FileInfo(exeName ?? throw new ArgumentNullException(nameof(exeName)));
             source = AppConfigSource.File;
             sync = new ReaderWriterLockSlim();
         }
@@ -52,7 +52,7 @@ namespace Mimick
         /// <exception cref="System.ArgumentNullException">config</exception>
         public AppConfigConfigurationSource(Configuration config)
         {
-            configuration = config ?? throw new ArgumentNullException("config");
+            configuration = config ?? throw new ArgumentNullException(nameof(config));
             source = AppConfigSource.Direct;
             sync = new ReaderWriterLockSlim();
         }

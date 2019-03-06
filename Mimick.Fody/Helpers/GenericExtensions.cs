@@ -25,7 +25,7 @@ static class GenericExtensions
     public static MethodReference GetGeneric(this MethodReference method)
     {
         if (method == null)
-            throw new ArgumentNullException("method", "Cannot create a generic reference to a null method");
+            throw new ArgumentNullException(nameof(method), "Cannot create a generic reference to a null method");
 
         if (method.HasGenericParameters)
         {

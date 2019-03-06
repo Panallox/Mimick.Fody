@@ -26,7 +26,7 @@ namespace Mimick
         /// <param name="doc">The document.</param>
         public YamlConfigurationSource(YamlDocument doc)
         {
-            document = doc ?? throw new ArgumentNullException("doc");
+            document = doc ?? throw new ArgumentNullException(nameof(doc));
             source = YamlSource.Document;
             sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         }
@@ -37,7 +37,7 @@ namespace Mimick
         /// <param name="filename">The full path to the document.</param>
         public YamlConfigurationSource(string filename)
         {
-            path = new FileInfo(filename ?? throw new ArgumentNullException("filename"));
+            path = new FileInfo(filename ?? throw new ArgumentNullException(nameof(filename)));
             source = YamlSource.File;
             sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         }
@@ -49,7 +49,7 @@ namespace Mimick
         public YamlConfigurationSource(Stream src)
         {
             if (src == null)
-                throw new ArgumentNullException("src");
+                throw new ArgumentNullException(nameof(src));
             if (!src.CanRead)
                 throw new IOException("Cannot read content from the provided stream");
 

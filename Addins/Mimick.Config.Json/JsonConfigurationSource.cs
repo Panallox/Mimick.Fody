@@ -30,7 +30,7 @@ namespace Mimick
         /// <param name="filename">The full path to the document.</param>
         public JsonConfigurationSource(string filename)
         {
-            path = new FileInfo(filename ?? throw new ArgumentNullException("filename"));
+            path = new FileInfo(filename ?? throw new ArgumentNullException(nameof(filename)));
             serializer = new JsonSerializer();
             source = JsonSource.File;
             sync = new ReaderWriterLockSlim();
@@ -43,7 +43,7 @@ namespace Mimick
         public JsonConfigurationSource(Stream src)
         {
             if (src == null)
-                throw new ArgumentNullException("src");
+                throw new ArgumentNullException(nameof(src));
             if (!src.CanRead)
                 throw new IOException("Cannot read content from the provided stream");
 

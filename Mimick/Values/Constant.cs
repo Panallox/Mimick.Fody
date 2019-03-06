@@ -18,7 +18,7 @@ namespace Mimick.Values
         public Constant(object value)
         {
             if (value == null)
-                throw new ArgumentNullException("value", "A constant must have a value");
+                throw new ArgumentNullException(nameof(value), "A constant must have a value");
 
             Type = System.Type.GetTypeCode(value.GetType());
             Value = value;

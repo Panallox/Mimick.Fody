@@ -28,7 +28,7 @@ namespace Mimick.Configurations
         /// <param name="doc">The document.</param>
         public XmlConfigurationSource(XmlDocument doc)
         {
-            document = doc ?? throw new ArgumentNullException("doc");
+            document = doc ?? throw new ArgumentNullException(nameof(doc));
             source = XmlSource.Document;
             sync = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         }
@@ -40,7 +40,7 @@ namespace Mimick.Configurations
         public XmlConfigurationSource(string filename)
         {
             if (filename == null)
-                throw new ArgumentNullException("filename");
+                throw new ArgumentNullException(nameof(filename));
 
             path = new FileInfo(filename);
             source = XmlSource.File;
@@ -57,7 +57,7 @@ namespace Mimick.Configurations
         public XmlConfigurationSource(Stream src)
         {
             if (src == null)
-                throw new ArgumentNullException("src");
+                throw new ArgumentNullException(nameof(src));
             if (!src.CanRead)
                 throw new IOException("Cannot read content from the provided stream");
 

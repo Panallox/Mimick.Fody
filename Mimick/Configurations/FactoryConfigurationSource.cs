@@ -13,7 +13,7 @@ namespace Mimick.Configurations
     {
         private readonly Func<string, string> factory;
 
-        public FactoryConfigurationSource(Func<string, string> factory) => this.factory = factory ?? throw new ArgumentNullException("factory");
+        public FactoryConfigurationSource(Func<string, string> factory) => this.factory = factory ?? throw new ArgumentNullException(nameof(factory));
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

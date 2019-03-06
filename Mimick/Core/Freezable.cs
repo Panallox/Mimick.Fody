@@ -24,7 +24,7 @@ namespace Mimick
         private static IFreezable GetFreezable(object target)
         {
             if (target == null)
-                throw new ArgumentNullException("target");
+                throw new ArgumentNullException(nameof(target));
 
             return target as IFreezable ?? throw new ArgumentException($"The object type {target.GetType().FullName} does not implement the IFreezable interface");
         }
