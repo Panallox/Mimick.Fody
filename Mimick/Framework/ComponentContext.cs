@@ -363,6 +363,9 @@ namespace Mimick.Framework
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance), "The component instance cannot be null");
 
+            if (names == null)
+                names = new string[0];
+
             var type = instance.GetType();
             var implements = new List<Type>(GetImplementedTypes(type));
             implements.Add(type);
