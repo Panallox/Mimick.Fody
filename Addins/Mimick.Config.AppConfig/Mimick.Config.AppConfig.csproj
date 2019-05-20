@@ -15,12 +15,10 @@
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Mimick.Fody" Version="1.0.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Configuration" Condition="'$(TargetFramework)' == 'net461'" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Mimick\Mimick.csproj" developmentDependency="true" />
   </ItemGroup>
 </Project>

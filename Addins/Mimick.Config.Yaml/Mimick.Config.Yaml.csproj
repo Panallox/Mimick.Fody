@@ -15,9 +15,7 @@
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Mimick.Fody" Version="1.0.0" />
     <PackageReference Include="YamlDotNet.Signed" Version="5.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Mimick\Mimick.csproj" developmentDependency="true" />
   </ItemGroup>
 </Project>

@@ -49,7 +49,7 @@ C:\Path> dotnet build -c Release
 
 ### Test
 
-The library can be tested locally by running the following againstthe solution directory:
+The library can be tested locally by running the following against the solution directory:
 
 ```powershell
 C:\Path> dotnet test -c Release Mimick.Tests\Mimick.Tests.csproj
