@@ -10,6 +10,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Mimick\Mimick.csproj" />
+    <PackageReference Include="Mimick.Fody" Version="1.0.*" />
   </ItemGroup>
 </Project>

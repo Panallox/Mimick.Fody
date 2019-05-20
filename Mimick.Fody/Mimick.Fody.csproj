@@ -5,6 +5,11 @@
   <ItemGroup>
 	<PackageReference Include="FodyHelpers" Version="3.2.17" developmentDependency="true" />
   </ItemGroup>
+  <Target Name="GetTargetPath" Returns="@(_BuildOutputPath)">
+    <ItemGroup>
+      <_BuildOutputPath Include="$(MSBuildProjectDirectory)\$(PackageOutputPath)\$(AssemblyName).UNK" />
+    </ItemGroup>
+  </Target>
   <Target Name="CopyFiles" AfterTargets="build">
 	<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)\Tools" />
   </Target>
