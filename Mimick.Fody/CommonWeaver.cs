@@ -833,9 +833,15 @@ public partial class ModuleWeaver
 
             if (member is MethodReference method)
             {
-                var field = CreateMethodInfo(new MethodEmitter(il.Parent.Parent, method));
-                il.Emit(Codes.ThisIf(field));
-                il.Emit(Codes.Load(field));
+                var minfo = CreateMethodInfo(new MethodEmitter(il.Parent.Parent, method));
+                il.Emit(Codes.ThisIf(minfo));
+                il.Emit(Codes.Load(minfo));
+            }
+            else if (member is PropertyReference property)
+            {
+                var pinfo = CreatePropertyInfo(new PropertyEmitter(il.Parent.Parent, property, isStatic));
+                il.Emit(Codes.ThisIf(pinfo));
+                il.Emit(Codes.Load(pinfo));
             }
 
             il.Emit(Codes.Invoke(Context.Finder.MemberAwareMemberSet));
