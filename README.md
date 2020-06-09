@@ -1,9 +1,9 @@
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/ifjrmddnbmedidb0?svg=true&style=flat)](https://ci.appveyor.com/project/Epoque1/mimick-fody) 
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/ifjrmddnbmedidb0?svg=true&style=flat)](https://ci.appveyor.com/project/Epoque/mimick-fody) 
 [![NuGet Status](http://img.shields.io/nuget/v/Mimick.Fody.svg?style=flat&max-age=86400)](https://www.nuget.org/packages/Mimick.Fody/)
 
 ## This is an add-in for [Fody](http://github.com/Fody/Fody)
 
-![Mimick](https://github.com/Epoque1/Mimick.Fody/raw/master/icon.png)
+![Mimick](https://github.com/Epoque/Mimick.Fody/raw/master/icon.png)
 
 This framework introduces automated behaviour when developing an application, and provides dependency injection support, and dependency resolution.
 
@@ -33,7 +33,7 @@ The package must then be added to the Fody `FodyWeavers.xml` document, such as b
 
 ### Getting Started
 
-The Mimick Framework requires a little configuration before it can be immediately used within an application. For more information, please refer to the [Getting Started](https://github.com/Epoque1/Mimick.Fody/wiki/Getting-Started) page.
+The Mimick Framework requires a little configuration before it can be immediately used within an application. For more information, please refer to the [Getting Started](https://github.com/Epoque/Mimick.Fody/wiki/Getting-Started) page.
 
 ## Building
 

@@ -9,8 +9,8 @@
 	<PackageTags>Mimick, Framework, AppConfig</PackageTags>
 	<Description>Mimick AppConfig adds support for configuration sources from standard or custom application configuration files.</Description>
     <Copyright>Chris Copeland</Copyright>
-    <PackageLicenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/Epoque1/Mimick.Fody</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Epoque/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Epoque/Mimick.Fody</PackageProjectUrl>
 	<NoWarn>CS1591</NoWarn>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>

@@ -9,8 +9,8 @@
 	<PackageTags>Mimick, Framework, Json</PackageTags>
 	<Description>Mimick Json adds support for configuration sources which read from a JSON document.</Description>
     <Copyright>Chris Copeland</Copyright>
-    <PackageLicenseUrl>https://github.com/Epoque1/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/Epoque1/Mimick.Fody</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Epoque/Mimick.Fody/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Epoque/Mimick.Fody</PackageProjectUrl>
 	<NoWarn>CS1591</NoWarn>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
